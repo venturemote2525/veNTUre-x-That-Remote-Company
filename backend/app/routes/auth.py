@@ -1,4 +1,4 @@
-# app/routes/auth.py
+
 from fastapi import APIRouter
 from app.models.schemas import SignupRequest, LoginRequest
 from app.db.supabase_client import supabase
