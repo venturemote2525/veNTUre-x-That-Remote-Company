@@ -52,7 +52,7 @@ export default function SignUp() {
       hasError = true;
     }
 
-    if (hasError) return;
+    // if (hasError) return;
 
     try {
       setLoading(true);
