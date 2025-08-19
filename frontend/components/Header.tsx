@@ -19,7 +19,9 @@ export default function Header({ title, onBackPress }: HeaderProps) {
         }}>
         <Icon as={ChevronLeftIcon} size={'xl'} className="text-secondary-500" />
       </Pressable>
-      <Text className="font-bodyBold text-2xl text-secondary-500">{title}</Text>
+      <Text className="text-body1 font-bodyBold text-secondary-500">
+        {title}
+      </Text>
     </View>
   );
 }
