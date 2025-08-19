@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.button-rounded {
+  @apply rounded-full bg-secondary-500 py-3 items-center;
+}
