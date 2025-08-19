@@ -2,8 +2,10 @@ import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useState } from 'react';
 import { Platform, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
 
 export default function Onboarding() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const genders = ['Female', 'Male'];
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -31,6 +33,7 @@ export default function Onboarding() {
       // TODO: Update user details in supabase
     } finally {
       setLoading(false);
+      router.replace('/(tabs)');
     }
   };
 
@@ -47,10 +50,6 @@ export default function Onboarding() {
 
   return (
     <ThemedSafeAreaView className="px-4">
-      <Text className="px-2 text-sm text-primary-300">{fields.name}</Text>
-      <Text className="px-2 text-sm text-primary-300">{fields.dob}</Text>
-      <Text className="px-2 text-sm text-primary-300">{fields.gender}</Text>
-      <Text className="px-2 text-sm text-primary-300">{fields.height}</Text>
       <View className="items-center gap-1 py-12">
         <Text className="text-head2 font-heading">Welcome to HealthSync</Text>
         <Text className="text-primary-200">Please enter your details</Text>
