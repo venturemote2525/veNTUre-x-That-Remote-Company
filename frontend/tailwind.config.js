@@ -13,9 +13,11 @@ module.exports = {
   ],
   theme: {
     fontSize: {
-      title: ['3rem', { lineHeight: '3.5rem' }],
-      head1: ['2.25rem', { lineHeight: '3rem' }],
-      head2: ['1.875rem', { lineHeight: '2.25rem' }],
+      title: ['3rem', { lineHeight: '3.5rem' }], // 48px
+      head1: ['2.25rem', { lineHeight: '3rem' }], // 36px
+      head2: ['1.875rem', { lineHeight: '2.25rem' }], // 30px
+      body1: ['1.5rem', { lineHeight: '2rem' }], // 24px
+      body2: ['1.125rem', { lineHeight: '1.75rem' }], // 18px
     },
     extend: {
       colors: {
@@ -178,7 +180,8 @@ module.exports = {
       fontFamily: {
         heading: 'Poppins-Bold',
         body: 'Poppins-Regular',
-        bodyBold: 'Poppins-Medium',
+        bodySemiBold: 'Poppins-Medium',
+        bodyBold: 'Poppins-SemiBold',
         roboto: ['Roboto', 'sans-serif'],
       },
       fontWeight: {

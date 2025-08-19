@@ -10,7 +10,7 @@ type DropdownItemProps = {
 export function DropdownItem({ label, onPress }: DropdownItemProps) {
   return (
     <Pressable onPress={onPress}>
-      <Text>{label}</Text>
+      <Text className="font-bodySemiBold px-2">{label}</Text>
     </Pressable>
   );
 }
@@ -25,26 +25,32 @@ export default function CustomDropdown({
   children,
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
-  const toggleDropdown = () => setOpen(prev => !prev);
+  const toggleDropdown = () => {
+    setOpen(prev => !prev);
+    console.log('open');
+  };
   return (
-    <View>
+    <View className="relative">
       {React.isValidElement(toggle)
         ? React.cloneElement(toggle as React.ReactElement<any>, {
             onPress: toggleDropdown,
           })
         : toggle}
       {open && (
-        <View>
-          {React.Children.map(children, child =>
-            React.isValidElement(child)
-              ? React.cloneElement(child, {
-                  onPress: () => {
-                    child.props.onPress?.();
-                    setOpen(false);
-                  },
-                })
-              : child,
-          )}
+        <View className="absolute right-0 top-full min-w-40 rounded-2xl bg-background-0 p-3">
+          {React.Children.map(children, (child, index) => (
+            <View key={index}>
+              {index > 0 && <View className="my-2 h-px bg-secondary-500/50" />}
+              {React.isValidElement(child)
+                ? React.cloneElement(child, {
+                    onPress: () => {
+                      child.props.onPress?.();
+                      setOpen(false);
+                    },
+                  })
+                : child}
+            </View>
+          ))}
         </View>
       )}
     </View>
