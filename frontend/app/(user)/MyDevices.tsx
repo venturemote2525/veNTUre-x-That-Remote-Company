@@ -22,7 +22,7 @@ export default function MyDevices() {
               className="rounded-2xl bg-background-0 px-6 py-4">
               <View className="flex-row items-center justify-between">
                 <View>
-                  <Text className="text-body2 font-bodyBold text-secondary-500">
+                  <Text className="font-bodyBold text-body2 text-secondary-500">
                     {device.name}
                   </Text>
                   <Text className="font-bodySemiBold text-primary-300">

@@ -10,7 +10,7 @@ type DropdownItemProps = {
 export function DropdownItem({ label, onPress }: DropdownItemProps) {
   return (
     <Pressable onPress={onPress}>
-      <Text className="font-bodySemiBold px-2">{label}</Text>
+      <Text className="px-2 font-bodySemiBold text-primary-500">{label}</Text>
     </Pressable>
   );
 }

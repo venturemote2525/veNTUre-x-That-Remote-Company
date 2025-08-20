@@ -109,9 +109,7 @@ export default function SignUp() {
               )}
             </View>
           </View>
-          <Pressable
-            onPress={handleSignup}
-            className="items-center rounded-2xl bg-secondary-500 py-3">
+          <Pressable onPress={handleSignup} className="button">
             <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Creating new account...' : 'Sign Up'}
             </Text>
