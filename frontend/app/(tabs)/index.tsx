@@ -9,7 +9,7 @@ export default function HomeScreen() {
   return (
     <ThemedSafeAreaView className="p-4">
       <View className="flex-row justify-between">
-        <Text className="text-head2 font-heading text-secondary-500">
+        <Text className="font-heading text-head2 text-secondary-500">
           HealthSync
         </Text>
         <CustomDropdown

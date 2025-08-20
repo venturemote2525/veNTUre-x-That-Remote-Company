@@ -7,18 +7,22 @@ export default function Index() {
   return (
     <ThemedSafeAreaView className="flex">
       <View className="flex-1 items-center justify-center">
-        <Text className="font-heading text-title">HealthSync</Text>
+        <Text className="font-heading text-title text-primary-500">
+          HealthSync
+        </Text>
       </View>
       <View className="flex w-full gap-6 px-4 py-6">
         <Pressable
           onPress={() => router.push('/(auth)/signup')}
           className="flex w-full items-center rounded-2xl bg-background-0 p-4">
-          <Text className="font-bodyBold text-lg">Sign Up</Text>
+          <Text className="text-lg font-bodyBold text-primary-500">
+            Sign Up
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => router.push('/(auth)/login')}
           className="flex w-full items-center rounded-2xl bg-secondary-500 p-4">
-          <Text className="font-bodyBold text-lg text-background-500">
+          <Text className="text-lg font-bodyBold text-background-500">
             Log In
           </Text>
         </Pressable>

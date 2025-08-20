@@ -70,7 +70,9 @@ export default function SignUp() {
       <Header />
       <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
-          <Text className="text-head1 font-heading">Sign Up</Text>
+          <Text className="font-heading text-head1 text-primary-500">
+            Sign Up
+          </Text>
           <Text className="text-primary-200">Create a new account</Text>
         </View>
         {/* Email Login */}
@@ -110,13 +112,13 @@ export default function SignUp() {
           <Pressable
             onPress={handleSignup}
             className="items-center rounded-2xl bg-secondary-500 py-3">
-            <Text className="font-bodyBold text-xl text-background-500">
+            <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Creating new account...' : 'Sign Up'}
             </Text>
           </Pressable>
         </View>
         <View className="mt-4 flex-row justify-center">
-          <Text>Have an account? </Text>
+          <Text className="text-primary-500">Have an account? </Text>
           <Pressable onPress={() => router.replace('/(auth)/login')}>
             <Text className="font-bodyBold text-secondary-500">Log In</Text>
           </Pressable>
