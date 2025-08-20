@@ -3,5 +3,17 @@
 @tailwind utilities;
 
 .button-rounded {
-  @apply rounded-full bg-secondary-500 py-3 items-center;
+  @apply items-center rounded-full bg-secondary-500 py-3;
+}
+
+.button-rounded-white {
+  @apply items-center rounded-full bg-background-0 py-3;
+}
+
+.button {
+  @apply items-center rounded-2xl bg-secondary-500 py-3;
+}
+
+.button-white {
+  @apply items-center rounded-2xl bg-background-0 py-3;
 }

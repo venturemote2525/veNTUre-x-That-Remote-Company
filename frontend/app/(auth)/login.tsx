@@ -76,9 +76,7 @@ export default function LogIn() {
               )}
             </View>
           </View>
-          <Pressable
-            onPress={handleLogin}
-            className="items-center rounded-2xl bg-secondary-500 py-3">
+          <Pressable onPress={handleLogin} className="button">
             <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Logging in...' : 'Log In'}
             </Text>
@@ -97,7 +95,7 @@ export default function LogIn() {
         <View>
           <Pressable
             onPress={() => console.log('Google login')}
-            className="items-center rounded-2xl bg-background-0 py-3">
+            className="button-white">
             <Text className="text-xl font-bodyBold text-primary-500">
               Log in with Google
             </Text>
