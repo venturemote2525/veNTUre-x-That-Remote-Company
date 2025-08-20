@@ -9,7 +9,10 @@ import {
   TextInput as DefaultTextInput,
   useColorScheme,
 } from 'react-native';
-import { SafeAreaView as DefaultSafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView as DefaultSafeAreaView,
+  SafeAreaViewProps,
+} from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/Colors';
 
@@ -26,7 +29,6 @@ export type ViewProps = ThemeProps &
   DefaultView['props'] & {
     type?: 'default' | 'card';
   };
-export type SafeAreaViewProps = ViewProps;
 export type TextInputProps = ThemeProps & DefaultTextInput['props'];
 
 export function useThemeColor(
@@ -92,19 +94,7 @@ export function View(props: ViewProps) {
 }
 
 export function ThemedSafeAreaView(props: SafeAreaViewProps) {
-  const {
-    style,
-    lightColor,
-    darkColor,
-    className,
-    type = 'default',
-    ...otherProps
-  } = props;
-
-  const backgroundColor = useThemeColor(
-    { light: lightColor, dark: darkColor },
-    'background',
-  );
+  const { style, className, ...otherProps } = props;
 
   return (
     <DefaultSafeAreaView
