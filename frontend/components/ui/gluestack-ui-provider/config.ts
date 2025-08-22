@@ -189,7 +189,7 @@ export const config = {
     '--color-tertiary-200': '180 98 26',
     '--color-tertiary-300': '215 117 31',
     '--color-tertiary-400': '231 129 40',
-    '--color-tertiary-500': '0 175 185',
+    '--color-tertiary-500': '#00AFB9',
     '--color-tertiary-600': '253 180 116',
     '--color-tertiary-700': '254 209 170',
     '--color-tertiary-800': '255 233 213',
