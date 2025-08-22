@@ -27,7 +27,7 @@ export default function LoadingScreen({ text }: LoadingScreenProps) {
       return Animated.loop(
         Animated.sequence([
           Animated.timing(anim, {
-            toValue: -15, // move up
+            toValue: -15,
             duration: 300,
             delay,
             useNativeDriver: true,
@@ -43,7 +43,7 @@ export default function LoadingScreen({ text }: LoadingScreenProps) {
 
     const anims = animations.map((anim, i) => createAnimation(anim, i * 100));
     anims.forEach(a => a.start());
-  });
+  }, []);
 
   return (
     <View className="flex-1 items-center justify-center gap-6">
