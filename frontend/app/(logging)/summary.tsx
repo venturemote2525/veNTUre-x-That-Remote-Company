@@ -1,14 +1,15 @@
 import Header from '@/components/Header';
 import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image, Pressable, useColorScheme } from 'react-native';
 import dayjs from 'dayjs';
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { toUpperCase } from '@/utils/formatString';
 import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { PieChart, pieDataItem } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const tempData = {
   date: '2025-08-22T16:36:41.702+00:00',
@@ -27,17 +28,22 @@ const mealColoursClasses: Record<string, string> = {
 };
 
 export default function SummaryScreen() {
+  const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { image } = useLocalSearchParams<{ image: string }>();
+  const { image, meal: paramMeal } = useLocalSearchParams<{
+    image: string;
+    meal: string;
+  }>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [data, setData] = useState({
     date: new Date(tempData.date),
-    meal: tempData.meal,
+    meal: paramMeal ?? '',
   });
   const [name, setName] = useState(tempData.name);
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const nutrients = [
     { key: 'Carbs', value: tempData.carbs, color: '#FFCA3A' },
@@ -76,17 +82,48 @@ export default function SummaryScreen() {
     setShowTimePicker(false);
   };
 
+  const handleCancel = () => {
+    router.replace('/(tabs)/logging');
+  };
+
+  const handleSave = async () => {
+    try {
+      // TODO: Save to supabase
+    } finally {
+      router.replace('/(tabs)/logging');
+    }
+  };
+
+  useEffect(() => {
+    try {
+      setLoading(true);
+      // TODO: Get analysis of photo
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  if (loading)
+    return (
+      <ThemedSafeAreaView>
+        <Header title="Food Summary" />
+        <View className="flex-1">
+          <LoadingScreen text="Analysing your photo" />
+        </View>
+      </ThemedSafeAreaView>
+    );
+
   return (
     <ThemedSafeAreaView>
       <Header title="Food Summary" />
-      <View className="items-center gap-4 px-8 text-body1">
+      <View className="flex-1 items-center gap-4 px-8 text-body1">
         <Pressable onPress={() => setShowDatePicker(true)}>
           <Text className="font-bodySemiBold text-primary-500">
             {dayjs(data.date).format('DD MMM YYYY HH:mm')}
           </Text>
         </Pressable>
 
-        {!image ? (
+        {image ? (
           <Image
             source={{ uri: decodedUri }}
             className="h-80 w-80 rounded-3xl"
@@ -147,17 +184,18 @@ export default function SummaryScreen() {
             </View>
           </View>
         </View>
-        {/* Buttons */}
-        <View className="flex-row">
-          <Pressable className="button-rounded-tertiary flex-1">
-            <Text>Cancel</Text>
-          </Pressable>
-          <Pressable className="button-rounded flex-1">
-            <Text>Cancel</Text>
-          </Pressable>
-        </View>
       </View>
-
+      {/* Buttons */}
+      <View className="flex-row gap-4 p-4">
+        <Pressable
+          onPress={handleCancel}
+          className="button-rounded-tertiary flex-1">
+          <Text className="font-bodyBold text-background-0">Cancel</Text>
+        </Pressable>
+        <Pressable onPress={handleSave} className="button-rounded flex-1">
+          <Text className="font-bodyBold text-background-0">Save</Text>
+        </Pressable>
+      </View>
       {showDatePicker && (
         <DateTimePicker
           value={data.date}

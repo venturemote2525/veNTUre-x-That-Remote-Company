@@ -1,13 +1,23 @@
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Pressable, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function LoggingScreen() {
   const [image, setImage] = useState<string | null>(null);
   const router = useRouter();
+  const { meal: paramMeal } = useLocalSearchParams();
+  const [meal, setMeal] = useState(paramMeal ?? '');
+
+  useEffect(() => {
+    if (paramMeal) {
+      console.log('Open from add meal: ', paramMeal);
+      setMeal(paramMeal);
+    }
+  }, [paramMeal]);
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -44,7 +54,7 @@ export default function LoggingScreen() {
     if (!image) return;
     router.push({
       pathname: '/(logging)/summary',
-      params: { image: image },
+      params: { image: image, meal: meal },
     });
   };
 
