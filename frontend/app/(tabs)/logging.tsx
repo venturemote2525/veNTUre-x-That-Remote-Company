@@ -19,8 +19,6 @@ export default function LoggingScreen() {
       console.log('select photo');
       const uri = result.assets[0].uri;
       setImage(uri);
-      console.log(uri);
-      //router.push(`/(logging)/confirm?image=${encodeURIComponent(uri)}`);
     } else {
       console.log('no image selected');
     }
@@ -37,12 +35,19 @@ export default function LoggingScreen() {
       console.log('take photo');
       const uri = result.assets[0].uri;
       setImage(uri);
-      console.log(uri);
-      //router.push(`/(logging)/confirm?image=${encodeURIComponent(uri)}`);
     } else {
       console.log('no image taken');
     }
   };
+
+  const confirmPhoto = () => {
+    if (!image) return;
+    router.push({
+      pathname: '/(logging)/summary',
+      params: { image: image },
+    });
+  };
+
   return (
     <ThemedSafeAreaView edges={['top']} className="px-4 py-8">
       <View className="flex-1 items-center gap-8 pt-16">
@@ -57,20 +62,20 @@ export default function LoggingScreen() {
         )}
         <View className="gap-4">
           <Pressable className="button-white w-80" onPress={pickImage}>
-            <Text className="font-bodySemiBold text-primary-500">
+            <Text className="font-bodySemiBold text-secondary-500">
               Pick a photo from gallery
             </Text>
           </Pressable>
 
           <Pressable className="button-white w-80" onPress={takePhoto}>
-            <Text className="font-bodySemiBold text-primary-500">
+            <Text className="font-bodySemiBold text-secondary-500">
               Take a photo
             </Text>
           </Pressable>
         </View>
       </View>
       {image && (
-        <Pressable className="button-rounded w-full">
+        <Pressable onPress={confirmPhoto} className="button-rounded w-full">
           <Text className="font-bodySemiBold text-background-0">
             Use this photo
           </Text>

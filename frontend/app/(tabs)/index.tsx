@@ -17,10 +17,13 @@ export default function HomeScreen() {
             <Pressable>
               <Icon as={AddIcon} size={'xl'} className="text-secondary-500" />
             </Pressable>
-          }>
+          }
+          menuClassName="min-w-40 rounded-2xl bg-background-0 p-3"
+          separator={true}>
           <DropdownItem
             label={'Add Device'}
             onPress={() => router.push('/(user)/MyDevices')}
+            itemTextClassName="text-primary-500"
           />
           <DropdownItem label={'Manual Input'} />
         </CustomDropdown>
