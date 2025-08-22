@@ -71,8 +71,8 @@ export default function TabBar({
               {options.tabBarIcon?.({
                 focused: isFocused,
                 color: isFocused
-                  ? Colors[scheme].tabActive
-                  : Colors[scheme].tabInactive,
+                  ? Colors[scheme].secondary
+                  : Colors[scheme].primary,
                 size: 24,
               })}
             </Animated.View>
