@@ -22,7 +22,7 @@ const iconStyle = tva({
       xs: 'h-3.5 w-3.5',
       sm: 'h-4 w-4',
       md: 'h-[18px] w-[18px]',
-      lg: 'h-5 w-5',
+      lg: 'h-8 w-8',
       xl: 'h-10 w-10',
     },
   },

@@ -48,9 +48,11 @@ export default function CustomDropdown({
             onPress: toggleDropdown,
           })
         : toggle}
+
       {open && (
         <View
-          className={`absolute right-0 top-full mt-2 ${menuClassName ?? ''}`}>
+          className={`absolute right-0 top-full z-50 mt-2 ${menuClassName ?? ''}`}
+          style={{ elevation: 10 }}>
           {React.Children.map(children, (child, index) => (
             <View key={index}>
               {separator && index > 0 && (
