@@ -4,7 +4,6 @@ import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const tempData = [
   { id: 1, meal: 'lunch', name: 'lunch meal', calories: 5 },

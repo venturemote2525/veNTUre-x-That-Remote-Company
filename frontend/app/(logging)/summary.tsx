@@ -1,6 +1,6 @@
 import Header from '@/components/Header';
 import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Image, Pressable, useColorScheme } from 'react-native';
 import dayjs from 'dayjs';
 import { useState, memo, useEffect } from 'react';
@@ -29,6 +29,7 @@ const mealColoursClasses: Record<string, string> = {
 
 export default function SummaryScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
   const { image, meal: paramMeal } = useLocalSearchParams<{
@@ -83,7 +84,7 @@ export default function SummaryScreen() {
   };
 
   const handleCancel = () => {
-    router.replace('/(tabs)/logging');
+    navigation.goBack();
   };
 
   const handleSave = async () => {

@@ -11,7 +11,7 @@
 }
 
 .button-rounded-tertiary {
-  @apply bg-tertiary-500 items-center rounded-full py-3;
+  @apply bg-[#00AFB9] items-center rounded-full py-3;
 }
 
 .button {

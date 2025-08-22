@@ -32,8 +32,12 @@ export default function MealCard({ title, meals }: MealCardProps) {
             }
             key={meal.id}
             className="flex-row justify-between py-1">
-            <Text className="font-bodySemiBold text-body2">{meal.name}</Text>
-            <Text className="text-body2">{meal.calories} kcal</Text>
+            <Text className="font-bodySemiBold text-body2 text-primary-500">
+              {meal.name}
+            </Text>
+            <Text className="text-body2 text-primary-500">
+              {meal.calories} kcal
+            </Text>
           </Pressable>
         ))
       ) : (

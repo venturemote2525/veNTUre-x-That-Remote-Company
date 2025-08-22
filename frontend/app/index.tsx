@@ -7,7 +7,7 @@ export default function Index() {
   return (
     <ThemedSafeAreaView className="flex">
       <View className="flex-1 items-center justify-center">
-        <Text className="font-heading text-title text-primary-500">
+        <Text className="font-heading text-title text-secondary-500">
           HealthSync
         </Text>
       </View>
