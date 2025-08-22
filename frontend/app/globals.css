@@ -10,6 +10,10 @@
   @apply items-center rounded-full bg-background-0 py-3;
 }
 
+.button-rounded-tertiary {
+  @apply bg-tertiary-500-0 items-center rounded-full py-3;
+}
+
 .button {
   @apply items-center rounded-2xl bg-secondary-500 py-3;
 }
