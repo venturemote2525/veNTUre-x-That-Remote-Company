@@ -2,10 +2,6 @@ import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useState } from 'react';
 import { Platform, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-<<<<<<< Updated upstream
-
-export default function Onboarding() {
-=======
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { createProfile } from '@/utils/auth/api';
@@ -13,7 +9,6 @@ import { createProfile } from '@/utils/auth/api';
 export default function Onboarding() {
   const router = useRouter();
   const { user, refreshProfile } = useAuth();
->>>>>>> Stashed changes
   const [loading, setLoading] = useState(false);
   const genders = ['Female', 'Male'];
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -56,7 +51,7 @@ export default function Onboarding() {
       console.log('Onboarding error: ', error);
     } finally {
       setLoading(false);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     }
   };
 
@@ -138,13 +133,8 @@ export default function Onboarding() {
       <Pressable
         onPress={handleConfirm}
         className="mb-4 items-center rounded-2xl bg-secondary-500 py-3">
-<<<<<<< Updated upstream
-        <Text className="font-bodyBold text-xl text-background-500">
-          Confirm
-=======
         <Text className="text-xl font-bodyBold text-background-500">
-          {loading ? 'Creating your profile' : 'Confirm'}
->>>>>>> Stashed changes
+          Confirm
         </Text>
       </Pressable>
 
