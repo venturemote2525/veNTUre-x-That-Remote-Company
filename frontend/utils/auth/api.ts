@@ -19,6 +19,19 @@ export async function userLogin(email: string, password: string) {
   return data;
 }
 
+export async function checkUserExists(email: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_user_exists', {
+    input_email: email.trim().toLowerCase(),
+  });
+
+  if (error) {
+    console.error('Error checking user:', error);
+    return false;
+  }
+
+  return data as boolean;
+}
+
 /**
  * Create new user profile from onboarding
  * @param profile User profile information

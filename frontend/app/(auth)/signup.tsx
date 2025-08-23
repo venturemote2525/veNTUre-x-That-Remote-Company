@@ -5,11 +5,17 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { checkPasswordStrength, checkValidEmail } from '@/utils/auth/auth';
-import { userSignup } from '@/utils/auth/api';
+import { checkUserExists, userSignup } from '@/utils/auth/api';
+import { CustomAlert } from '@/components/CustomAlert';
 
 export default function SignUp() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: '',
+    message: '',
+  });
   const [fields, setFields] = useState({
     email: '',
     password: '',
@@ -57,14 +63,36 @@ export default function SignUp() {
 
     try {
       setLoading(true);
+      console.log('sign up');
+      // Check if user exists
+      const exists = await checkUserExists(fields.email.trim().toLowerCase());
+      if (exists) {
+        setAlert({
+          visible: true,
+          title: 'User exists',
+          message: 'An account with this email already exists!',
+        });
+        return;
+      }
       // Supabase sign up
-      await userSignup(fields.email, fields.password);
-    } catch (error) {
+      await userSignup(fields.email.trim().toLowerCase(), fields.password);
+      setAlert({
+        visible: true,
+        title: 'Signup successful',
+        message: 'Please check your email to verify your account!',
+      });
+    } catch (error: any) {
+      const message =
+        error?.message || error?.error_description || 'Unknown error occurred';
+
       console.log('signup error: ', error);
+      setAlert({
+        visible: true,
+        title: 'Signup failed',
+        message,
+      });
     } finally {
       setLoading(false);
-      // Route to onboarding
-      router.replace('/(auth)/onboarding');
     }
   };
 
@@ -125,6 +153,15 @@ export default function SignUp() {
           </Pressable>
         </View>
       </View>
+
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={() => {
+          setAlert({ ...alert, visible: false });
+        }}
+      />
     </ThemedSafeAreaView>
   );
 }
