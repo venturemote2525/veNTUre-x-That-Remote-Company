@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { checkPasswordStrength, checkValidEmail } from '@/utils/auth/auth';
+import { userSignup } from '@/utils/auth/api';
 
 export default function SignUp() {
   const router = useRouter();
@@ -52,16 +53,18 @@ export default function SignUp() {
       hasError = true;
     }
 
-    // if (hasError) return;
+    if (hasError) return;
 
     try {
       setLoading(true);
-      // TODO: Supabase sign up
-
-      // Route to onboarding
-      router.replace('/(auth)/onboarding');
+      // Supabase sign up
+      await userSignup(fields.email, fields.password);
+    } catch (error) {
+      console.log('signup error: ', error);
     } finally {
       setLoading(false);
+      // Route to onboarding
+      router.replace('/(auth)/onboarding');
     }
   };
 

@@ -2,8 +2,18 @@ import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useState } from 'react';
 import { Platform, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+<<<<<<< Updated upstream
 
 export default function Onboarding() {
+=======
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+import { createProfile } from '@/utils/auth/api';
+
+export default function Onboarding() {
+  const router = useRouter();
+  const { user, refreshProfile } = useAuth();
+>>>>>>> Stashed changes
   const [loading, setLoading] = useState(false);
   const genders = ['Female', 'Male'];
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -17,6 +27,8 @@ export default function Onboarding() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const handleConfirm = async () => {
+    if (!user) return;
+    console.log('userid: ', user?.id);
     setError('');
     // Check if any fields empty
     const emptyFields = Object.entries(fields).filter(
@@ -27,8 +39,21 @@ export default function Onboarding() {
       return;
     }
     try {
+      if (!user) return;
       setLoading(true);
-      // TODO: Update user details in supabase
+      // Insert user details in supabase
+      const profile = {
+        user_id: user?.id,
+        username: fields.name,
+        gender: fields.gender.toUpperCase(),
+        height: Number(fields.height),
+        dob: selectedDate.toISOString().split('T')[0],
+      };
+      await createProfile(profile);
+      refreshProfile();
+      router.replace('/(tabs)/home');
+    } catch (error) {
+      console.log('Onboarding error: ', error);
     } finally {
       setLoading(false);
     }
@@ -114,8 +139,13 @@ export default function Onboarding() {
       <Pressable
         onPress={handleConfirm}
         className="mb-4 items-center rounded-2xl bg-secondary-500 py-3">
+<<<<<<< Updated upstream
         <Text className="font-bodyBold text-xl text-background-500">
           Confirm
+=======
+        <Text className="text-xl font-bodyBold text-background-500">
+          {loading ? 'Creating your profile' : 'Confirm'}
+>>>>>>> Stashed changes
         </Text>
       </Pressable>
 
