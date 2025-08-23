@@ -134,7 +134,7 @@ export default function Onboarding() {
         onPress={handleConfirm}
         className="mb-4 items-center rounded-2xl bg-secondary-500 py-3">
         <Text className="text-xl font-bodyBold text-background-500">
-          Confirm
+          {loading ? 'Creating your profile...' : 'Confirm'}
         </Text>
       </Pressable>
 
