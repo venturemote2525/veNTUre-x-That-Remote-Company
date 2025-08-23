@@ -30,7 +30,6 @@ export default function LogIn() {
       setError(prev => ({ ...prev, password: 'Please enter your password' }));
       hasError = true;
     }
-    router.push('/(tabs)/home');
     if (hasError) return;
 
     try {
