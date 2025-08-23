@@ -1,6 +1,7 @@
 import PasswordInput from '@/components/Auth/PasswordInput';
 import Header from '@/components/Header';
 import { ThemedSafeAreaView, Text, View, TextInput } from '@/components/Themed';
+import { userLogin } from '@/utils/auth/api';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
@@ -29,12 +30,19 @@ export default function LogIn() {
       setError(prev => ({ ...prev, password: 'Please enter your password' }));
       hasError = true;
     }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     if (hasError) return;
 
     try {
       setLoading(true);
-      // TODO: Supabase login
+      // Supabase login
+      await userLogin(fields.email, fields.password);
+      router.push('/(tabs)/home');
+    } catch (error) {
+      console.log('Log in failed: ', error);
     } finally {
       setLoading(false);
     }
