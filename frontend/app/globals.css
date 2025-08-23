@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.button-rounded {
+  @apply items-center rounded-full bg-secondary-500 py-3;
+}
+
+.button-rounded-white {
+  @apply items-center rounded-full bg-background-0 py-3;
+}
+
+.button-rounded-tertiary {
+  @apply bg-[#00AFB9] items-center rounded-full py-3;
+}
+
+.button {
+  @apply items-center rounded-2xl bg-secondary-500 py-3;
+}
+
+.button-white {
+  @apply items-center rounded-2xl bg-background-0 py-3;
+}
+
+.card-white {
+  @apply rounded-2xl bg-background-0 py-4 px-6
+}

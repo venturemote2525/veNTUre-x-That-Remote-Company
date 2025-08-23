@@ -30,10 +30,7 @@ export default function LogIn() {
       setError(prev => ({ ...prev, password: 'Please enter your password' }));
       hasError = true;
     }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
+    router.push('/(tabs)/home');
     if (hasError) return;
 
     try {
@@ -53,7 +50,9 @@ export default function LogIn() {
       <Header />
       <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
-          <Text className="text-head1 font-heading">Log In</Text>
+          <Text className="font-heading text-head1 text-primary-500">
+            Log In
+          </Text>
           <Text className="text-primary-200">
             Log in to your account via email
           </Text>
@@ -82,10 +81,8 @@ export default function LogIn() {
               )}
             </View>
           </View>
-          <Pressable
-            onPress={handleLogin}
-            className="items-center rounded-2xl bg-secondary-500 py-3">
-            <Text className="font-bodyBold text-xl text-background-500">
+          <Pressable onPress={handleLogin} className="button">
+            <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Logging in...' : 'Log In'}
             </Text>
           </Pressable>
@@ -103,13 +100,15 @@ export default function LogIn() {
         <View>
           <Pressable
             onPress={() => console.log('Google login')}
-            className="items-center rounded-2xl bg-background-0 py-3">
-            <Text className="font-bodyBold text-xl">Log in with Google</Text>
+            className="button-white">
+            <Text className="text-xl font-bodyBold text-primary-500">
+              Log in with Google
+            </Text>
           </Pressable>
         </View>
 
         <View className="mt-4 flex-row justify-center">
-          <Text>Not a member? </Text>
+          <Text className="text-primary-500">Not a member? </Text>
           <Pressable onPress={() => router.replace('/(auth)/signup')}>
             <Text className="font-bodyBold text-secondary-500">
               Create a new account
