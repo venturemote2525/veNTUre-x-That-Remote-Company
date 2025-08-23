@@ -9,11 +9,15 @@ export const Colors = {
     title: '#F15025',
     background: '#F2F2F2',
     cardBackground: '#FFFFFF',
+    secondary: '#F15025',
+    primary: '#000000',
   },
   dark: {
     text: '#11181C',
     title: '#F15025',
     background: '#F2F2F2',
     cardBackground: '#FFFFFF',
+    secondary: '#9d0208',
+    primary: '#FFFFFF',
   },
 };
