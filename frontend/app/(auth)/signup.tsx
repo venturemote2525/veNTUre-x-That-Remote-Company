@@ -5,10 +5,17 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { checkPasswordStrength, checkValidEmail } from '@/utils/auth/auth';
+import { checkUserExists, userSignup } from '@/utils/auth/api';
+import { CustomAlert } from '@/components/CustomAlert';
 
 export default function SignUp() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: '',
+    message: '',
+  });
   const [fields, setFields] = useState({
     email: '',
     password: '',
@@ -52,14 +59,38 @@ export default function SignUp() {
       hasError = true;
     }
 
-    // if (hasError) return;
+    if (hasError) return;
 
     try {
       setLoading(true);
-      // TODO: Supabase sign up
+      console.log('sign up');
+      // Check if user exists
+      const exists = await checkUserExists(fields.email.trim().toLowerCase());
+      if (exists) {
+        setAlert({
+          visible: true,
+          title: 'User exists',
+          message: 'An account with this email already exists!',
+        });
+        return;
+      }
+      // Supabase sign up
+      await userSignup(fields.email.trim().toLowerCase(), fields.password);
+      setAlert({
+        visible: true,
+        title: 'Signup successful',
+        message: 'Please check your email to verify your account!',
+      });
+    } catch (error: any) {
+      const message =
+        error?.message || error?.error_description || 'Unknown error occurred';
 
-      // Route to onboarding
-      router.replace('/(auth)/onboarding');
+      console.log('signup error: ', error);
+      setAlert({
+        visible: true,
+        title: 'Signup failed',
+        message,
+      });
     } finally {
       setLoading(false);
     }
@@ -70,7 +101,9 @@ export default function SignUp() {
       <Header />
       <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
-          <Text className="text-head1 font-heading">Sign Up</Text>
+          <Text className="font-heading text-head1 text-primary-500">
+            Sign Up
+          </Text>
           <Text className="text-primary-200">Create a new account</Text>
         </View>
         {/* Email Login */}
@@ -107,21 +140,28 @@ export default function SignUp() {
               )}
             </View>
           </View>
-          <Pressable
-            onPress={handleSignup}
-            className="items-center rounded-2xl bg-secondary-500 py-3">
-            <Text className="font-bodyBold text-xl text-background-500">
+          <Pressable onPress={handleSignup} className="button">
+            <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Creating new account...' : 'Sign Up'}
             </Text>
           </Pressable>
         </View>
         <View className="mt-4 flex-row justify-center">
-          <Text>Have an account? </Text>
+          <Text className="text-primary-500">Have an account? </Text>
           <Pressable onPress={() => router.replace('/(auth)/login')}>
             <Text className="font-bodyBold text-secondary-500">Log In</Text>
           </Pressable>
         </View>
       </View>
+
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={() => {
+          setAlert({ ...alert, visible: false });
+        }}
+      />
     </ThemedSafeAreaView>
   );
 }

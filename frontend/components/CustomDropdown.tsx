@@ -5,12 +5,21 @@ import { Pressable } from 'react-native';
 type DropdownItemProps = {
   label: string;
   onPress?: () => void;
+  itemClassName?: string;
+  itemTextClassName?: string;
 };
 
-export function DropdownItem({ label, onPress }: DropdownItemProps) {
+export function DropdownItem({
+  label,
+  onPress,
+  itemClassName,
+  itemTextClassName,
+}: DropdownItemProps) {
   return (
-    <Pressable onPress={onPress}>
-      <Text className="font-bodySemiBold px-2">{label}</Text>
+    <Pressable onPress={onPress} className={`${itemClassName ?? ''}`}>
+      <Text className={`px-2 font-bodySemiBold ${itemTextClassName ?? ''}`}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -18,16 +27,19 @@ export function DropdownItem({ label, onPress }: DropdownItemProps) {
 type CustomDropdownProps = {
   toggle: React.ReactNode;
   children: React.ReactElement<DropdownItemProps>[];
+  menuClassName?: string;
+  separator?: boolean;
 };
 
 export default function CustomDropdown({
   toggle,
   children,
+  menuClassName,
+  separator,
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
   const toggleDropdown = () => {
     setOpen(prev => !prev);
-    console.log('open');
   };
   return (
     <View className="relative">
@@ -36,11 +48,16 @@ export default function CustomDropdown({
             onPress: toggleDropdown,
           })
         : toggle}
+
       {open && (
-        <View className="absolute right-0 top-full min-w-40 rounded-2xl bg-background-0 p-3">
+        <View
+          className={`absolute right-0 top-full z-50 mt-2 ${menuClassName ?? ''}`}
+          style={{ elevation: 10 }}>
           {React.Children.map(children, (child, index) => (
             <View key={index}>
-              {index > 0 && <View className="my-2 h-px bg-secondary-500/50" />}
+              {separator && index > 0 && (
+                <View className="my-2 h-px bg-secondary-500/50" />
+              )}
               {React.isValidElement(child)
                 ? React.cloneElement(child, {
                     onPress: () => {
