@@ -8,20 +8,14 @@ const deviceEmitter = new NativeEventEmitter(ICDeviceModule);
 
 export default function AddDevice() {
     const [devices, setDevices] = useState([]);
+
     useEffect(() => {
-        const deviceFoundListener = deviceEmitter.addListener('onDeviceFound', (device) => {
-          setDevices((prev) => [...prev, device]);
-        });
-
-        const scanFinishedListener = deviceEmitter.addListener('onScanFinished', () => {
-          console.log('Scan finished');
-        });
-
-        return () => {
-          deviceFoundListener.remove();
-          scanFinishedListener.remove();
-        };
-      }, []);
+        console.log('Start scan')
+        const timeout = setTimeout(() => {
+            ICDeviceModule.initializeSDK();
+        }, 500); // delay to ensure activity exists
+        return () => clearTimeout(timeout);
+    }, []);
 
     const handleStartScan = () => {
         ICDeviceModule.startScan();
@@ -42,16 +36,8 @@ export default function AddDevice() {
       <Header title="Add Device" />
       <View className="flex-1 items-center justify-center">
         <Text>Instructions on how to add device here</Text>
-        <Button title="Start Scan" onPress={() => ICDeviceModule.startScan()} />
-              <Button title="Stop Scan" onPress={() => ICDeviceModule.stopScan()} />
-
-              <FlatList
-                data={devices}
-                keyExtractor={(item) => item.mac}
-                renderItem={({ item }) => (
-                  <Text>{item.name || 'Unknown Device'} ({item.mac})</Text>
-                )}
-              />
+        <Button title="Start Scan" onPress={handleStartScan} />
+          <Button title="Stop Scan" onPress={handleStopScan} />
       </View>
     </ThemedSafeAreaView>
   );
