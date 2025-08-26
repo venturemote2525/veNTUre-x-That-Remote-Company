@@ -17,6 +17,18 @@ export default function AddDevice() {
         return () => clearTimeout(timeout);
     }, []);
 
+    useEffect(() => {
+        const deviceFoundListener = deviceEmitter.addListener('onDeviceAdded', (device) => {
+            console.log('Device found:', device);
+            setDevices((prev) => [...prev, device]);
+        });
+
+        return () => {
+            console.log('Removing device listener');
+            deviceFoundListener.remove();
+        };
+    }, []);
+
     const handleStartScan = () => {
         ICDeviceModule.startScan();
         Alert.alert("Scan started");
@@ -38,6 +50,13 @@ export default function AddDevice() {
         <Text>Instructions on how to add device here</Text>
         <Button title="Start Scan" onPress={handleStartScan} />
           <Button title="Stop Scan" onPress={handleStopScan} />
+          <FlatList
+              data={devices}
+              keyExtractor={(item) => item.mac}
+              renderItem={({ item }) => (
+                  <Text>{item.name || 'Unknown Device'} ({item.mac})</Text>
+              )}
+          />
       </View>
     </ThemedSafeAreaView>
   );
