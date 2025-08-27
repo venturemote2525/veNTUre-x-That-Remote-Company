@@ -5,6 +5,10 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { NativeModules, NativeEventEmitter } from 'react-native';
+import { ICDeviceProvider } from '@/context/ICDeviceContext';
+
+const { ICDeviceModule } = NativeModules;
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -21,11 +25,13 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <GluestackUIProvider mode="light">
-        <RootLayoutNav />
-      </GluestackUIProvider>
-    </AuthProvider>
+    <ICDeviceProvider>
+      <AuthProvider>
+        <GluestackUIProvider mode="light">
+          <RootLayoutNav />
+        </GluestackUIProvider>
+      </AuthProvider>
+    </ICDeviceProvider>
   );
 }
 

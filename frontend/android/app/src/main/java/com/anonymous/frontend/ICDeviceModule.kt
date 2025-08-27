@@ -35,6 +35,9 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         const val CODE_REQUEST_PERMISSION = 1001
     }
 
+    private val scannedDevices = mutableListOf<ICDevice>()
+    private val connectedDevices = mutableListOf<ICDevice>()
+
     private lateinit var deviceManagerDelegate: ICDeviceManagerDelegate
     private lateinit var scanDelegate: ICScanDeviceDelegate
 
@@ -99,6 +102,18 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
 
             override fun onDeviceConnectionChanged(device: ICDevice, state: ICConstant.ICDeviceConnectState) {
                 Log.d(TAG, "Device ${device.macAddr} connection changed: $state")
+
+                when (state) {
+                    ICConstant.ICDeviceConnectState.ICDeviceConnectStateConnected -> {
+                        if (connectedDevices.none { it.macAddr == device.macAddr }) {
+                            connectedDevices.add(device)
+                        }
+                    }
+                    ICConstant.ICDeviceConnectState.ICDeviceConnectStateDisconnected -> {
+                        connectedDevices.removeAll { it.macAddr == device.macAddr }
+                    }
+                }
+
                 emitToJS("onDeviceConnectionChanged", Arguments.createMap().apply {
                     putString("mac", device.macAddr)
                     putString("state", state.name)
@@ -150,6 +165,11 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
             override fun onScanResult(deviceInfo: ICScanDeviceInfo) {
                 val device = ICDevice()
                 device.setMacAddr(deviceInfo.macAddr)
+
+                // Add device if not in list
+                if (scannedDevices.none { it.macAddr == device.macAddr }) {
+                    scannedDevices.add(device)
+                }
                 ICDeviceManager.shared().addDevice(device, object : ICConstant.ICAddDeviceCallBack {
                     override fun onCallBack(device: ICDevice, code: ICConstant.ICAddDeviceCallBackCode) {
                         Log.d(TAG, "Device added: ${device.macAddr} -> $code")
@@ -211,4 +231,28 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         ICDeviceManager.shared().stopScan()
         Log.d(TAG, "Scan stopped")
     }
+
+    @ReactMethod
+    fun getScannedDevices() = emitToJS(
+        "onScannedDevices",
+        Arguments.createArray().apply {
+            scannedDevices.forEach { device ->
+                pushMap(Arguments.createMap().apply {
+                    putString("mac", device.macAddr)
+                })
+            }
+        }
+    )
+
+    @ReactMethod
+    fun getConnectedDevices() = emitToJS(
+        "onConnectedDevices",
+        Arguments.createArray().apply {
+            connectedDevices.forEach { device ->
+                pushMap(Arguments.createMap().apply {
+                    putString("mac", device.macAddr)
+                })
+            }
+        }
+    )
 }

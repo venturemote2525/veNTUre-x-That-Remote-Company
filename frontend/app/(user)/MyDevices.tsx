@@ -3,8 +3,10 @@ import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { Pressable, ScrollView } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useRouter } from 'expo-router';
+import { useICDevice } from '@/context/ICDeviceContext';
 
 export default function MyDevices() {
+  const { connectedDevices } = useICDevice();
   const router = useRouter();
   const devices = [
     { id: 1, name: 'device 1', mac: 'mac 1' },
@@ -35,6 +37,30 @@ export default function MyDevices() {
               </View>
             </Pressable>
           ))}
+        </ScrollView>
+        <ScrollView contentContainerStyle={{ gap: 16 }}>
+          {connectedDevices.length === 0 ? (
+            <Text className="text-primary-300">No connected devices</Text>
+          ) : (
+            connectedDevices.map((device, index) => (
+              <Pressable
+                key={index}
+                onPress={() => console.log('Pressed: device ', device.mac)}
+                className="rounded-2xl bg-background-0 px-6 py-4">
+                <View className="flex-row items-center justify-between">
+                  <View>
+                    <Text className="font-bodyBold text-body2 text-secondary-500">
+                      {device.name || 'Unknown Device'}
+                    </Text>
+                    <Text className="font-bodySemiBold text-primary-300">
+                      {device.mac}
+                    </Text>
+                  </View>
+                  <AntDesign name="caretright" size={20} color="#6B7280" />
+                </View>
+              </Pressable>
+            ))
+          )}
         </ScrollView>
         <Pressable
           onPress={() => router.push('/(user)/AddDevice')}
