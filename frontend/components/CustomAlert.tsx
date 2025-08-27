@@ -4,7 +4,7 @@ import { View, Text } from '@/components/Themed';
 type CustomAlertProps = {
   visible: boolean;
   title: string;
-  message: string;
+  message?: string;
   onConfirm: () => void;
   onCancel?: () => void;
   confirmText?: string;
@@ -30,7 +30,9 @@ export function CustomAlert({
             <Text className="font-heading text-body1 text-secondary-500">
               {title}
             </Text>
-            <Text className="text-body2 text-primary-500">{message}</Text>
+            {message && (
+              <Text className="text-body2 text-primary-500">{message}</Text>
+            )}
           </View>
           <View className="flex-row gap-4">
             {onCancel && (
