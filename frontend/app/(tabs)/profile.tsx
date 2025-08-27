@@ -15,7 +15,7 @@ export default function ProfileScreen() {
     try {
       const { error } = await supabase.auth.signOut();
       console.log(error);
-      router.dismissAll();
+      router.replace('/');
     } catch (error) {
       console.log('Error signing out: ', error);
     }
