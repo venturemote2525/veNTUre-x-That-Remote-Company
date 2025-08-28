@@ -11,6 +11,8 @@ import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { PieChart, pieDataItem } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
 import LoadingScreen from '@/components/LoadingScreen';
+import { retrieveMeal } from '@/utils/food/api';
+import { Meal } from '@/types/database-types';
 
 const tempData = {
   date: '2025-08-22T16:36:41.702+00:00',
@@ -33,27 +35,47 @@ export default function SummaryScreen() {
   const navigation = useNavigation();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { image, meal: paramMeal } = useLocalSearchParams<{
-    image: string;
+  const { mealId, meal: paramMeal } = useLocalSearchParams<{
+    mealId: string;
     meal: string;
   }>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [data, setData] = useState({
-    date: new Date(tempData.date),
+    date: new Date(),
     meal: paramMeal ?? '',
   });
   const [name, setName] = useState(tempData.name);
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const nutrients = [
+  const [mealData, setMealData] = useState<Meal | null>(null);
+  const [nutrients, setNutrients] = useState([
     { key: 'Carbs', value: tempData.carbs, color: '#FFCA3A' },
     { key: 'Protein', value: tempData.protein, color: '#1982C4' },
     { key: 'Fat', value: tempData.fat, color: '#FF595E' },
-  ];
+  ]);
 
-  const decodedUri = decodeURIComponent(image);
+  useEffect(() => {
+    const fetchMeal = async () => {
+      const data = await retrieveMeal(mealId);
+      setMealData(data);
+      setData(prev => ({ ...prev, date: new Date(data.date) }));
+      setName(data.name)
+      setNutrients([
+        { key: 'Carbs', value: data.carbs, color: '#FFCA3A' },
+        { key: 'Protein', value: data.protein, color: '#1982C4' },
+        { key: 'Fat', value: data.fat, color: '#FF595E' },
+      ]);
+      console.log('Meal data: ', data);
+    }
+    try {
+      setLoading(true);
+      fetchMeal();
+      setLoading(false);
+    } catch (error) {
+      console.log('Fetch meal error: ', error);
+    }
+  }, []);
 
   const handleDateChange = (event: any, date?: Date) => {
     if (date) {
@@ -85,6 +107,7 @@ export default function SummaryScreen() {
   };
 
   const handleCancel = () => {
+    // TODO: Delete from supabase
     navigation.goBack();
   };
 
@@ -95,15 +118,6 @@ export default function SummaryScreen() {
       router.replace('/(tabs)/logging');
     }
   };
-
-  useEffect(() => {
-    try {
-      setLoading(true);
-      // TODO: Get analysis of photo
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   if (loading)
     return (
@@ -125,9 +139,9 @@ export default function SummaryScreen() {
           </Text>
         </Pressable>
 
-        {image ? (
+        {mealData?.image_url ? (
           <Image
-            source={{ uri: decodedUri }}
+            source={{ uri: mealData?.image_url }}
             className="h-80 w-80 rounded-3xl"
           />
         ) : (
@@ -146,24 +160,28 @@ export default function SummaryScreen() {
           />
         </View>
         <View className="w-full flex-row items-center justify-start gap-8">
-          <PieChart
-            data={nutrients.map(n => ({
-              value: n.value,
-              text: n.key,
-              color: n.color,
-            }))}
-            showText
-            radius={90}
-            labelsPosition="mid"
-            font="Poppins-Medium"
-            textColor="#1e1e1e"
-            onPress={(item: pieDataItem) => setSelectedSlice(item.text ?? null)}
-          />
+          {nutrients.reduce((sum, n) => sum + n.value, 0) > 0 ? (
+              <PieChart
+                  data={nutrients.map(n => ({
+                    value: n.value,
+                    text: n.key,
+                    color: n.color,
+                  }))}
+                  showText
+                  radius={90}
+                  labelsPosition="mid"
+                  font="Poppins-Medium"
+                  textColor="#1e1e1e"
+                  onPress={(item: pieDataItem) => setSelectedSlice(item.text ?? null)}
+              />
+          ) : (
+              <Text className="text-secondary-500">No nutrients data</Text>
+          )}
 
           {/* Statistics */}
           <View className="gap-4">
             <Text className="font-bodyBold text-head2 text-secondary-500">
-              {tempData.calories} kcal
+              {mealData?.calories ?? 0} kcal
             </Text>
             <View className="gap-1">
               {nutrients.map(n => (
@@ -227,6 +245,10 @@ type FoodNameInputProps = {
 
 const FoodNameInput = memo(({ value, onChange }: FoodNameInputProps) => {
   const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   const handleBlur = () => {
     onChange(localValue);
