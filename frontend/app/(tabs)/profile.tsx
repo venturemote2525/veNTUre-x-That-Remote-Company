@@ -2,65 +2,74 @@ import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, Image } from 'react-native';
+import { Link } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [createdAt, setCreatedAt] = useState<string>('');
+  const { profile, user, profileLoading, loading } = useAuth();
 
-  // Fetch user info from Supabase
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (!profile?.id) return;
-
-      const { data, error } = await supabase
-        .from('profiles') // Assuming you have a 'profiles' table with created_at
-        .select('email, created_at')
-        .eq('id', profile.id)
-        .single();
-
-      if (error) {
-        console.log('Error fetching user info:', error);
-      } else if (data) {
-        setUserEmail(data.email);
-        setCreatedAt(new Date(data.created_at).toLocaleDateString());
-      }
-    };
-
-    fetchUserInfo();
-  }, [profile]);
+  const email = user?.email ?? undefined;
+  const memberSinceIso =
+    (profile as { created_at?: string } | null)?.created_at ?? user?.created_at;
+  const memberSince =
+    memberSinceIso ? new Date(memberSinceIso).toLocaleDateString() : undefined;
 
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      console.log(error);
-      router.replace('/');
-    } catch (error) {
-      console.log('Error signing out: ', error);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) console.log('Error signing out:', error);
+    // router.replace('/'); // no need if using Link
   };
+
+  const isBusy = loading || profileLoading;
 
   return (
     <ThemedSafeAreaView>
-      <View className="flex-1 justify-between px-4 py-8">
-        <View className="space-y-2">
-          <Text className="text-primary-500 font-bodyBold text-body1">
-            {profile?.username}
+      <View className="flex-1 px-6 py-10 bg-background-50">
+        {/* Profile Header */}
+        <View className="items-center mb-10">
+          <Image
+            source={{
+              uri:
+                'https://ui-avatars.com/api/?name=' +
+                encodeURIComponent(profile?.username || email || 'User'),
+            }}
+            className="w-24 h-24 rounded-full mb-4"
+          />
+          <Text className="text-xl font-bodyBold text-primary-600">
+            {profile?.username || 'Guest User'}
           </Text>
-          <Text className="font-body text-body2 text-black">
-            Email: {userEmail || 'Loading...'}
-          </Text>
-          <Text className="font-body text-body2 text-black">
-            Member since: {createdAt || 'Loading...'}
+          <Text className="text-sm text-gray-500">
+            {isBusy ? 'Loading...' : email ?? 'No email'}
           </Text>
         </View>
 
-        <Pressable onPress={handleLogout} className="button-rounded py-3 px-4">
-          <Text className="font-bodyBold text-background-0 text-center">Log out</Text>
-        </Pressable>
+        {/* Info Section */}
+        <View className="space-y-4 bg-white rounded-2xl shadow-md p-6 mb-10">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 font-body">Member since</Text>
+            <Text className="font-bodyBold text-black">
+              {isBusy ? 'Loading...' : memberSince ?? 'N/A'}
+            </Text>
+          </View>
+          <View className="h-[1px] bg-gray-200" />
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 font-body">Status</Text>
+            <Text className="font-bodyBold text-green-600">Active</Text>
+          </View>
+        </View>
+
+        {/* Logout Button using Link */}
+        <Link href="/" replace asChild>
+          <Pressable
+            onPress={handleLogout}
+            className="bg-red-500 py-3 rounded-2xl shadow-md"
+          >
+            <Text className="font-bodyBold text-background-0 text-center">
+              Log out
+            </Text>
+          </Pressable>
+        </Link>
       </View>
     </ThemedSafeAreaView>
   );
