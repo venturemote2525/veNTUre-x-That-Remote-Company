@@ -27,3 +27,14 @@ export interface Meal {
   date: string;
   created_at: string;
 }
+
+
+export interface AlertState {
+  visible: boolean;
+  title: string;
+  message: string;
+  cancelText?: string;
+  onCancel?: () => void;
+  confirmText?: string;
+  onConfirm?: () => void;
+}
