@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { NativeModules, NativeEventEmitter } from "react-native";
 import { Device } from '@/types/icdevice-types';
+import { PermissionsAndroid, Platform } from "react-native";
 
 const { ICDeviceModule } = NativeModules;
 const emitter = ICDeviceModule ? new NativeEventEmitter(ICDeviceModule) : null;
@@ -34,6 +35,18 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
   const [bluetoothEnabled, setBluetoothEnabled] = useState(false);
 
   useEffect(() => {
+      const requestPermissions = async () => {
+          if (Platform.OS === "android" && Platform.Version >= 31) {
+              const granted = await PermissionsAndroid.requestMultiple([
+                  PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+                  PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+                  PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+              ]);
+              console.log("Bluetooth permissions:", granted);
+          }
+      };
+
+      requestPermissions();
     if (!ICDeviceModule || !emitter) return;
 
     ICDeviceModule.initializeSDK();
@@ -46,7 +59,11 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     });
 
     const bleStateSub = emitter.addListener("onBleState", ({ state }) => {
-      setBluetoothEnabled(state === "ICBleStatePoweredOn");
+        const poweredOn = state === "ICBleStatePoweredOn";
+        setBluetoothEnabled(poweredOn);
+        if (!poweredOn) {
+            setConnectedDevices([]);
+        }
     })
 
     const scannedSub = emitter.addListener("onScannedDevices", setScannedDevices);
@@ -87,6 +104,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       connectionSub.remove();
       addedSub.remove();
       removedSub.remove();
+      ICDeviceModule.cleanup()
     };
   }, []);
 
