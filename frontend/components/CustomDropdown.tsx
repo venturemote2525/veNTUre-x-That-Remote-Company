@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text } from '@/components/Themed';
-import { Pressable } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 
 type DropdownItemProps = {
   label: string;
@@ -28,7 +28,10 @@ type CustomDropdownProps = {
   toggle: React.ReactNode;
   children: React.ReactElement<DropdownItemProps>[];
   menuClassName?: string;
+  toggleClassName?: string;
   separator?: boolean;
+  gap?: number;
+  maxHeight?: number;
 };
 
 export default function CustomDropdown({
@@ -36,13 +39,15 @@ export default function CustomDropdown({
   children,
   menuClassName,
   separator,
+  gap = 0,
+  maxHeight = 200,
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
   const toggleDropdown = () => {
     setOpen(prev => !prev);
   };
   return (
-    <View className="relative">
+    <View className={`relative`}>
       {React.isValidElement(toggle)
         ? React.cloneElement(toggle as React.ReactElement<any>, {
             onPress: toggleDropdown,
@@ -52,9 +57,9 @@ export default function CustomDropdown({
       {open && (
         <View
           className={`absolute right-0 top-full z-50 mt-2 ${menuClassName ?? ''}`}
-          style={{ elevation: 10 }}>
-          {React.Children.map(children, (child, index) => (
-            <View key={index}>
+          style={{ elevation: 10, maxHeight: maxHeight }}>
+          <ScrollView className="rounded-xl" contentContainerStyle={{ gap: gap }}>{React.Children.map(children, (child, index) => (
+            <View key={index} className={``}>
               {separator && index > 0 && (
                 <View className="my-2 h-px bg-secondary-500/50" />
               )}
@@ -67,7 +72,7 @@ export default function CustomDropdown({
                   })
                 : child}
             </View>
-          ))}
+          ))}</ScrollView>
         </View>
       )}
     </View>

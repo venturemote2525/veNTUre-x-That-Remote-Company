@@ -11,23 +11,19 @@ import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { PieChart, pieDataItem } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
 import LoadingScreen from '@/components/LoadingScreen';
-import { retrieveMeal } from '@/utils/food/api';
-import { Meal } from '@/types/database-types';
-
-const tempData = {
-  date: '2025-08-22T16:36:41.702+00:00',
-  name: '',
-  meal: '',
-  calories: 10,
-  carbs: 5,
-  protein: 7,
-  fat: 8,
-};
+import { deleteMeal, retrieveMeal, updateMeal } from '@/utils/food/api';
+import { AlertState, Meal } from '@/types/database-types';
+import { CustomAlert } from '@/components/CustomAlert';
+import { useFocusEffect } from '@react-navigation/native';
+import { BackHandler } from 'react-native';
 
 const mealColoursClasses: Record<string, string> = {
   breakfast: 'bg-[#8ecae6]',
   lunch: 'bg-[#ffb703]',
   dinner: 'bg-[#023e8a]',
+  morning_snack: 'bg-[#8ecae6]',
+  afternoon_snack: 'bg-[#ffb703]',
+  night_snack: 'bg-[#023e8a]',
 };
 
 export default function SummaryScreen() {
@@ -35,9 +31,10 @@ export default function SummaryScreen() {
   const navigation = useNavigation();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { mealId, meal: paramMeal } = useLocalSearchParams<{
+  const { mealId, meal: paramMeal, type } = useLocalSearchParams<{
     mealId: string;
     meal: string;
+    type: string;
   }>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -45,21 +42,30 @@ export default function SummaryScreen() {
     date: new Date(),
     meal: paramMeal ?? '',
   });
-  const [name, setName] = useState(tempData.name);
+  const [name, setName] = useState('');
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mealData, setMealData] = useState<Meal | null>(null);
   const [nutrients, setNutrients] = useState([
-    { key: 'Carbs', value: tempData.carbs, color: '#FFCA3A' },
-    { key: 'Protein', value: tempData.protein, color: '#1982C4' },
-    { key: 'Fat', value: tempData.fat, color: '#FF595E' },
+    { key: 'Carbs', value: 0, color: '#FFCA3A' },
+    { key: 'Protein', value: 0, color: '#1982C4' },
+    { key: 'Fat', value: 0, color: '#FF595E' },
   ]);
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  })
 
   useEffect(() => {
     const fetchMeal = async () => {
       const data = await retrieveMeal(mealId);
       setMealData(data);
-      setData(prev => ({ ...prev, date: new Date(data.date) }));
+      setData(prev => ({
+        ...prev,
+        date: new Date(data.date),
+        meal: type === 'history' ? data.meal.toLowerCase() : prev.meal,
+      }));
       setName(data.name)
       setNutrients([
         { key: 'Carbs', value: data.carbs, color: '#FFCA3A' },
@@ -107,31 +113,81 @@ export default function SummaryScreen() {
   };
 
   const handleCancel = () => {
-    // TODO: Delete from supabase
-    navigation.goBack();
+    setAlert({
+      visible: true,
+      title: type === 'log' ? 'Discard meal log?' : 'Discard changes?',
+      message: type === 'log' ? `Are you sure you want to discard ${name}` : 'Are you sure you want to discard changes',
+      confirmText: 'Yes',
+      onConfirm: () => {handleConfirmCancel()},
+      cancelText: 'No',
+      onCancel: () => setAlert({ ...alert, visible: false }),
+    })
+  }
+
+  const handleConfirmCancel = async () => {
+    if (type === 'history') {
+      navigation.goBack();
+      return;
+    }
+    try {
+      await deleteMeal(mealId);
+      setAlert({ ...alert, visible: false });
+      navigation.goBack();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleSave = async () => {
+    if (!mealData) return
+    if (data.meal === '') {
+      setAlert({
+        visible: true,
+        title: 'Missing info',
+        message: 'Please select meal',
+        onConfirm: () => {setAlert(() => ({ ...alert, visible: false })) }
+      })
+      return;
+    }
+    setLoading(true);
     try {
-      // TODO: Save to supabase
+      await updateMeal(mealId, {
+        name: name,
+        date: data.date.toISOString(),
+        meal: data.meal.toUpperCase(),
+      });
+      router.replace('/(tabs)/food');
+    } catch (error) {
+      console.log('Update meal error: ', error);
     } finally {
-      router.replace('/(tabs)/logging');
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleCancel()
+        return true
+      },
+    )
+    return () => subscription.remove()
+  }, [])
 
   if (loading)
     return (
       <ThemedSafeAreaView>
         <Header title="Food Summary" />
         <View className="flex-1">
-          <LoadingScreen text="Analysing your photo" />
+          <LoadingScreen text="Loading" />
         </View>
       </ThemedSafeAreaView>
     );
 
   return (
     <ThemedSafeAreaView>
-      <Header title="Food Summary" />
+      <Header title="Food Summary" onBackPress={handleCancel} />
       <View className="flex-1 items-center gap-4 px-8 text-body1">
         <Pressable onPress={() => setShowDatePicker(true)}>
           <Text className="font-bodySemiBold text-primary-500">
@@ -234,6 +290,15 @@ export default function SummaryScreen() {
           onChange={handleTimeChange}
         />
       )}
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        confirmText={alert.confirmText}
+        onConfirm={alert.onConfirm ?? (() => {})}
+        cancelText={alert.cancelText}
+        onCancel={alert.onCancel}
+      />
     </ThemedSafeAreaView>
   );
 }
@@ -262,7 +327,8 @@ const FoodNameInput = memo(({ value, onChange }: FoodNameInputProps) => {
       multiline={true}
       maxLength={40}
       className="m-0 p-0 font-heading text-body2 text-primary-500"
-      style={{ width: 200, paddingTop: 0, paddingBottom: 0 }}
+      style={{ width: '50%', paddingTop: 0, paddingBottom: 0 }}
+      submitBehavior={'blurAndSubmit'}
     />
   );
 });
@@ -278,14 +344,15 @@ const MealDropdown = ({ meal, setMeal }: MealDropdownProps) => (
   <CustomDropdown
     toggle={
       <Pressable
-        className={`rounded-full px-4 py-2 ${mealColoursClasses[meal.toLowerCase()] || 'bg-secondary-500'}`}>
+        className={`w-full rounded-full px-4 py-2 ${mealColoursClasses[meal.toLowerCase()] || 'bg-secondary-500'}`}>
         <Text className="font-bodySemiBold text-background-0">
           {meal !== '' ? toUpperCase(meal) : 'Select Meal'}
         </Text>
       </Pressable>
     }
-    menuClassName="gap-2 min-w-[120px] bg-background-0 p-2 rounded-2xl">
-    {['breakfast', 'lunch', 'dinner'].map(m => (
+    gap={8}
+    menuClassName="gap-2 min-w-40 bg-background-0 p-2 rounded-2xl">
+    {Object.keys(mealColoursClasses).map(m => (
       <DropdownItem
         key={m}
         label={toUpperCase(m)}
