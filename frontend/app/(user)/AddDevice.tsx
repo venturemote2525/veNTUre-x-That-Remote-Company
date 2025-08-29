@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, FlatList, Pressable } from 'react-native';
 import { Device } from '@/types/icdevice-types';
 import { pairDevice } from '@/utils/device/api';
@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useRouter } from 'expo-router';
 import { AlertState } from '@/types/database-types';
+import BluetoothStatus from "@/components/devices/BluetoothStatus";
 
 export default function AddDevice() {
   const router = useRouter();
@@ -26,15 +27,18 @@ export default function AddDevice() {
     title: '',
     message: '',
   });
+    const [availableDevices, setAvailableDevices] = useState<Device[]>([]);
 
   useEffect(() => {
     startScan();
     return () => stopScan();
   }, []);
 
-  const availableDevices = scannedDevices.filter(
-    d => !connectedDevices.some(c => c.mac === d.mac),
-  );
+    useEffect(() => {
+        setAvailableDevices(
+            scannedDevices.filter(d => !connectedDevices.some(c => c.mac === d.mac))
+        );
+    }, [scannedDevices, connectedDevices]);
 
   const handleAddDevice = (device: Device) => {
     setAlert({
@@ -70,18 +74,13 @@ export default function AddDevice() {
   return (
     <ThemedSafeAreaView>
       <Header title="Add Device" />
-      <View className="flex-1 px-4 items-center justify-center gap-4">
-        {!bluetoothEnabled && (
-          <View className="rounded-full bg-secondary-500 px-4 py-1">
-            <Text className="font-bodySemiBold text-background-500">
-              Bluetooth not enabled
-            </Text>
-          </View>
-        )}
+      <View className="flex-1 px-4 gap-4">
 
+          <BluetoothStatus />
         {/* Instructions */}
+          <View className="items-center">
         <Text>Instructions on how to add device here</Text>
-
+          </View>
         {/* List of scanned devices */}
         <FlatList
           className="flex-1 w-full"

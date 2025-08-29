@@ -2,6 +2,11 @@ package com.anonymous.frontend.device
 
 import android.os.Build
 import android.util.Log
+import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.core.app.ActivityCompat
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
@@ -128,12 +133,35 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             .emit(event, params)
     }
 
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val state = intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+            when (state) {
+                BluetoothAdapter.STATE_ON -> emitToJS(
+                    "onBleState",
+                    Arguments.createMap().apply { putString("state", "ICBleStatePoweredOn") }
+                )
+                BluetoothAdapter.STATE_OFF -> emitToJS(
+                    "onBleState",
+                    Arguments.createMap().apply { putString("state", "ICBleStatePoweredOff") }
+                )
+            }
+        }
+    }
+
     fun initSDK() {
         val config = ICDeviceManagerConfig()
         config.context = reactContext.applicationContext
         ICDeviceManager.shared().setDelegate(deviceManagerDelegate)
         ICDeviceManager.shared().initMgrWithConfig(config)
         Log.d(TAG, "SDK initialized")
+
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        reactContext.registerReceiver(bluetoothReceiver, filter)
+    }
+
+    fun cleanup() {
+        reactContext.unregisterReceiver(bluetoothReceiver)
     }
 
     fun startScan() {

@@ -8,6 +8,7 @@ import { useState, useCallback } from 'react';
 import { DBDevice } from '@/types/database-types';
 import { retrieveDevices, } from '@/utils/device/api';
 import LoadingScreen from '@/components/LoadingScreen';
+import BluetoothStatus from "@/components/devices/BluetoothStatus";
 
 export default function MyDevices() {
   const { connectedDevices, removeDevice } = useICDevice();
@@ -43,7 +44,8 @@ export default function MyDevices() {
   return (
     <ThemedSafeAreaView>
       <Header title="My Devices" />
-      <View className="flex-1 px-4">
+      <View className="flex-1 px-4 gap-4">
+          <BluetoothStatus />
         <ScrollView contentContainerStyle={{ gap: 16 }}>
           {pairedDevices.map(device => {
             const isConnected = connectedDevices.some(
