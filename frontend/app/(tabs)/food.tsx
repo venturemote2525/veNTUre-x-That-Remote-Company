@@ -2,8 +2,10 @@ import DateSelector from '@/components/DateSelector';
 import MealCard from '@/components/Food/MealCard';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { Meal } from '@/types/database-types';
+import { retrieveMeals } from '@/utils/food/api';
 
 const tempData = [
   { id: 1, meal: 'lunch', name: 'lunch meal', calories: 5 },
@@ -13,14 +15,26 @@ const tempData = [
 
 export default function FoodScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const totalCalories = tempData.reduce((sum, meal) => sum + meal.calories, 0);
+  const [meals, setMeals] = useState<Meal[] | null>(null);
+
+  useEffect(() => {
+    const fetchMeals = async () => {
+      const result = await retrieveMeals(selectedDate)
+      setMeals(result)
+    };
+    fetchMeals();
+  }, [selectedDate]);
+
+
+  const totalCalories = meals?.reduce((sum, meal) => sum + meal.calories, 0);
+
   return (
     <ThemedSafeAreaView edges={['top']} className="px-4">
       <DateSelector
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
       />
-      <View className="button-rounded flex-row justify-between px-8">
+      <View className="button-rounded flex-row justify-between px-8 my-2">
         <Text className="font-bodyBold text-body1 text-background-0">
           Total
         </Text>
@@ -35,27 +49,27 @@ export default function FoodScreen() {
           contentContainerClassName="gap-4">
           <MealCard
             title="Breakfast"
-            meals={tempData.filter(m => m.meal === 'breakfast')}
+            meals={meals ? meals.filter(m => m.meal === 'BREAKFAST') : null}
           />
           <MealCard
             title="Lunch"
-            meals={tempData.filter(m => m.meal === 'lunch')}
+            meals={meals ? meals.filter(m => m.meal === 'LUNCH') : null}
           />
           <MealCard
             title="Dinner"
-            meals={tempData.filter(m => m.meal === 'dinner')}
+            meals={meals ? meals.filter(m => m.meal === 'DINNER') : null}
           />
           <MealCard
             title="Morning Snack"
-            meals={tempData.filter(m => m.meal === 'morning-snack')}
+            meals={meals ? meals.filter(m => m.meal === 'MORNING_SNACK') : null}
           />
           <MealCard
             title="Afternoon Snack"
-            meals={tempData.filter(m => m.meal === 'afternoon-snack')}
+            meals={meals ? meals.filter(m => m.meal === 'AFTERNOON_SNACK') : null}
           />
           <MealCard
             title="Night Snack"
-            meals={tempData.filter(m => m.meal === 'night-snack')}
+            meals={meals ? meals.filter(m => m.meal === 'NIGHT_SNACK') : null}
           />
         </ScrollView>
       </View>
