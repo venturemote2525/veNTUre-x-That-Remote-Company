@@ -78,7 +78,7 @@ export default function LoggingScreen() {
       // Go to summary screen
       router.push({
         pathname: '/(logging)/summary',
-        params: { mealId: id, meal: meal },
+        params: { mealId: id, meal: meal, type: 'log' },
       });
     } catch (error) {
       console.log('Upload meal error: ', error);
