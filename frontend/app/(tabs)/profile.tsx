@@ -25,7 +25,7 @@ export default function ProfileScreen() {
     if (!loading && !user) router.replace('/login');
   }, [user, loading]);
 
-
+  // Load photo from AsyncStorage first, fallback to Supabase
   useEffect(() => {
     const loadPhoto = async () => {
       const storedBase64 = await AsyncStorage.getItem('profile_photo');
@@ -58,9 +58,9 @@ export default function ProfileScreen() {
 
       if (result.assets && result.assets.length > 0 && result.assets[0].base64) {
         const base64Image = `data:image/png;base64,${result.assets[0].base64}`;
-        setPhoto(base64Image); 
-        await AsyncStorage.setItem('profile_photo', base64Image); 
-        await uploadPhoto(result.assets[0].base64); 
+        setPhoto(base64Image); // show immediately
+        await AsyncStorage.setItem('profile_photo', base64Image); // persist locally
+        await uploadPhoto(result.assets[0].base64); // upload to Supabase
       }
     } catch (err) {
       console.log('Error picking image:', err);
@@ -68,7 +68,7 @@ export default function ProfileScreen() {
     }
   };
 
- 
+  // Upload photo to Supabase using friend’s logic
   const uploadPhoto = async (base64Data: string) => {
     if (!user) return;
     try {
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
 
       if (uploadError) throw uploadError;
 
-      
+      // Get public URL and update local state
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
       if (urlData?.publicUrl) setPhoto(urlData.publicUrl);
 
