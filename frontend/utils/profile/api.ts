@@ -11,7 +11,6 @@ const filePath = `${userId}/${Date.now()}.png`;
 
   if (uploadError) throw uploadError;
 
-  // Update avatar_url in the correct table
   const { error: dbError } = await supabase
     .from('user_profiles')   
     .update({ avatar_url: filePath })

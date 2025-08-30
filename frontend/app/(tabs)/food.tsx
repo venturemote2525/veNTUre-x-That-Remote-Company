@@ -1,32 +1,22 @@
+import DateSelector from '@/components/DateSelector';
+import MealCard from '@/components/Food/MealCard';
+import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { View, Image, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { Text, ThemedSafeAreaView } from '@/components/Themed';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import uuid from 'react-native-uuid';
+import { ScrollView } from 'react-native';
+import { Meal } from '@/types/database-types';
+import { retrieveMeals } from '@/utils/food/api';
 
-export default function ProfileScreen() {
-  const { profile, user, profileLoading, loading } = useAuth();
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const router = useRouter();
+const tempData = [
+  { id: 1, meal: 'lunch', name: 'lunch meal', calories: 5 },
+  { id: 2, meal: 'lunch', name: 'lunch meal', calories: 7 },
+  { id: 3, meal: 'breakfast', name: 'breakfast meal', calories: 10 },
+];
 
-  const email = user?.email ?? undefined;
-  const memberSinceIso = profile?.created_at ?? user?.created_at;
-  const memberSince = memberSinceIso ? new Date(memberSinceIso).toLocaleDateString() : undefined;
-  const isBusy = loading || profileLoading;
+export default function FoodScreen() {
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [meals, setMeals] = useState<Meal[] | null>(null);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [user, loading]);
-
-  // Load avatar initially from Supabase Storage
   useEffect(() => {
     const fetchMeals = async () => {
       const result = await retrieveMeals(selectedDate);
