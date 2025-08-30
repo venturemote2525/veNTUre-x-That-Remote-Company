@@ -25,7 +25,6 @@ export default function ProfileScreen() {
     if (!loading && !user) router.replace('/login');
   }, [user, loading]);
 
-  // Load photo from AsyncStorage first, fallback to Supabase
   useEffect(() => {
     const loadPhoto = async () => {
       const storedBase64 = await AsyncStorage.getItem('profile_photo');
@@ -68,7 +67,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // Upload photo to Supabase using friend’s logic
   const uploadPhoto = async (base64Data: string) => {
     if (!user) return;
     try {
