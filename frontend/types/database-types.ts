@@ -8,6 +8,7 @@ export interface UserProfile {
   height: number;
   dob: string;
   created_at: string;
+  avatar_url?: string;
 }
 
 export type UserProfileInsert = Omit<UserProfile, 'id' | 'created_at'>;
