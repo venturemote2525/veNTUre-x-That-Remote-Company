@@ -171,12 +171,22 @@ export default function ProfileScreen() {
             <Text className="text-gray-500 font-body">Member since</Text>
             <Text className="font-bodyBold text-black">{isBusy ? 'Loading...' : memberSince ?? 'N/A'}</Text>
           </View>
+          <View className="flex-row justify-between">
+  <Text className="text-gray-500 font-body">DOB</Text>
+  <Text className="font-bodyBold text-black">{profile?.dob ?? 'N/A'}</Text>
+</View>
+<View className="flex-row justify-between">
+  <Text className="text-gray-500 font-body">Gender</Text>
+  <Text className="font-bodyBold text-black">{profile?.gender ?? 'N/A'}</Text>
+</View>
+
           <View className="h-[1px] bg-gray-200" />
           <View className="flex-row justify-between">
             <Text className="text-gray-500 font-body">Status</Text>
             <Text className="font-bodyBold text-green-600">Active</Text>
           </View>
         </View>
+              
 
         <Pressable onPress={handleLogout} className="bg-red-500 py-3 rounded-2xl shadow-md">
           <Text className="font-bodyBold text-background-0 text-center">Log out</Text>
