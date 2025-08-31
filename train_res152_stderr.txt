@@ -1,0 +1,51 @@
+2025-08-31 20:31:31,305 - MaskRCNN_Training - INFO - Training logger initialized
+2025-08-31 20:31:31,308 - MaskRCNN_Training - INFO - Initializing trainer on cuda
+2025-08-31 20:31:31,335 - MaskRCNN_Training - INFO - Config: swiss_7class_resnet152
+C:\Users\tingl\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\torchvision\models\_utils.py:135: UserWarning: Using 'backbone_name' as positional parameter(s) is deprecated since 0.13 and may be removed in the future. Please use keyword parameter(s) instead.
+  warnings.warn(
+C:\Users\tingl\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\torchvision\models\_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+C:\Users\tingl\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet152_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet152_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+C:\Users\tingl\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\torch\nn\modules\module.py:1326: UserWarning: expandable_segments not supported on this platform (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\c10/cuda/CUDAAllocatorConfig.h:28.)
+  return t.to(
+D:\githib repo clones\food-portion-size-classifier\src\models\pytorch_mask_rcnn\train_maskrcnn_food.py:242: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.cuda.amp.GradScaler()
+D:\githib repo clones\food-portion-size-classifier\src\models\pytorch_mask_rcnn\train_maskrcnn_food.py:295: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast():
+2025-08-31 20:31:35,720 - MaskRCNN_Training - INFO - Epoch 1, Batch 5/34, Loss: 3.7461, Avg Loss: 3.8506
+2025-08-31 20:31:37,551 - MaskRCNN_Training - INFO - Epoch 1, Batch 10/34, Loss: 3.4002, Avg Loss: 3.6297
+2025-08-31 20:31:39,285 - MaskRCNN_Training - INFO - Epoch 1, Batch 15/34, Loss: 3.2878, Avg Loss: 3.5915
+2025-08-31 20:31:41,202 - MaskRCNN_Training - INFO - Epoch 1, Batch 20/34, Loss: 3.5320, Avg Loss: 3.5638
+2025-08-31 20:31:42,870 - MaskRCNN_Training - INFO - Epoch 1, Batch 25/34, Loss: 3.5334, Avg Loss: 3.5839
+2025-08-31 20:31:44,777 - MaskRCNN_Training - INFO - Epoch 1, Batch 30/34, Loss: 3.3930, Avg Loss: 3.5846
+2025-08-31 20:31:46,054 - MaskRCNN_Training - INFO - Epoch 1/2 completed
+2025-08-31 20:31:46,054 - MaskRCNN_Training - INFO - Average Training Loss: 3.5501
+2025-08-31 20:31:46,054 - MaskRCNN_Training - INFO - Processed Batches: 34/34
+2025-08-31 20:31:46,054 - MaskRCNN_Training - INFO - Success Rate: 100.0%
+2025-08-31 20:31:51,960 - MaskRCNN_Training - INFO - Epoch 1 Validation - Loss: 3.3185, mAP: 0.0000
+2025-08-31 20:31:54,206 - MaskRCNN_Training - INFO - Epoch 2, Batch 5/100, Loss: 3.6182, Avg Loss: 3.3547
+2025-08-31 20:31:55,441 - MaskRCNN_Training - INFO - Epoch 2, Batch 10/100, Loss: 3.5640, Avg Loss: 3.3381
+2025-08-31 20:31:57,043 - MaskRCNN_Training - INFO - Epoch 2, Batch 15/100, Loss: 3.1417, Avg Loss: 3.4215
+2025-08-31 20:31:58,614 - MaskRCNN_Training - INFO - Epoch 2, Batch 20/100, Loss: 2.7954, Avg Loss: 3.3955
+2025-08-31 20:32:00,034 - MaskRCNN_Training - INFO - Epoch 2, Batch 25/100, Loss: 3.4462, Avg Loss: 3.3631
+2025-08-31 20:32:01,553 - MaskRCNN_Training - INFO - Epoch 2, Batch 30/100, Loss: 2.6054, Avg Loss: 3.3158
+2025-08-31 20:32:02,945 - MaskRCNN_Training - INFO - Epoch 2, Batch 35/100, Loss: 3.5763, Avg Loss: 3.3125
+2025-08-31 20:32:04,313 - MaskRCNN_Training - INFO - Epoch 2, Batch 40/100, Loss: 3.5513, Avg Loss: 3.3120
+2025-08-31 20:32:05,686 - MaskRCNN_Training - INFO - Epoch 2, Batch 45/100, Loss: 3.3792, Avg Loss: 3.3244
+2025-08-31 20:32:07,022 - MaskRCNN_Training - INFO - Epoch 2, Batch 50/100, Loss: 3.1900, Avg Loss: 3.3072
+2025-08-31 20:32:08,121 - MaskRCNN_Training - INFO - Epoch 2, Batch 55/100, Loss: 3.3707, Avg Loss: 3.3378
+2025-08-31 20:32:09,380 - MaskRCNN_Training - INFO - Epoch 2, Batch 60/100, Loss: 3.3086, Avg Loss: 3.3445
+2025-08-31 20:32:10,847 - MaskRCNN_Training - INFO - Epoch 2, Batch 65/100, Loss: 3.4028, Avg Loss: 3.3401
+2025-08-31 20:32:12,175 - MaskRCNN_Training - INFO - Epoch 2, Batch 70/100, Loss: 2.7725, Avg Loss: 3.3218
+2025-08-31 20:32:13,434 - MaskRCNN_Training - INFO - Epoch 2, Batch 75/100, Loss: 3.1985, Avg Loss: 3.3095
+2025-08-31 20:32:14,702 - MaskRCNN_Training - INFO - Epoch 2, Batch 80/100, Loss: 3.4619, Avg Loss: 3.3047
+2025-08-31 20:32:15,821 - MaskRCNN_Training - INFO - Epoch 2, Batch 85/100, Loss: 3.3617, Avg Loss: 3.2993
+2025-08-31 20:32:17,123 - MaskRCNN_Training - INFO - Epoch 2, Batch 90/100, Loss: 3.2596, Avg Loss: 3.2965
+2025-08-31 20:32:18,217 - MaskRCNN_Training - INFO - Epoch 2, Batch 95/100, Loss: 3.3602, Avg Loss: 3.2927
+2025-08-31 20:32:19,514 - MaskRCNN_Training - INFO - Epoch 2, Batch 100/100, Loss: 2.6229, Avg Loss: 3.2792
+2025-08-31 20:32:19,516 - MaskRCNN_Training - INFO - Epoch 2/2 completed
+2025-08-31 20:32:19,516 - MaskRCNN_Training - INFO - Average Training Loss: 3.2792
+2025-08-31 20:32:19,516 - MaskRCNN_Training - INFO - Processed Batches: 100/100
+2025-08-31 20:32:19,517 - MaskRCNN_Training - INFO - Success Rate: 100.0%
+2025-08-31 20:32:25,272 - MaskRCNN_Training - INFO - Epoch 2 Validation - Loss: 3.2621, mAP: 0.0000

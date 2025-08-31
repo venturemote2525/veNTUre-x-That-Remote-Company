@@ -1,0 +1,5 @@
+# GUI Monitor Requirements
+matplotlib>=3.5.0
+numpy>=1.21.0
+tkinter
+Pillow>=8.0.0
