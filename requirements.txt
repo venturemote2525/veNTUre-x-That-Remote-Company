@@ -1,34 +1,55 @@
-# Core ML dependencies
-torch>=1.9.0
-torchvision>=0.10.0
-numpy>=1.21.0
+# Food Nutrition Analysis System - Core Dependencies
 
-# Computer Vision
-opencv-python>=4.5.0
-pillow>=8.3.0
+# Core ML and Deep Learning
+torch>=2.0.0,<3.0.0
+torchvision>=0.15.0,<1.0.0
+transformers>=4.30.0,<5.0.0
+huggingface-hub>=0.16.0,<1.0.0
+timm>=0.9.0,<1.0.0
 
-# Data handling
-pandas>=1.3.0
-pyyaml>=5.4.0
+# Computer Vision and Image Processing
+opencv-python>=4.8.0,<5.0.0
+Pillow>=9.5.0,<12.0.0
+scikit-image>=0.21.0,<1.0.0
+imageio>=2.31.0,<3.0.0
 
-# Visualization
-matplotlib>=3.4.0
-tensorboard>=2.7.0
+# Scientific Computing
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0,<2.0.0
+pandas>=2.0.0,<3.0.0
 
-# Progress bars
-tqdm>=4.62.0
+# Visualization and UI
+streamlit>=1.28.0,<2.0.0
+matplotlib>=3.7.0,<4.0.0
+seaborn>=0.12.0,<1.0.0
+plotly>=5.15.0,<6.0.0
 
-# Machine Learning
-scikit-learn>=1.0.0
+# 3D Processing for Volume Calculation
+open3d>=0.17.0,<1.0.0
 
-# YOLO models
-ultralytics>=8.0.0
+# Utility Libraries
+tqdm>=4.65.0,<5.0.0
+python-dateutil>=2.8.0,<3.0.0
+pytz>=2023.3
+tzdata>=2023.3
+requests>=2.31.0,<3.0.0
+PyYAML>=6.0.0,<7.0.0
 
-# Web apps
-streamlit>=1.0.0
+# Development Dependencies (optional)
+pytest>=7.4.0,<8.0.0
+black>=23.0.0,<24.0.0
+flake8>=6.0.0,<7.0.0
 
-# Development tools (optional)
-pytest>=6.2.0
-black>=21.0.0
-flake8>=3.9.0
-mypy>=0.910
+# Optional: API Framework Support (uncomment if needed)
+# fastapi>=0.100.0,<1.0.0
+# uvicorn[standard]>=0.23.0,<1.0.0
+
+# Optional: Jupyter Support (uncomment if needed)
+# jupyter>=1.0.0,<2.0.0
+# ipykernel>=6.25.0,<7.0.0
+
+# System-specific packages (automatically installed with above)
+# - fsspec (for file system operations)
+# - packaging (for version handling)
+# - setuptools (for package management)
+# - wheel (for package building)

@@ -1,9 +1,16 @@
 {
   "permissions": {
     "allow": [
+      "Bash(tree:*)",
+      "Bash(mkdir:*)",
+      "Bash(set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True)",
       "Bash(python:*)",
+      "Bash(nvidia-smi:*)",
       "Bash(pip install:*)",
-      "Bash(streamlit run:*)"
+      "Bash(pip uninstall:*)",
+      "Bash(git remote add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

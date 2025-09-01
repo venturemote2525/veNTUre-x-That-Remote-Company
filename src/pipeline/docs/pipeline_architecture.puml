@@ -1,0 +1,247 @@
+@startuml Food Nutrition Analysis Pipeline
+
+!theme cerulean-outline
+
+title Food Nutrition Analysis Pipeline Architecture
+
+' Define colors for different model types
+!define SEGMENTATION_COLOR #87CEEB
+!define DEPTH_COLOR #98FB98  
+!define NUTRITION_COLOR #FFB6C1
+!define INTERFACE_COLOR #F0E68C
+!define REFERENCE_COLOR #D8BFD8
+
+' Visual style overrides for readability on dark editors
+skinparam BackgroundColor #0E1116
+skinparam TitleFontColor #FFFFFF
+skinparam DefaultFontColor #FFFFFF
+skinparam ArrowColor #FFFFFF
+skinparam NoteFontColor #FFFFFF
+skinparam NoteBackgroundColor #1A2230
+skinparam NoteBorderColor #4A637A
+skinparam PackageFontColor #FFFFFF
+skinparam PackageBorderColor #4A637A
+skinparam ClassFontColor #FFFFFF
+skinparam ClassBackgroundColor #1E2A36
+skinparam ClassBorderColor #4A637A
+skinparam InterfaceBackgroundColor #1E2A36
+skinparam InterfaceBorderColor #4A637A
+
+package "Input Processing" {
+  class ImageInput {
+    + image_path: str
+    + image_data: np.ndarray
+    + preprocess_image(): np.ndarray
+    + validate_input(): bool
+  }
+}
+
+package "Segmentation Module" SEGMENTATION_COLOR {
+  class MaskRCNNSegmentation {
+    + model: torch.nn.Module
+    + device: str
+    + class_names: List[str]
+    + load_model(checkpoint_path: str): void
+    + segment_image(image: np.ndarray): SegmentationResult
+  }
+  
+  class SegmentationResult {
+    + boxes: torch.Tensor
+    + masks: torch.Tensor
+    + labels: torch.Tensor
+    + scores: torch.Tensor
+    + get_food_items(): List[FoodItem]
+  }
+}
+
+package "Depth Estimation" DEPTH_COLOR {
+  class DepthAnythingModel {
+    + model: DepthAnything
+    + device: str
+    + encoder: str
+    + transform: Compose
+    + estimate_depth(image: np.ndarray): np.ndarray
+    + get_depth_stats(depth_map: np.ndarray): Dict
+  }
+  
+  class DepthResult {
+    + depth_map: np.ndarray
+    + depth_stats: Dict
+    + visualize_depth(colormap: str): np.ndarray
+  }
+}
+
+package "Volume Calculation" {
+  class VolumeCalculator {
+    + camera_params: Dict
+    + reference_scale: float
+    + set_scale(scale_mm_per_pixel: float): void
+    + calculate_volume(mask: np.ndarray, depth: np.ndarray, scale_mm_per_pixel: Optional[float] = None): float
+    + estimate_real_world_scale(measurement: ReferenceObjectMeasurement): float
+    + get_volume_confidence(volume: float): str
+  }
+  
+  class VolumeResult {
+    + volume_ml: float
+    + confidence: str
+    + mask_area: int
+    + avg_depth: float
+  }
+}
+
+package "Reference Scale" REFERENCE_COLOR {
+  interface ReferenceObjectDetectorInterface {
+    + detect(image: np.ndarray): List[ReferenceObjectMeasurement]
+    + get_supported_objects(): List[str]
+  }
+
+  class ReferenceObjectDetector {
+    + model: torch.nn.Module
+    + segmenter: torch.nn.Module
+    + detect(image: np.ndarray): List[ReferenceObjectMeasurement]
+  }
+
+  class ReferenceObjectMeasurement {
+    + object_type: str
+    + bbox: Tuple
+    + mask: np.ndarray
+    + pixel_length: float
+    + known_real_length_mm: float
+    + scale_mm_per_pixel: float
+    + confidence: float
+  }
+}
+
+package "Specific Classification" INTERFACE_COLOR {
+  interface SpecificClassifierInterface {
+    + classify(image: np.ndarray, bbox: Tuple): SpecificClassification
+    + is_available(): bool
+    + get_supported_classes(): List[str]
+  }
+  
+  class FriendsSpecificModel {
+    + model: torch.nn.Module
+    + classify(image: np.ndarray, bbox: Tuple): SpecificClassification
+    + is_available(): bool
+  }
+  
+  class SpecificClassification {
+    + specific_class: str
+    + confidence: float
+    + broad_to_specific_mapping(): Dict
+  }
+}
+
+package "Nutrition Database" NUTRITION_COLOR {
+  class NutritionDatabase {
+    + broad_class_nutrition: Dict
+    + specific_class_nutrition: Dict
+    + food_densities: Dict
+    + get_nutrition_broad(class_name: str): NutritionInfo
+    + get_nutrition_specific(food_name: str): NutritionInfo
+    + get_density(food_name: str): float
+  }
+  
+  class NutritionInfo {
+    + calories_per_100g: float
+    + protein_g: float
+    + carbs_g: float
+    + fat_g: float
+    + fiber_g: float
+    + density_g_ml: float
+  }
+}
+
+package "Main Pipeline" {
+  class NutritionPipeline {
+    + segmentation_model: MaskRCNNSegmentation
+    + depth_model: DepthAnythingModel
+    + volume_calculator: VolumeCalculator
+    + reference_detector: ReferenceObjectDetectorInterface
+    + specific_classifier: SpecificClassifierInterface
+    + nutrition_db: NutritionDatabase
+    + analyze_food_image(image_path: str): NutritionAnalysisResult
+    + estimate_scale(image: np.ndarray): Optional[float]
+    + process_food_items(): List[FoodItemAnalysis]
+  }
+  
+  class FoodItem {
+    + item_id: int
+    + broad_class: str
+    + specific_class: Optional[str]
+    + confidence_broad: float
+    + confidence_specific: Optional[float]
+    + mask: np.ndarray
+    + bbox: Tuple
+  }
+  
+  class FoodItemAnalysis {
+    + food_item: FoodItem
+    + volume: VolumeResult
+    + nutrition: NutritionInfo
+    + total_calories: float
+    + total_macros: Dict
+  }
+  
+  class NutritionAnalysisResult {
+    + image_path: str
+    + total_calories: float
+    + total_volume_ml: float
+    + total_protein_g: float
+    + total_carbs_g: float
+    + total_fat_g: float
+    + food_items: List[FoodItemAnalysis]
+    + export_json(): str
+    + export_csv(): str
+  }
+}
+
+package "User Interface" INTERFACE_COLOR {
+  class StreamlitNutritionApp {
+    + pipeline: NutritionPipeline
+    + run_analysis(uploaded_files): void
+    + display_results(result: NutritionAnalysisResult): void
+    + export_reports(result: NutritionAnalysisResult): void
+  }
+}
+
+' Relationships
+ImageInput --> NutritionPipeline : feeds image
+NutritionPipeline --> MaskRCNNSegmentation : uses
+NutritionPipeline --> DepthAnythingModel : uses  
+NutritionPipeline --> VolumeCalculator : uses
+NutritionPipeline --> ReferenceObjectDetectorInterface : uses
+NutritionPipeline --> SpecificClassifierInterface : uses
+NutritionPipeline --> NutritionDatabase : queries
+
+MaskRCNNSegmentation --> SegmentationResult : produces
+DepthAnythingModel --> DepthResult : produces
+VolumeCalculator --> VolumeResult : produces
+ReferenceObjectDetectorInterface <|-- ReferenceObjectDetector : implements
+ReferenceObjectDetector --> ReferenceObjectMeasurement : produces
+VolumeCalculator ..> ReferenceObjectMeasurement : uses scale
+SpecificClassifierInterface <|-- FriendsSpecificModel : implements
+FriendsSpecificModel --> SpecificClassification : produces
+
+NutritionDatabase --> NutritionInfo : provides
+NutritionPipeline --> FoodItemAnalysis : creates
+FoodItemAnalysis --> NutritionAnalysisResult : aggregated into
+
+StreamlitNutritionApp --> NutritionPipeline : uses
+NutritionAnalysisResult --> StreamlitNutritionApp : displays
+
+' Sequence Flow
+note right of NutritionPipeline
+  **Pipeline Flow:**
+  1. Load image
+  2. Run segmentation (broad classes)
+  3. Detect reference object(s) and compute scale
+  4. Estimate depth map
+  5. Calculate volumes per food item (use scale + depth)
+  6. Run specific classification (if available)
+  7. Look up nutrition data
+  8. Calculate total nutrition
+  9. Generate comprehensive report
+end note
+
+@enduml

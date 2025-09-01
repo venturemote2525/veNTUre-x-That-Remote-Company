@@ -1,19 +1,24 @@
-# Codex Memory — Food Portion Size Classifier
+# Codex Memory — Food Nutrition Analysis System
 
-This repository implements food instance segmentation (Mask R-CNN) with optional depth estimation (Depth Anything) to support portion analysis. Optimized for NVIDIA RTX 3060 (12GB).
+Integrated food nutrition analysis pipeline combining instance segmentation (Mask R-CNN), depth estimation (Depth Anything), 3D volume estimation, and nutrition lookup. Optimized for NVIDIA RTX 3060 (12GB).
 
 ## Summary
 
-- Focus: 7‑class Swiss food instance segmentation (+ background)
-- Primary model: Mask R‑CNN (typical backbones: ResNet‑18/50/152)
-- Depth: Depth Anything integration for depth/3D cues
-- Monitoring: CLI status, Streamlit dashboard, Tkinter GUI
-- Artifacts: Logs and checkpoints tracked per configuration
+- Focus: Complete nutrition analysis from food images
+- Pipeline: Segmentation → Depth → Volume → Nutrition
+- Models: Mask R-CNN (Swiss 7-class), Depth Anything, nutrition database
+- Integration: Optional specific-food classifier via interface
+- Interfaces: Unified Streamlit app; CLI/Streamlit/Tkinter monitoring
+- Artifacts: Logs, checkpoints, UML architecture
 
 ## Key Entry Points
 
+- Unified nutrition app: `python -m streamlit run src/nutrition_analysis/streamlit_nutrition_app.py`
+  - Upload images → get calories, macros, volume; export JSON/CSV
+  - Supports optional friend’s specific classifier
+
 - Train segmentation: `python src/training/train_swiss_7class.py`
-  - Schedule: ~70 epochs (23 heads‑only + 47 full fine‑tune)
+  - Typical: ~70 epochs (23 heads-only + 47 full fine-tune)
   - Produces: checkpoints + `training_history.json`
 
 - Depth pipeline: `python src/training/train_depth_anything_food.py`
@@ -22,53 +27,92 @@ This repository implements food instance segmentation (Mask R-CNN) with optional
     - Single image: `--single-image path/to/image.jpg --output-dir outputs/depth_anything`
 
 - Status (CLI): `python scripts/show_status.py`
-  - Shows latest logs/checkpoints, current/last epoch, loss, run status
+  - Shows latest logs/checkpoints, epoch, loss, run status
 
-- Streamlit monitor: `python ui/training_monitor.py`
-  - Auto‑detects latest training log; plots train/val loss and mAP
+- Streamlit monitor: `python ui/streamlit/training_monitor.py`
+- Tkinter monitor: `python ui/gui_monitor/main_dashboard.py`
 
-- Tkinter monitor: `python gui_monitor/main_dashboard.py`
-  - Real‑time GPU/util/temp/memory/power + training loss graphs; log browser
+### New: Reference-Scale CLI
+- `python reference_scale_pipeline/run.py --image path/to.jpg`
+  - Calibrates mm-per-pixel from a reference object (credit card/spoon) and runs analysis
+  - Optional sizes override: `reference_scale_pipeline/reference_objects.yaml`
 
 ## Important Paths
 
-- Logs (examples):
-  - `src/training/logs/swiss_7class_resnet152/` (recent logs)
-  - May also use `src/training/logs/swiss_7class_resnet50` and `logs/rtx3060_segmentation`
+- Nutrition module: `src/nutrition_analysis/`
+  - `nutrition_pipeline.py`, `nutrition_database.py`, `volume_calculator.py`
+  - `specific_classifier_interface.py`, `streamlit_nutrition_app.py`
+  - `pipeline_architecture.puml`
 
-- Checkpoints (examples):
-  - `src/training/checkpoints/swiss_7class_resnet50/`
-  - Files: `best_checkpoint.pth`, `latest_checkpoint.pth`, `checkpoint_epoch_XXX.pth`, `training_history.json`
+- Logs: `src/training/logs/swiss_7class_<backbone>/`
+- Checkpoints: `src/training/checkpoints/swiss_7class_<backbone>/`
+- Segmentation model: `src/models/pytorch_mask_rcnn/`
+- Depth model: `src/models/depth_anything/`
 
-- Depth module: `src/models/depth_anything/` (TorchHub DINOv2, Streamlit demo, assets)
+### New: Reference-Scale Pipeline
+- Folder: `reference_scale_pipeline/`
+  - `run.py`: CLI to run pipeline with reference-scale enabled
+  - `reference_objects.yaml`: known object sizes (mm)
+
+## Architecture (Updated)
+- UML: `src/nutrition_analysis/pipeline_architecture.puml` now includes Reference Scale module
 
 ## Dataset Notes
 
-- Primary dataset: `data/swiss_coco_7class/` (COCO format; train/val)
-- Additional: `data/classification/` (5/7/8‑class), `data/coco_5class_food_dataset/`, `data/merged/`
+- Primary: `data/swiss_coco_7class/` (COCO format; train/val)
+- Additional: `data/classification/`, `data/coco_5class_food_dataset/`, `data/merged/`
 
 ## Hardware & Performance
 
 - Target GPU: RTX 3060 (12GB)
-- Suggested settings: batch size 2–4; workers 2–4
-- CUDA allocator (Windows example):
+- Suggested: batch size 2–4; workers 2–4
+- CUDA allocator (Windows):
   - `set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`
-  - Example run: `set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && python src/training/train_swiss_7class.py --batch-size 4`
+  - Example: `set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && python src/training/train_swiss_7class.py --batch-size 4`
 
-## Claude Settings Found
+## Docker
+
+- Quick start: `docker-compose up -d` (serves at http://localhost:8501)
+- Single container: `docker build -t nutrition-app . && docker run -p 8501:8501 nutrition-app`
+- Volumes: checkpoints `/app/src/training/checkpoints` (ro), cache `/app/.cache`, outputs `/app/outputs`, temp `/app/temp`
+- Env vars: `DEPTH_ENCODER`, `CONFIDENCE_THRESHOLD`, `USE_SPECIFIC_CLASSIFIER`, `DEVICE`
+
+## Claude Settings
 
 - `.claude/settings.local.json` allows: `python:*`, `pip install:*`, `streamlit run:*`
 
 ## Collaboration Preferences (User Rules)
 
-- Prefer edits over new files: Do not create new files unless no suitable existing file can be updated. If a new file is necessary, keep it minimal and justified.
-- No random utility/checking scripts: Avoid adding ad‑hoc scripts for checks or helpers unless explicitly requested or essential to the task.
-- No dummy data or placeholders: Do not use dummy variables, mock data, or placeholder scripts. Operate on real data/paths relevant to the project.
-- Respect specified models: Do not switch to different models/architectures just to work around issues. If blocked, surface the blocker and ask before changing scope.
-- Build the full product when asked: Do not deliver demos/prototypes when the request is for a complete implementation.
-- Communicate blockers early: If something prevents completion, report it and request guidance rather than altering requirements.
+- Prefer edits over new files; keep new files minimal when necessary.
+- No ad-hoc utility/check scripts unless requested/essential.
+- No dummy data/placeholders; operate on real project paths/data.
+- Don’t switch models/architectures without approval; surface blockers.
+- Deliver full product when asked; avoid partial demos.
+- Communicate blockers early.
 
-## Open Items
+## Structure (Updated)
+- src/segmentation/mask_rcnn: Mask R-CNN code, training, datasets, checkpoints
+- src/depth/depth_anything: Depth model code and training
+- src/volume: Volume calculator
+- src/reference: Reference-scale detection
+- src/nutrition: Nutrition database
+- src/specific_classification: Interface for specific food models
+- src/pipeline: Orchestration pipeline, Streamlit app, docs, CLI
 
-- `claude.md` not found in repo. If you provide it (or its path), I will add/merge its contents here or store it alongside this file.
+### Entry Points (Updated)
+- App: `streamlit run src/pipeline/streamlit_app.py`
+- CLI: `python src/pipeline/cli/reference_scale_run.py --image path/to.jpg`
+
+### Docker Paths (Updated)
+- CMD app: `src/pipeline/streamlit_app.py`
+- Volumes:
+  - `./src/segmentation/mask_rcnn/training/checkpoints:/app/src/segmentation/mask_rcnn/training/checkpoints:ro`
+  - `./src/segmentation/mask_rcnn/datasets:/app/src/segmentation/mask_rcnn/datasets:ro`
+
+## Training Paths (Updated)
+- Segmentation datasets: src/segmentation/mask_rcnn/datasets/
+- Segmentation logs: src/segmentation/mask_rcnn/training/logs/<model_name>/
+- Segmentation checkpoints: src/segmentation/mask_rcnn/training/checkpoints/<model_name>/
+- Segmentation exported models: src/segmentation/mask_rcnn/models/<model_name>/
+- Depth logs: src/depth/training/logs/depth_anything_<encoder>/
 
