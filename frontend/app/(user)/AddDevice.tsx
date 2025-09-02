@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Alert, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  RefreshControl,
+  ScrollView,
+} from 'react-native';
 import Header from '@/components/Header';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
@@ -24,7 +30,7 @@ export default function AddDevice() {
     stopScan,
     initializeSDK,
     clearScannedDevices,
-    getLatestWeightForDevice
+    getLatestWeightForDevice,
   } = useICDevice();
 
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -44,7 +50,10 @@ export default function AddDevice() {
       // Auto stop after 30 seconds
       const autoStopTimer = setTimeout(() => {
         handleStopScan();
-        Alert.alert('Scan Complete', 'Scan stopped automatically after 30 seconds');
+        Alert.alert(
+          'Scan Complete',
+          'Scan stopped automatically after 30 seconds',
+        );
       }, 30000);
 
       return () => {
@@ -65,14 +74,20 @@ export default function AddDevice() {
       await initializeSDK();
       Alert.alert('Success', 'SDK initialized successfully');
     } catch (error) {
-      Alert.alert('Initialization Failed', 'Failed to initialize SDK. Please try again.');
+      Alert.alert(
+        'Initialization Failed',
+        'Failed to initialize SDK. Please try again.',
+      );
       console.error('SDK initialization error:', error);
     }
   };
 
   const handleConnectDevice = async (device: Device) => {
     if (isDeviceConnected(device.mac)) {
-      Alert.alert('Already Connected', `Device ${device.mac} is already connected`);
+      Alert.alert(
+        'Already Connected',
+        `Device ${device.mac} is already connected`,
+      );
       return;
     }
 
@@ -82,7 +97,10 @@ export default function AddDevice() {
       Alert.alert('Success', `Connected to ${device.mac}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      Alert.alert('Connection Failed', `Failed to connect to ${device.mac}\n\nError: ${errorMessage}`);
+      Alert.alert(
+        'Connection Failed',
+        `Failed to connect to ${device.mac}\n\nError: ${errorMessage}`,
+      );
       console.error('Connection error:', error);
     } finally {
       setConnecting(null);
@@ -96,7 +114,10 @@ export default function AddDevice() {
       Alert.alert('Disconnected', `Disconnected from ${device.mac}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      Alert.alert('Disconnection Failed', `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`);
+      Alert.alert(
+        'Disconnection Failed',
+        `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`,
+      );
       console.error('Disconnection error:', error);
     } finally {
       setDisconnecting(null);
@@ -113,7 +134,10 @@ export default function AddDevice() {
       await startScan();
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      Alert.alert('Scan Failed', `Failed to start scanning\n\nError: ${errorMessage}`);
+      Alert.alert(
+        'Scan Failed',
+        `Failed to start scanning\n\nError: ${errorMessage}`,
+      );
       console.error('Scan start error:', error);
     }
   };
@@ -182,19 +206,21 @@ export default function AddDevice() {
         className="flex-1"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+        }>
         <View className="p-4">
           {/* SDK Status */}
-          <View className="mb-4 p-4 bg-gray-50 rounded-lg">
-            <Text className="text-lg font-semibold mb-2">SDK Status</Text>
-            <View className="flex-row items-center justify-between mb-2">
+          <View className="mb-4 rounded-lg bg-gray-50 p-4">
+            <Text className="text-lg mb-2 font-semibold">SDK Status</Text>
+            <View className="mb-2 flex-row items-center justify-between">
               <Text>Initialized:</Text>
-              <Text className={isSDKInitialized ? 'text-green-600' : 'text-red-600'}>
+              <Text
+                className={
+                  isSDKInitialized ? 'text-green-600' : 'text-red-600'
+                }>
                 {isSDKInitialized ? '✅ Ready' : '❌ Not Ready'}
               </Text>
             </View>
-            <View className="flex-row items-center justify-between mb-2">
+            <View className="mb-2 flex-row items-center justify-between">
               <Text>Scanning:</Text>
               <Text className={isScanning ? 'text-blue-600' : 'text-gray-600'}>
                 {isScanning ? `🔍 Active (${scanDuration}s)` : '⏸️ Stopped'}
@@ -202,51 +228,59 @@ export default function AddDevice() {
             </View>
 
             {!isSDKInitialized && (
-              <Button
-                title="Initialize SDK"
-                onPress={handleInitializeSDK}
-              />
+              <Button title="Initialize SDK" onPress={handleInitializeSDK} />
             )}
           </View>
 
           {/* Weight Data Display */}
           {connectedDevices.length > 0 && (
-            <View className="mb-4 p-4 bg-purple-50 rounded-lg">
-              <Text className="text-lg font-semibold mb-2">Weight Measurements</Text>
-              {connectedDevices.map((device) => {
+            <View className="mb-4 rounded-lg bg-purple-50 p-4">
+              <Text className="text-lg mb-2 font-semibold">
+                Weight Measurements
+              </Text>
+              {connectedDevices.map(device => {
                 const latestWeight = getLatestWeightForDevice(device.mac);
                 const deviceWeights = weightData
                   .filter(m => m.device.mac === device.mac)
                   .slice(-3); // Show last 3 measurements
 
                 return (
-                  <View key={device.mac} className="mb-3 p-3 bg-white rounded-lg border">
-                    <Text className="font-semibold text-sm mb-2">Device: {device.mac}</Text>
+                  <View
+                    key={device.mac}
+                    className="mb-3 rounded-lg border bg-white p-3">
+                    <Text className="text-sm mb-2 font-semibold">
+                      Device: {device.mac}
+                    </Text>
 
                     {latestWeight ? (
                       <View>
-                        <Text className="text-2xl font-bold text-purple-600 mb-1">
+                        <Text className="text-2xl mb-1 font-bold text-purple-600">
                           {formatWeight(latestWeight.data.weight)} kg
                         </Text>
-                        <Text className="text-xs text-gray-500 mb-2">
-                          Last measurement: {formatTime(latestWeight.data.timestamp)}
-                          {latestWeight.data.isStabilized && " (Stabilized)"}
+                        <Text className="text-xs mb-2 text-gray-500">
+                          Last measurement:{' '}
+                          {formatTime(latestWeight.data.timestamp)}
+                          {latestWeight.data.isStabilized && ' (Stabilized)'}
                         </Text>
 
                         {deviceWeights.length > 1 && (
                           <View>
-                            <Text className="text-sm font-medium mb-1">Recent measurements:</Text>
+                            <Text className="text-sm mb-1 font-medium">
+                              Recent measurements:
+                            </Text>
                             {deviceWeights.reverse().map((measurement, idx) => (
                               <Text key={idx} className="text-xs text-gray-600">
-                                {formatWeight(measurement.data.weight)}kg at {formatTime(measurement.data.timestamp)}
+                                {formatWeight(measurement.data.weight)}kg at{' '}
+                                {formatTime(measurement.data.timestamp)}
                               </Text>
                             ))}
                           </View>
                         )}
                       </View>
                     ) : (
-                      <Text className="text-gray-500 italic">
-                        No weight data yet - step on the scale to start measuring
+                      <Text className="italic text-gray-500">
+                        No weight data yet - step on the scale to start
+                        measuring
                       </Text>
                     )}
                   </View>
@@ -256,12 +290,16 @@ export default function AddDevice() {
           )}
 
           {/* Scan Controls */}
-          <View className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <Text className="text-lg font-semibold mb-2">Scan Control</Text>
-            <View className="flex-row gap-2 mb-2">
+          <View className="mb-4 rounded-lg bg-blue-50 p-4">
+            <Text className="text-lg mb-2 font-semibold">Scan Control</Text>
+            <View className="mb-2 flex-row gap-2">
               <View className="flex-1">
                 <Button
-                  title={isScanning ? `Stop Scan (${30 - scanDuration}s)` : "Start Scan"}
+                  title={
+                    isScanning
+                      ? `Stop Scan (${30 - scanDuration}s)`
+                      : 'Start Scan'
+                  }
                   onPress={isScanning ? handleStopScan : handleStartScan}
                   disabled={!isSDKInitialized}
                 />
@@ -275,7 +313,7 @@ export default function AddDevice() {
               </View>
             </View>
             {isScanning && (
-              <Text className="text-sm text-gray-600 text-center">
+              <Text className="text-sm text-center text-gray-600">
                 Scan will auto-stop in {30 - scanDuration} seconds
               </Text>
             )}
@@ -283,12 +321,12 @@ export default function AddDevice() {
 
           {/* Scanned Devices */}
           <View className="mb-4">
-            <Text className="text-lg font-semibold mb-2">
+            <Text className="text-lg mb-2 font-semibold">
               Available Devices ({scannedDevices.length})
             </Text>
             {scannedDevices.length === 0 ? (
-              <View className="p-4 bg-gray-50 rounded-lg">
-                <Text className="text-gray-500 italic text-center">
+              <View className="rounded-lg bg-gray-50 p-4">
+                <Text className="text-center italic text-gray-500">
                   {isScanning
                     ? 'Scanning for devices...'
                     : 'No devices found. Start scanning to find devices.'}
@@ -305,28 +343,37 @@ export default function AddDevice() {
                 return (
                   <View
                     key={device.mac || index}
-                    className={`p-4 mb-2 rounded-lg border ${
-                      isConnected ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <View className="flex-row items-center justify-between mb-2">
-                      <Text className="font-bold text-sm">MAC: {device.mac}</Text>
+                    className={`mb-2 rounded-lg border p-4 ${
+                      isConnected
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-gray-200 bg-gray-50'
+                    }`}>
+                    <View className="mb-2 flex-row items-center justify-between">
+                      <Text className="text-sm font-bold">
+                        MAC: {device.mac}
+                      </Text>
                       {device.rssi && (
                         <View className="flex-row items-center">
-                          <Text className="text-xs mr-1">{getRSSIIcon(device.rssi)}</Text>
-                          <Text className="text-xs">{getRSSIText(device.rssi)} ({device.rssi}dBm)</Text>
+                          <Text className="text-xs mr-1">
+                            {getRSSIIcon(device.rssi)}
+                          </Text>
+                          <Text className="text-xs">
+                            {getRSSIText(device.rssi)} ({device.rssi}dBm)
+                          </Text>
                         </View>
                       )}
                     </View>
 
-                    <Text className="text-sm text-gray-600 mb-3">
+                    <Text className="text-sm mb-3 text-gray-600">
                       Name: {device.name || 'Unknown Device'}
                     </Text>
 
                     <View className="flex-row items-center justify-between">
                       {isConnected ? (
                         <View className="flex-1">
-                          <Text className="text-green-600 font-medium text-center">✅ Connected</Text>
+                          <Text className="text-center font-medium text-green-600">
+                            ✅ Connected
+                          </Text>
                         </View>
                       ) : (
                         <View className="flex-1">
@@ -337,7 +384,10 @@ export default function AddDevice() {
                               disabled={isConnectingThis}
                             />
                             {isConnectingThis && (
-                              <ActivityIndicator size="small" className="ml-2" />
+                              <ActivityIndicator
+                                size="small"
+                                className="ml-2"
+                              />
                             )}
                           </View>
                         </View>
@@ -351,29 +401,35 @@ export default function AddDevice() {
 
           {/* Connected Devices */}
           <View className="mb-4">
-            <Text className="text-lg font-semibold mb-2">
+            <Text className="text-lg mb-2 font-semibold">
               Connected Devices ({connectedDevices.length})
             </Text>
             {connectedDevices.length === 0 ? (
-              <View className="p-4 bg-gray-50 rounded-lg">
-                <Text className="text-gray-500 italic text-center">No devices connected</Text>
+              <View className="rounded-lg bg-gray-50 p-4">
+                <Text className="text-center italic text-gray-500">
+                  No devices connected
+                </Text>
               </View>
             ) : (
               connectedDevices.map((device, index) => {
                 const isDisconnectingThis = disconnecting === device.mac;
 
                 return (
-                  <View key={device.mac || index} className="p-4 mb-2 bg-green-50 border border-green-200 rounded-lg">
-                    <View className="flex-row items-center justify-between mb-2">
+                  <View
+                    key={device.mac || index}
+                    className="mb-2 rounded-lg border border-green-200 bg-green-50 p-4">
+                    <View className="mb-2 flex-row items-center justify-between">
                       <Text className="font-bold">MAC: {device.mac}</Text>
-                      <Text className="text-green-600 font-medium">🟢 Active</Text>
+                      <Text className="font-medium text-green-600">
+                        🟢 Active
+                      </Text>
                     </View>
 
-                    <Text className="text-sm text-gray-600 mb-3">
+                    <Text className="text-sm mb-3 text-gray-600">
                       Name: {device.name || 'Unknown Device'}
                     </Text>
 
-                    <Text className="text-green-600 font-medium mb-3 text-center">
+                    <Text className="mb-3 text-center font-medium text-green-600">
                       📊 Ready to receive weight data
                     </Text>
 
