@@ -40,7 +40,7 @@ export default function DateSelector({
   };
 
   return (
-    <View className="w-full flex-row items-center justify-center gap-4 py-2">
+    <View className="w-full flex-row items-center justify-center gap-4">
       <Pressable onPress={handlePrev}>
         <FontAwesomeIcon
           icon={faCaretLeft}

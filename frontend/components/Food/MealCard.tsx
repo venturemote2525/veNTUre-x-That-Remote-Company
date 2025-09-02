@@ -2,15 +2,16 @@ import { View, Text } from '@/components/Themed';
 import { Pressable } from 'react-native';
 import { AddIcon, Icon } from '@/components/ui/icon';
 import { useRouter } from 'expo-router';
+import { Meal } from '@/types/database-types';
 
 type MealCardProps = {
   title: string;
-  meals: { id: number; name: string; calories: number }[];
+  meals: Meal[] | null;
 };
 
 export default function MealCard({ title, meals }: MealCardProps) {
   const router = useRouter();
-  const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
+  const totalCalories = meals?.reduce((sum, meal) => sum + meal.calories, 0);
   return (
     <View className="card-white">
       <View className="flex-row items-center justify-between">
@@ -21,13 +22,14 @@ export default function MealCard({ title, meals }: MealCardProps) {
           {totalCalories} kcal
         </Text>
       </View>
-      <View className="my-1 h-[1px] w-full bg-primary-500" />
-      {meals.length > 0 ? (
+      <View className="my-2 h-[1px] w-full bg-primary-500" />
+      {meals && meals.length > 0 ? (
         meals.map(meal => (
           <Pressable
             onPress={() =>
               router.push({
                 pathname: '/(logging)/summary',
+                params: { mealId: meal.id, type: 'history' }
               })
             }
             key={meal.id}
@@ -41,7 +43,7 @@ export default function MealCard({ title, meals }: MealCardProps) {
           </Pressable>
         ))
       ) : (
-        <Text className="py-2 text-center text-body2 text-primary-300">
+        <Text className="py-1 text-center text-body2 text-primary-300">
           No meals
         </Text>
       )}

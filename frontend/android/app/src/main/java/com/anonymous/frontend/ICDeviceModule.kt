@@ -7,43 +7,14 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import cn.icomon.icdevicemanager.ICDeviceManager
-import cn.icomon.icdevicemanager.ICDeviceManagerDelegate
-import cn.icomon.icdevicemanager.callback.ICScanDeviceDelegate
-import cn.icomon.icdevicemanager.model.device.ICDevice
-import cn.icomon.icdevicemanager.model.device.ICScanDeviceInfo
-import cn.icomon.icdevicemanager.model.device.ICUserInfo
-import cn.icomon.icdevicemanager.model.device.ICDeviceInfo
-import cn.icomon.icdevicemanager.model.other.ICConstant
-import cn.icomon.icdevicemanager.model.other.ICDeviceManagerConfig
-import cn.icomon.icdevicemanager.model.data.ICWeightData
-import cn.icomon.icdevicemanager.model.data.ICWeightCenterData
-import cn.icomon.icdevicemanager.model.data.ICKitchenScaleData
-import cn.icomon.icdevicemanager.model.data.ICCoordData
-import cn.icomon.icdevicemanager.model.data.ICWeightHistoryData
-import cn.icomon.icdevicemanager.model.data.ICRulerData
-import cn.icomon.icdevicemanager.model.data.ICSkipData
+import com.anonymous.frontend.device.PermissionManager
+import com.anonymous.frontend.device.ScanManager
 
 class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
-    companion object {
-        private const val TAG = "ICDeviceModule"
-        private const val CODE_REQUEST_PERMISSION = 1001
-    }
-
-    private val scannedDevices = mutableMapOf<String, ICDevice>()
-    private val connectedDevices = mutableMapOf<String, ICDevice>()
-    private var listenerCount = 0
-    private var isScanning = false
-    private var isSDKInitialized = false
-
-    private var deviceManagerDelegate: ICDeviceManagerDelegate? = null
-    private var scanDelegate: ICScanDeviceDelegate? = null
-
-    init {
-        setupDelegates()
-    }
+    private val permissionManager = PermissionManager(reactContext)
+    private val scanManager = ScanManager(reactContext)
 
     override fun getName(): String = "ICDeviceModule"
 
@@ -390,8 +361,12 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         if (!checkBLEPermission()) {
             requestBLEPermission()
             promise.reject("NO_PERMISSION", "BLE permissions not granted")
+    fun initializeSDK() {
+        if (!permissionManager.hasBLEPermission()) {
+            permissionManager.requestBLEPermission()
             return
         }
+        scanManager.initSDK()
 
         try {
             val config = ICDeviceManagerConfig()
@@ -418,8 +393,12 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         if (!checkBLEPermission()) {
             requestBLEPermission()
             promise.reject("NO_PERMISSION", "BLE permissions not granted")
+    fun startScan() {
+        if (!permissionManager.hasBLEPermission()) {
+            permissionManager.requestBLEPermission()
             return
         }
+        scanManager.startScan()
 
         if (isScanning) {
             promise.resolve(false)
@@ -444,6 +423,13 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun stopScan() = scanManager.stopScan()
+
+    @ReactMethod
+    fun addDevice(mac: String, name: String) = scanManager.addDevice(mac, name)
+
+    @ReactMethod
+    fun removeDevice(mac: String) = scanManager.removeDevice(mac)
     fun stopScan(promise: Promise) {
         try {
             ICDeviceManager.shared().stopScan()
@@ -457,6 +443,13 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun getScannedDevices() = emitToJS(
+        "onScannedDevices",
+        Arguments.createArray().apply {
+            scanManager.getScannedDevices().forEach { device ->
+                pushMap(Arguments.createMap().apply {
+                    putString("mac", device.mac)
+                    putString("name", device.name)
     fun connectDevice(macAddress: String, promise: Promise) {
         try {
             val device = scannedDevices[macAddress]
@@ -542,6 +535,13 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun getConnectedDevices() = emitToJS(
+        "onConnectedDevices",
+        Arguments.createArray().apply {
+            scanManager.getConnectedDevices().forEach { device ->
+                pushMap(Arguments.createMap().apply {
+                    putString("mac", device.mac)
+                    putString("name", device.name)
     fun getConnectedDevices(promise: Promise) {
         try {
             val devicesArray = Arguments.createArray()
@@ -555,6 +555,12 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         } catch (e: Exception) {
             promise.reject("ERROR", e.message)
         }
+    )
+
+    private fun emitToJS(event: String, params: Any?) =
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit(event, params)
+}
     }
 
     @ReactMethod

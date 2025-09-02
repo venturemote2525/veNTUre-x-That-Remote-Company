@@ -3,7 +3,7 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { NativeModules, NativeEventEmitter } from 'react-native';
 import { ICDeviceProvider } from '@/context/ICDeviceContext';
@@ -39,22 +39,28 @@ function RootLayoutNav() {
   const { profile, authenticated, loading, profileLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const [init, setInit] = useState(false);
 
   useEffect(() => {
     // wait until loading finishes
     if (!loading && !profileLoading) {
       const inAuthScreens = segments[0] === '(auth)';
-      console.log('authenticated:', authenticated);
-      // Navigate to onboarding if incomplete
+
+      // Navigate to onboarding if authenticated but profile not set
       if (authenticated && profile === null && !inAuthScreens) {
         router.replace('/(auth)/onboarding');
       }
-      // Go to root if not authenticated
-      if (!authenticated && !inAuthScreens) {
+      // Navigate to tabs if fully authenticated
+      else if (authenticated && profile !== null && segments[0] !== '(tabs)' && !init) {
+        setInit(true);
+        router.replace('/(tabs)/home');
+      }
+      // Navigate to root if not authenticated
+      else if (!authenticated && !inAuthScreens) {
         router.replace('/');
       }
     }
-  }, [loading, profileLoading, authenticated, profile, router, segments]);
+  }, [loading, profileLoading, authenticated, profile, router, segments, init]);
 
   return (
     <Stack>
