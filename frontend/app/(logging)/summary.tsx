@@ -1,4 +1,4 @@
-// app/(logging)/summary.tsx
+
 import Header from '@/components/Header';
 import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
@@ -129,7 +129,7 @@ export default function SummaryScreen() {
     setLoading(true);
     try {
       await updateMeal(mealId, { name, date: data.date.toISOString(), meal: data.meal.toUpperCase() });
-      setShowCapybaraModal(true); // ✅ instead of immediate navigation
+      setShowCapybaraModal(true); 
     } catch (error) {
       console.log(error);
     } finally {
@@ -208,7 +208,7 @@ export default function SummaryScreen() {
 
       <CustomAlert visible={alert.visible} title={alert.title} message={alert.message} confirmText={alert.confirmText} onConfirm={alert.onConfirm ?? (() => {})} cancelText={alert.cancelText} onCancel={alert.onCancel} />
 
-      {/* ✅ Capybara Popup */}
+      {/*Capybara Popup */}
       <Modal
         visible={showCapybaraModal}
         transparent
