@@ -7,6 +7,7 @@ import {
   faCamera,
   faChild,
   faUser,
+  faHippo,
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function TabLayout() {
@@ -60,7 +61,7 @@ export default function TabLayout() {
         name="capybara"
         options={{
           tabBarIcon: ({ color }) => (
-            <FontAwesomeIcon icon={faChild} size={24} color={color} /> // choose an icon
+            <FontAwesomeIcon icon={faHippo} size={24} color={color} /> 
           ),
         }}
       />
