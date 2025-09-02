@@ -75,10 +75,4 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR", e.message)
         }
     }
-
-    @ReactMethod
-    fun addDevice(mac: String, name: String) = scanManager.addDevice(mac, name)
-
-    @ReactMethod
-    fun removeDevice(mac: String) = scanManager.removeDevice(mac)
 }

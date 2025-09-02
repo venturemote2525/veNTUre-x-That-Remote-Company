@@ -5,10 +5,8 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { NativeModules, NativeEventEmitter } from 'react-native';
 import { ICDeviceProvider } from '@/context/ICDeviceContext';
-
-const { ICDeviceModule } = NativeModules;
+import { CustomAlert } from '@/components/CustomAlert';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -51,7 +49,12 @@ function RootLayoutNav() {
         router.replace('/(auth)/onboarding');
       }
       // Navigate to tabs if fully authenticated
-      else if (authenticated && profile !== null && segments[0] !== '(tabs)' && !init) {
+      else if (
+        authenticated &&
+        profile !== null &&
+        segments[0] !== '(tabs)' &&
+        !init
+      ) {
         setInit(true);
         router.replace('/(tabs)/home');
       }
@@ -68,7 +71,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(logging)" options={{ headerShown: false }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false }} />
+      <Stack.Screen name="(device)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" options={{ headerShown: false }} />
     </Stack>
   );

@@ -9,6 +9,8 @@ import {
 import Header from '@/components/Header';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
+import { AlertState } from '@/types/database-types';
+import { CustomAlert } from '@/components/CustomAlert';
 
 interface Device {
   mac: string;
@@ -37,7 +39,13 @@ export default function AddDevice() {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [scanDuration, setScanDuration] = useState(0);
-  const [scanTimer, setScanTimer] = useState<NodeJS.Timeout | null>(null);
+  const [scanTimer, setScanTimer] = useState<number | null>(null);
+
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   // Auto-stop scan after 30 seconds
   useEffect(() => {
@@ -83,6 +91,18 @@ export default function AddDevice() {
   };
 
   const handleConnectDevice = async (device: Device) => {
+    setAlert({
+      visible: true,
+      title: 'Add device?',
+      message: `Do you want to add ${device.name}?`,
+      confirmText: 'Yes',
+      onConfirm: () => handleConfirmConnectDevice(device),
+      cancelText: 'No',
+      onCancel: () => setAlert({ ...alert, visible: false }),
+    });
+  };
+
+  const handleConfirmConnectDevice = async (device: Device) => {
     if (isDeviceConnected(device.mac)) {
       Alert.alert(
         'Already Connected',
@@ -451,6 +471,15 @@ export default function AddDevice() {
           </View>
         </View>
       </ScrollView>
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        confirmText={alert.confirmText}
+        onConfirm={alert.onConfirm ?? (() => {})}
+        cancelText={alert.cancelText}
+        onCancel={alert.onCancel}
+      />
     </ThemedSafeAreaView>
   );
 }
