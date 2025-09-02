@@ -56,6 +56,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="capybara"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <FontAwesomeIcon icon={faChild} size={24} color={color} /> // choose an icon
+          ),
+        }}
+      />
     </Tabs>
   );
 }
