@@ -477,22 +477,4 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             receiverRegistered = false
         }
     }
-
-    fun addDevice(mac: String, deviceName: String) {
-        val device = scannedDevices[mac] ?: ICDevice().apply { setMacAddr(mac) }
-        ICDeviceManager.shared().addDevice(device) { _, _ ->
-            emitToJS("onDeviceAdded", Arguments.createMap().apply {
-                putString("mac", mac)
-                putString("name", deviceName)
-            })
-        }
-    }
-
-    fun removeDevice(mac: String) {
-        val device = connectedDevices[mac] ?: scannedDevices[mac] ?: ICDevice().apply { setMacAddr(mac) }
-        ICDeviceManager.shared().removeDevice(device) { _, _ ->
-            connectedDevices.remove(mac)
-            emitToJS("onDeviceRemoved", Arguments.createMap().apply { putString("mac", mac) })
-        }
-    }
 }

@@ -6,11 +6,33 @@ import { Pressable, useColorScheme } from 'react-native';
 import { faUtensils, faChild } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
+import { useEffect, useState } from 'react';
+import { useICDevice } from '@/context/ICDeviceContext';
+import { AlertState } from '@/types/database-types';
+import { CustomAlert } from '@/components/CustomAlert';
 
 export default function HomeScreen() {
   const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
+
+  const { bleEnabled } = useICDevice();
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  useEffect(() => {
+    if (!bleEnabled) {
+      setAlert({
+        visible: true,
+        title: 'Bluetooth not enabled',
+        message: 'Please enable Bluetooth to use weight scales.',
+      });
+    }
+  }, []);
+
   return (
     <ThemedSafeAreaView>
       {/* Header */}
@@ -84,6 +106,15 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </View>
+
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={() => {
+          setAlert({ ...alert, visible: false });
+        }}
+      />
     </ThemedSafeAreaView>
   );
 }

@@ -12,7 +12,7 @@ import { Pressable } from 'react-native';
 import { CustomAlert } from '@/components/CustomAlert';
 
 export default function DeviceInfo() {
-  const { deviceId } = useLocalSearchParams()
+  const { deviceId } = useLocalSearchParams();
   const deviceIdStr = Array.isArray(deviceId) ? deviceId[0] : deviceId;
   const { profile } = useAuth();
   const { removeDevice } = useICDevice();
@@ -32,7 +32,7 @@ export default function DeviceInfo() {
       } catch (error) {
         console.log(error);
       }
-    }
+    };
     fetchDeviceInfo();
   }, [deviceId]);
 
@@ -72,9 +72,11 @@ export default function DeviceInfo() {
       {device ? (
         <View>
           <Header title={device.name} />
-          <View className='px-4'>
+          <View className="px-4">
             <Text>MAC: {device.mac}</Text>
-            <Pressable className='button-rounded' onPress={() => handleRemoveDevice(device)}>
+            <Pressable
+              className="button-rounded"
+              onPress={() => handleRemoveDevice(device)}>
               <Text>Remove Device</Text>
             </Pressable>
           </View>
@@ -93,5 +95,5 @@ export default function DeviceInfo() {
         onCancel={alert.onCancel}
       />
     </ThemedSafeAreaView>
-  )
+  );
 }

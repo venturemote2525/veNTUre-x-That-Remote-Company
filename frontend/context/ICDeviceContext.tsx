@@ -1,35 +1,20 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { NativeModules, NativeEventEmitter, LogBox, Alert } from "react-native";
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import {
+  NativeModules,
+  NativeEventEmitter,
+  Alert,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
+import {
+  ICDevice,
+  ICWeightData,
+  ICWeightMeasurement,
+  ICDeviceInfo,
+} from '@/types/icdevice-types';
+
 const { ICDeviceModule } = NativeModules;
 const emitter = ICDeviceModule ? new NativeEventEmitter(ICDeviceModule) : null;
-
-interface ICDevice {
-  mac: string;
-  name?: string;
-  rssi?: number;
-  isConnected?: boolean;
-}
-
-interface ICWeightData {
-  weight: number;
-  timestamp: number;
-  impedance?: number;
-  isStabilized?: boolean;
-  unit?: string;
-  [key: string]: any;
-}
-
-interface ICWeightMeasurement {
-  device: ICDevice;
-  data: ICWeightData;
-  timestamp: number;
-}
-
-interface ICDeviceInfo {
-  firmwareVersion?: string;
-  hardwareVersion?: string;
-  [key: string]: any;
-}
 
 interface ICDeviceContextType {
   scannedDevices: ICDevice[];
@@ -40,6 +25,7 @@ interface ICDeviceContextType {
   bleState: string;
   deviceBatteryLevels: Record<string, number>;
   deviceInfo: Record<string, ICDeviceInfo>;
+  bleEnabled: boolean;
 
   // Weight data methods
   getLatestWeightForDevice: (deviceMac: string) => ICWeightMeasurement | null;
@@ -68,6 +54,7 @@ const ICDeviceContext = createContext<ICDeviceContextType>({
   bleState: 'Unknown',
   deviceBatteryLevels: {},
   deviceInfo: {},
+  bleEnabled: false,
 
   getLatestWeightForDevice: () => null,
   clearWeightData: () => {},
@@ -91,15 +78,22 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
   const [isScanning, setIsScanning] = useState(false);
   const [isSDKInitialized, setIsSDKInitialized] = useState(false);
   const [bleState, setBleState] = useState('Unknown');
-  const [deviceBatteryLevels, setDeviceBatteryLevels] = useState<Record<string, number>>({});
-  const [deviceInfo, setDeviceInfo] = useState<Record<string, ICDeviceInfo>>({});
+  const [deviceBatteryLevels, setDeviceBatteryLevels] = useState<
+    Record<string, number>
+  >({});
+  const [deviceInfo, setDeviceInfo] = useState<Record<string, ICDeviceInfo>>(
+    {},
+  );
+  const [bleEnabled, setBleEnabled] = useState(false);
 
   // Use ref to track initialization to prevent multiple calls
   const initializationRef = useRef<boolean>(false);
-  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scanTimeoutRef = useRef<number | null>(null);
 
   // Get latest weight measurement for a specific device
-  const getLatestWeightForDevice = (deviceMac: string): ICWeightMeasurement | null => {
+  const getLatestWeightForDevice = (
+    deviceMac: string,
+  ): ICWeightMeasurement | null => {
     const deviceMeasurements = weightData
       .filter(measurement => measurement.device?.mac === deviceMac)
       .sort((a, b) => b.timestamp - a.timestamp);
@@ -193,7 +187,6 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         await stopScan();
         console.log('Scan auto-stopped after 30 seconds');
       }, 30000);
-
     } catch (error) {
       console.error('Failed to start scan:', error);
       setIsScanning(false);
@@ -247,7 +240,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     try {
       const [connectedDevs, scannedDevs] = await Promise.all([
         ICDeviceModule.getConnectedDevices(),
-        ICDeviceModule.getScannedDevices()
+        ICDeviceModule.getScannedDevices(),
       ]);
 
       if (connectedDevs) setConnectedDevices(connectedDevs);
@@ -285,6 +278,19 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const requestPermissions = async () => {
+      if (Platform.OS === 'android' && Platform.Version >= 31) {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        ]);
+        console.log('Bluetooth permissions:', granted);
+      }
+    };
+
+    requestPermissions();
+
     // Auto-initialize SDK on mount
     const autoInitialize = async () => {
       if (!initializationRef.current && !isSDKInitialized) {
@@ -300,33 +306,52 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     autoInitialize();
 
     // SDK initialization callback
-    const sdkInitSub = emitter.addListener("onSDKInit", ({ success }: { success: boolean }) => {
-      console.log('SDK initialization result:', success);
-      setIsSDKInitialized(success);
-      initializationRef.current = success;
+    const sdkInitSub = emitter.addListener(
+      'onSDKInit',
+      ({ success }: { success: boolean }) => {
+        console.log('SDK initialization result:', success);
+        setIsSDKInitialized(success);
+        initializationRef.current = success;
 
-      if (!success) {
-        Alert.alert('SDK Initialization Failed', 'Please check Bluetooth permissions and try again.');
-      }
-    });
+        if (!success) {
+          Alert.alert(
+            'SDK Initialization Failed',
+            'Please check Bluetooth permissions and try again.',
+          );
+        }
+      },
+    );
 
     // Device found during scan
-    const deviceFoundSub = emitter.addListener("onDeviceFound", (device: ICDevice) => {
-      console.log('Device found:', device.mac);
-      setScannedDevices(prev => {
-        const exists = prev.some(d => d.mac === device.mac);
-        if (!exists) {
-          return [...prev, device];
-        }
-        return prev;
-      });
-    });
+    const deviceFoundSub = emitter.addListener(
+      'onDeviceFound',
+      (device: ICDevice) => {
+        console.log('Device found:', device.mac);
+        setScannedDevices(prev => {
+          const exists = prev.some(d => d.mac === device.mac);
+          if (!exists) {
+            return [...prev, device];
+          }
+          return prev;
+        });
+      },
+    );
 
     // Device connection state changes
     const connectionSub = emitter.addListener(
-      "onDeviceConnectionChanged",
-      ({ mac, state, isConnected }: { mac: string; state: string; isConnected: boolean }) => {
-        console.log(`Device ${mac} connection changed to: ${state} (${isConnected ? 'connected' : 'disconnected'})`);
+      'onDeviceConnectionChanged',
+      ({
+        mac,
+        state,
+        isConnected,
+      }: {
+        mac: string;
+        state: string;
+        isConnected: boolean;
+      }) => {
+        console.log(
+          `Device ${mac} connection changed to: ${state} (${isConnected ? 'connected' : 'disconnected'})`,
+        );
 
         if (isConnected) {
           setConnectedDevices(prev => {
@@ -334,7 +359,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
               const device = scannedDevices.find(d => d.mac === mac) || { mac };
               return [...prev, { ...device, isConnected: true }];
             }
-            return prev.map(d => d.mac === mac ? { ...d, isConnected: true } : d);
+            return prev.map(d =>
+              d.mac === mac ? { ...d, isConnected: true } : d,
+            );
           });
         } else {
           setConnectedDevices(prev => prev.filter(d => d.mac !== mac));
@@ -343,113 +370,131 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         // Update scanned devices connection status
         setScannedDevices(prev =>
           prev.map(device =>
-            device.mac === mac ? { ...device, isConnected } : device
-          )
+            device.mac === mac ? { ...device, isConnected } : device,
+          ),
         );
-      }
+      },
     );
 
     // Weight data callback
     const weightDataSub = emitter.addListener(
-      "onReceiveWeightData",
+      'onReceiveWeightData',
       ({ device, data }: { device: ICDevice; data: ICWeightData }) => {
         console.log('Weight data received:', {
           device: device?.mac,
           weight: data?.weight,
-          timestamp: new Date(data?.timestamp || Date.now()).toISOString()
+          timestamp: new Date(data?.timestamp || Date.now()).toISOString(),
         });
 
         const measurement: ICWeightMeasurement = {
           device,
           data: {
             ...data,
-            timestamp: data.timestamp || Date.now()
+            timestamp: data.timestamp || Date.now(),
           },
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         setWeightData(prev => {
           const newData = [...prev, measurement];
           // Keep only last 100 measurements per device
-          const deviceMeasurements = newData.filter(m => m.device.mac === device.mac);
-          const otherMeasurements = newData.filter(m => m.device.mac !== device.mac);
+          const deviceMeasurements = newData.filter(
+            m => m.device.mac === device.mac,
+          );
+          const otherMeasurements = newData.filter(
+            m => m.device.mac !== device.mac,
+          );
 
           return [
             ...otherMeasurements,
-            ...deviceMeasurements.slice(-50) // Keep last 50 per device
+            ...deviceMeasurements.slice(-50), // Keep last 50 per device
           ];
         });
-      }
+      },
     );
 
     // Battery level callback
     const batterySub = emitter.addListener(
-      "onReceiveBattery",
+      'onReceiveBattery',
       ({ mac, battery }: { mac: string; battery: number }) => {
         console.log(`Device ${mac} battery level: ${battery}%`);
         setDeviceBatteryLevels(prev => ({
           ...prev,
-          [mac]: battery
+          [mac]: battery,
         }));
-      }
+      },
     );
 
     // Device info callback
     const deviceInfoSub = emitter.addListener(
-      "onReceiveDeviceInfo",
-      ({ mac, deviceInfo: info }: { mac: string; deviceInfo: ICDeviceInfo }) => {
+      'onReceiveDeviceInfo',
+      ({
+        mac,
+        deviceInfo: info,
+      }: {
+        mac: string;
+        deviceInfo: ICDeviceInfo;
+      }) => {
         console.log(`Device ${mac} info received:`, info);
         setDeviceInfo(prev => ({
           ...prev,
-          [mac]: info
+          [mac]: info,
         }));
-      }
+      },
     );
 
     // Weight history data callback
     const weightHistorySub = emitter.addListener(
-      "onReceiveWeightHistoryData",
+      'onReceiveWeightHistoryData',
       ({ mac, data }: { mac: string; data: ICWeightData }) => {
         console.log(`Device ${mac} history data:`, data);
         // Handle historical data if needed
-      }
+      },
     );
 
     // RSSI callback
     const rssiSub = emitter.addListener(
-      "onReceiveRSSI",
+      'onReceiveRSSI',
       ({ mac, rssi }: { mac: string; rssi: number }) => {
         console.log(`Device ${mac} RSSI: ${rssi}dBm`);
         // Update device RSSI in scanned devices
         setScannedDevices(prev =>
           prev.map(device =>
-            device.mac === mac ? { ...device, rssi } : device
-          )
+            device.mac === mac ? { ...device, rssi } : device,
+          ),
         );
-      }
+      },
     );
 
     // Device upgrade progress
     const upgradeProgressSub = emitter.addListener(
-      "onReceiveUpgradePercent",
-      ({ mac, status, percent }: { mac: string; status: string; percent: number }) => {
+      'onReceiveUpgradePercent',
+      ({
+        mac,
+        status,
+        percent,
+      }: {
+        mac: string;
+        status: string;
+        percent: number;
+      }) => {
         console.log(`Device ${mac} upgrade: ${status} ${percent}%`);
-      }
+      },
     );
 
     // BLE state callback
     const bleStateSub = emitter.addListener(
-      "onBleState",
+      'onBleState',
       ({ state, enabled }: { state: string; enabled: boolean }) => {
         console.log('BLE state changed:', state, 'enabled:', enabled);
         setBleState(state);
-
+        setBleEnabled(state === 'ICBleStatePoweredOn');
         if (!enabled) {
-          Alert.alert('Bluetooth Disabled', 'Please enable Bluetooth to use weight scales.');
+          // Alert.alert('Bluetooth Disabled', 'Please enable Bluetooth to use weight scales.');
           setIsScanning(false);
           setConnectedDevices([]);
         }
-      }
+      },
     );
 
     return () => {
@@ -482,35 +527,44 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       weightData: weightData.length,
       isScanning,
       isSDKInitialized,
-      bleState
+      bleState,
     });
-  }, [scannedDevices, connectedDevices, weightData, isScanning, isSDKInitialized, bleState]);
+  }, [
+    scannedDevices,
+    connectedDevices,
+    weightData,
+    isScanning,
+    isSDKInitialized,
+    bleState,
+  ]);
 
   return (
-    <ICDeviceContext.Provider value={{
-      scannedDevices,
-      connectedDevices,
-      weightData,
-      isScanning,
-      isSDKInitialized,
-      bleState,
-      deviceBatteryLevels,
-      deviceInfo,
+    <ICDeviceContext.Provider
+      value={{
+        scannedDevices,
+        connectedDevices,
+        weightData,
+        isScanning,
+        isSDKInitialized,
+        bleState,
+        deviceBatteryLevels,
+        deviceInfo,
+        bleEnabled,
 
-      getLatestWeightForDevice,
-      clearWeightData,
+        getLatestWeightForDevice,
+        clearWeightData,
 
-      initializeSDK,
-      connectDevice,
-      disconnectDevice,
-      startScan,
-      stopScan,
-      clearScannedDevices,
-      refreshDevices,
-      isDeviceConnected,
+        initializeSDK,
+        connectDevice,
+        disconnectDevice,
+        startScan,
+        stopScan,
+        clearScannedDevices,
+        refreshDevices,
+        isDeviceConnected,
 
-      getBodyFatAlgorithmsManager,
-    }}>
+        getBodyFatAlgorithmsManager,
+      }}>
       {children}
     </ICDeviceContext.Provider>
   );
