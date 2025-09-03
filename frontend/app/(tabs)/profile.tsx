@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Image, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { Image, Pressable, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { ThemedSafeAreaView } from '@/components/Themed';
+import { ThemedSafeAreaView, View, Text } from '@/components/Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
 import uuid from 'react-native-uuid';
+import { useThemeMode } from '@/context/ThemeContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function ProfileScreen() {
+  const { mode, setMode } = useThemeMode();
   const { profile, user, profileLoading, loading, refreshProfile } = useAuth();
   const [photo, setPhoto] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -18,7 +21,9 @@ export default function ProfileScreen() {
 
   const email = user?.email ?? undefined;
   const memberSinceIso = profile?.created_at ?? user?.created_at;
-  const memberSince = memberSinceIso ? new Date(memberSinceIso).toLocaleDateString() : undefined;
+  const memberSince = memberSinceIso
+    ? new Date(memberSinceIso).toLocaleDateString()
+    : undefined;
   const isBusy = loading || profileLoading;
 
   useEffect(() => {
@@ -31,7 +36,9 @@ export default function ProfileScreen() {
       if (storedBase64) {
         setPhoto(storedBase64);
       } else if (profile?.avatar_url) {
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(profile.avatar_url);
         if (urlData?.publicUrl) setPhoto(urlData.publicUrl);
       }
     };
@@ -41,9 +48,13 @@ export default function ProfileScreen() {
   // Pick image from gallery
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'Please allow access to your photo library.');
+        Alert.alert(
+          'Permission required',
+          'Please allow access to your photo library.',
+        );
         return;
       }
 
@@ -55,7 +66,11 @@ export default function ProfileScreen() {
         base64: true,
       });
 
-      if (result.assets && result.assets.length > 0 && result.assets[0].base64) {
+      if (
+        result.assets &&
+        result.assets.length > 0 &&
+        result.assets[0].base64
+      ) {
         const base64Image = `data:image/png;base64,${result.assets[0].base64}`;
         setPhoto(base64Image); // show immediately
         await AsyncStorage.setItem('profile_photo', base64Image); // persist locally
@@ -82,7 +97,9 @@ export default function ProfileScreen() {
       if (uploadError) throw uploadError;
 
       // Get public URL and update local state
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
       if (urlData?.publicUrl) setPhoto(urlData.publicUrl);
 
       // Update profile table
@@ -126,15 +143,14 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ThemedSafeAreaView>
-      <View className="flex-1 px-6 py-10 bg-background-50">
-        <View className="items-center mb-6">
+    <ThemedSafeAreaView edges={['top']} className="justify-between p-4">
+      <View className="flex-1">
+        <View className="mb-6 items-center">
           <Pressable
             onPress={pickImage}
             disabled={uploading}
-            className="rounded-full overflow-hidden"
-            style={{ width: 96, height: 96 }}
-          >
+            className="overflow-hidden rounded-full"
+            style={{ width: 96, height: 96 }}>
             <Image
               source={{
                 uri: photo
@@ -154,42 +170,61 @@ export default function ProfileScreen() {
                 alignItems: 'center',
                 backgroundColor: 'rgba(0,0,0,0.2)',
                 borderRadius: 48,
-              }}
-            >
-              {uploading ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="camera-outline" size={24} color="#fff" />}
+              }}>
+              {uploading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="camera-outline" size={24} color="#fff" />
+              )}
             </View>
           </Pressable>
 
-          <Text className="text-xl font-bodyBold text-primary-600 mt-2">{profile?.username || 'Guest User'}</Text>
-          <Text className="text-sm text-gray-500">{isBusy ? 'Loading...' : email ?? 'No email'}</Text>
+          <Text className="mt-2 font-bodyBold text-head2 text-primary-500">
+            {profile?.username || 'Guest User'}
+          </Text>
+          <Text className="text-sm text-primary-300">
+            {isBusy ? 'Loading...' : (email ?? 'No email')}
+          </Text>
         </View>
 
-        <View className="space-y-4 bg-white rounded-2xl shadow-md p-6 mb-10">
+        <View className="mb-10 space-y-4 rounded-2xl bg-white p-6 shadow-md">
           <View className="flex-row justify-between">
-            <Text className="text-gray-500 font-body">Member since</Text>
-            <Text className="font-bodyBold text-black">{isBusy ? 'Loading...' : memberSince ?? 'N/A'}</Text>
+            <Text className="font-body text-gray-500">Member since</Text>
+            <Text className="font-bodyBold text-black">
+              {isBusy ? 'Loading...' : (memberSince ?? 'N/A')}
+            </Text>
           </View>
           <View className="flex-row justify-between">
-  <Text className="text-gray-500 font-body">DOB</Text>
-  <Text className="font-bodyBold text-black">{profile?.dob ?? 'N/A'}</Text>
-</View>
-<View className="flex-row justify-between">
-  <Text className="text-gray-500 font-body">Gender</Text>
-  <Text className="font-bodyBold text-black">{profile?.gender ?? 'N/A'}</Text>
-</View>
+            <Text className="font-body text-gray-500">DOB</Text>
+            <Text className="font-bodyBold text-black">
+              {profile?.dob ?? 'N/A'}
+            </Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="font-body text-gray-500">Gender</Text>
+            <Text className="font-bodyBold text-black">
+              {profile?.gender ?? 'N/A'}
+            </Text>
+          </View>
 
           <View className="h-[1px] bg-gray-200" />
           <View className="flex-row justify-between">
-            <Text className="text-gray-500 font-body">Status</Text>
+            <Text className="font-body text-gray-500">Status</Text>
             <Text className="font-bodyBold text-green-600">Active</Text>
           </View>
         </View>
-              
-
-        <Pressable onPress={handleLogout} className="bg-red-500 py-3 rounded-2xl shadow-md">
-          <Text className="font-bodyBold text-background-0 text-center">Log out</Text>
-        </Pressable>
+        <View className="gap-1">
+          <Text className="font-bodySemiBold text-body2 text-primary-300">
+            Theme
+          </Text>
+          <ThemeToggle />
+        </View>
       </View>
+      <Pressable onPress={handleLogout} className="button">
+        <Text className="text-center font-bodyBold text-body2 text-background-0">
+          Log out
+        </Text>
+      </Pressable>
     </ThemedSafeAreaView>
   );
 }

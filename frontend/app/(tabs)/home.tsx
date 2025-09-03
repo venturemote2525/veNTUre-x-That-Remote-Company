@@ -31,7 +31,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/(user)/MyDevices')}
             itemTextClassName="text-primary-500"
           />
-          <DropdownItem label={'Manual Input'} />
+          <DropdownItem
+            label={'Manual Input'}
+            itemTextClassName="text-primary-500"
+          />
         </CustomDropdown>
       </View>
       {/* Main */}
@@ -79,8 +82,8 @@ export default function HomeScreen() {
           </View>
           {/* Details */}
           <View>
-            <Text>Body Fat:</Text>
-            <Text>Weight:</Text>
+            <Text className="text">Body Fat:</Text>
+            <Text className="text">Weight:</Text>
           </View>
         </Pressable>
       </View>
