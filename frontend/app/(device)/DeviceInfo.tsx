@@ -15,7 +15,7 @@ export default function DeviceInfo() {
   const { deviceId } = useLocalSearchParams();
   const deviceIdStr = Array.isArray(deviceId) ? deviceId[0] : deviceId;
   const { profile } = useAuth();
-  const { removeDevice } = useICDevice();
+  const { disconnectDevice } = useICDevice();
   const router = useRouter();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -52,7 +52,7 @@ export default function DeviceInfo() {
     if (!profile) return;
     try {
       await unpairDevice(profile.user_id, device.mac);
-      removeDevice(device.mac);
+      await disconnectDevice(device.mac);
       setAlert({ ...alert, visible: false });
       router.back();
     } catch (error) {

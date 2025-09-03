@@ -40,12 +40,6 @@ export default function MyDevices() {
     }, []),
   );
 
-  const handleDevicePress = (device: any) => {
-    console.log('Pressed device:', device.mac);
-    // Navigate to device details page
-    // router.push(`/(user)/DeviceDetails?mac=${device.mac}`);
-  };
-
   const getDeviceStatus = (mac: string) => {
     const latestWeight = getLatestWeightForDevice(mac);
     if (latestWeight) {
@@ -114,7 +108,12 @@ export default function MyDevices() {
                 return (
                   <Pressable
                     key={device.mac || index}
-                    onPress={() => handleDevicePress(device)}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(device)/DeviceInfo',
+                        params: { deviceId: device.id },
+                      })
+                    }
                     className="mb-3 rounded-2xl bg-background-0 px-6 py-4">
                     <View className="flex-row items-center justify-between">
                       <View className="flex-1">
@@ -219,7 +218,7 @@ export default function MyDevices() {
         {/* Add Device Button - Fixed at bottom */}
         <View className="absolute bottom-4 left-4 right-4">
           <Pressable
-            onPress={() => router.push('/(user)/AddDevice')}
+            onPress={() => router.push('/(device)/AddDevice')}
             className="button-rounded">
             <View className="flex-row items-center justify-center">
               <AntDesign

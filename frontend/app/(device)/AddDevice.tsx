@@ -11,6 +11,8 @@ import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
+import { pairDevice } from '@/utils/device/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface Device {
   mac: string;
@@ -34,6 +36,7 @@ export default function AddDevice() {
     clearScannedDevices,
     getLatestWeightForDevice,
   } = useICDevice();
+  const { profile } = useAuth();
 
   const [connecting, setConnecting] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
@@ -103,6 +106,7 @@ export default function AddDevice() {
   };
 
   const handleConfirmConnectDevice = async (device: Device) => {
+    if (!profile) return;
     if (isDeviceConnected(device.mac)) {
       Alert.alert(
         'Already Connected',
@@ -113,6 +117,9 @@ export default function AddDevice() {
 
     try {
       setConnecting(device.mac);
+      // Add to database
+      await pairDevice(profile.user_id, device.name ?? 'MY_SCALE', device.mac);
+      // Add connection
       await connectDevice(device.mac);
       Alert.alert('Success', `Connected to ${device.mac}`);
     } catch (error: any) {
