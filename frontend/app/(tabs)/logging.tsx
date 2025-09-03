@@ -10,15 +10,15 @@ import LoadingScreen from '@/components/LoadingScreen';
 import uuid from 'react-native-uuid';
 
 export default function LoggingScreen() {
-  const { profile } = useAuth()
+  const { profile } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const router = useRouter();
   const { meal: paramMeal } = useLocalSearchParams();
   const [meal, setMeal] = useState(paramMeal ?? '');
-  const [loading, setLoading] = useState(false)
-  const [uploadLoading, setUploadLoading] = useState(false)
-  const [aiLoading, setAiLoading] = useState(false)
-  const id = uuid.v4()
+  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const id = uuid.v4();
 
   useEffect(() => {
     if (paramMeal) {
@@ -64,17 +64,17 @@ export default function LoggingScreen() {
   const confirmPhoto = async () => {
     if (!image || !profile) return;
     try {
-      setLoading(true)
+      setLoading(true);
       // Upload to database
-      setUploadLoading(true)
+      setUploadLoading(true);
       const path = await uploadImage(id, profile.user_id, image);
-      setUploadLoading(false)
+      setUploadLoading(false);
 
       // TODO: Send to AI
-      setAiLoading(true)
-      setAiLoading(false)
+      setAiLoading(true);
+      setAiLoading(false);
 
-      setLoading(false)
+      setLoading(false);
       // Go to summary screen
       router.push({
         pathname: '/(logging)/summary',
@@ -87,17 +87,28 @@ export default function LoggingScreen() {
 
   if (loading) {
     return (
-        <ThemedSafeAreaView>
-          <LoadingScreen text={uploadLoading ? "Uploading photo" : aiLoading ? "Analysing photo" : "Loading"} />
-        </ThemedSafeAreaView>
-    )
+      <ThemedSafeAreaView>
+        <LoadingScreen
+          text={
+            uploadLoading
+              ? 'Uploading photo'
+              : aiLoading
+                ? 'Analysing photo'
+                : 'Loading'
+          }
+        />
+      </ThemedSafeAreaView>
+    );
   }
 
   return (
     <ThemedSafeAreaView edges={['top']} className="px-4 py-8">
       <View className="flex-1 items-center gap-8 pt-16">
         {image ? (
-          <Image source={{ uri: `data:image/jpeg;base64,${image}` }} className="h-80 w-80 rounded-3xl" />
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${image}` }}
+            className="h-80 w-80 rounded-3xl"
+          />
         ) : (
           <View className="h-80 w-80 items-center justify-center rounded-3xl border-2 border-secondary-500 bg-background-0">
             <Text className="text-secondary-500">
@@ -107,13 +118,13 @@ export default function LoggingScreen() {
         )}
         <View className="gap-4">
           <Pressable className="button-white w-80" onPress={pickImage}>
-            <Text className="font-bodySemiBold text-secondary-500">
+            <Text className="font-bodySemiBold text-body2 text-secondary-500">
               Pick a photo from gallery
             </Text>
           </Pressable>
 
           <Pressable className="button-white w-80" onPress={takePhoto}>
-            <Text className="font-bodySemiBold text-secondary-500">
+            <Text className="font-bodySemiBold text-body2 text-secondary-500">
               Take a photo
             </Text>
           </Pressable>

@@ -13,11 +13,11 @@ module.exports = {
   ],
   theme: {
     fontSize: {
-      title: ['3rem', { lineHeight: '3.5rem' }], // 48px
-      head1: ['2.25rem', { lineHeight: '3rem' }], // 36px
-      head2: ['1.875rem', { lineHeight: '2.5rem' }], // 30px
+      title: ['3.75rem', { lineHeight: '3.75rem' }], // 48px
+      head1: ['2.25rem', { lineHeight: '2.5rem' }], // 36px
+      head2: ['1.875rem', { lineHeight: '2.25rem' }], // 30px
       body1: ['1.5rem', { lineHeight: '2rem' }], // 24px
-      body2: ['1.125rem', { lineHeight: '1.75rem' }], // 18px
+      body2: ['1.25rem', { lineHeight: '1.75rem' }], // 20px
     },
     extend: {
       colors: {

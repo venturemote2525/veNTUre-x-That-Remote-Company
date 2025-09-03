@@ -6,18 +6,18 @@
 export const Colors = {
   light: {
     text: '#11181C',
-    title: '#F15025',
+    title: '#0077b6',
     background: '#F2F2F2',
     cardBackground: '#FFFFFF',
-    secondary: '#F15025',
+    secondary: '#0077b6',
     primary: '#000000',
   },
   dark: {
     text: '#11181C',
-    title: '#F15025',
+    title: '#0096c7',
     background: '#F2F2F2',
     cardBackground: '#FFFFFF',
-    secondary: '#9d0208',
+    secondary: '#0096c7',
     primary: '#FFFFFF',
   },
 };
