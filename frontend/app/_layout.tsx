@@ -5,7 +5,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { ICDeviceProvider } from '@/context/ICDeviceContext';
+import { ICDeviceProvider, useICDevice } from '@/context/ICDeviceContext';
 import { CustomAlert } from '@/components/CustomAlert';
 
 export default function RootLayout() {
@@ -35,10 +35,13 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { profile, authenticated, loading, profileLoading } = useAuth();
+  const { connectedDevices, getLatestWeightForDevice, weightData } =
+    useICDevice();
   const router = useRouter();
   const segments = useSegments();
   const [init, setInit] = useState(false);
 
+  // -------------------- Auth Routing --------------------
   useEffect(() => {
     // wait until loading finishes
     if (!loading && !profileLoading) {
@@ -65,11 +68,45 @@ function RootLayoutNav() {
     }
   }, [loading, profileLoading, authenticated, profile, router, segments, init]);
 
+  // -------------------- Weight taking --------------------
+  const [lastRoutedWeightTs, setLastRoutedWeightTs] = useState<number | null>(
+    null,
+  );
+  useEffect(() => {
+    console.log('connected', connectedDevices);
+    if (connectedDevices.length === 0) return;
+
+    const deviceWithNewWeight = connectedDevices.find(device => {
+      const latestWeight = getLatestWeightForDevice(device.mac);
+      if (!latestWeight) return false;
+      const ts = new Date(latestWeight.data.timestamp).getTime();
+      // Only route if no previous timestamp OR 30s have passed
+      return !lastRoutedWeightTs || ts - lastRoutedWeightTs > 10 * 1000;
+    });
+
+    if (deviceWithNewWeight) {
+      const latestWeight = getLatestWeightForDevice(deviceWithNewWeight.mac)!;
+      const ts = new Date(latestWeight.data.timestamp).getTime();
+
+      // Update last routed timestamp
+      setLastRoutedWeightTs(ts);
+
+      // Only allow routing in device or tab screens (exclude logging)
+      const inTabScreens = segments[0] === '(tabs)';
+      const inDeviceScreens = segments[0] === '(device)';
+      const inLogging = segments[1] === 'logging';
+      if ((inTabScreens || inDeviceScreens) && !(inTabScreens && inLogging)) {
+        router.push('/(body)/weight-taking');
+      }
+    }
+  }, [connectedDevices, weightData]);
+
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(body)" options={{ headerShown: false }} />
       <Stack.Screen name="(logging)" options={{ headerShown: false }} />
       <Stack.Screen name="(device)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" options={{ headerShown: false }} />
