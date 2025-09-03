@@ -25,18 +25,23 @@ export default function MyDevices() {
 
   useFocusEffect(
     useCallback(() => {
-      const fetchPairedDevices = async () => {
+      let isActive = true;
+      (async () => {
         try {
           setLoading(true);
           const data = await retrieveDevices();
-          setPairedDevices(data);
+          if (isActive) {
+            setPairedDevices(data);
+          }
         } catch (error) {
           console.error('Retrieve device error: ', error);
         } finally {
-          setLoading(false);
+          if (isActive) setLoading(false);
         }
+      })();
+      return () => {
+        isActive = false;
       };
-      fetchPairedDevices();
     }, []),
   );
 

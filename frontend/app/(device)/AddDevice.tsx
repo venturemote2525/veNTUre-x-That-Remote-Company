@@ -35,6 +35,7 @@ export default function AddDevice() {
     initializeSDK,
     clearScannedDevices,
     getLatestWeightForDevice,
+    refreshDevices,
   } = useICDevice();
   const { profile } = useAuth();
 
@@ -80,6 +81,12 @@ export default function AddDevice() {
     }
   }, [isScanning]);
 
+  useEffect(() => {
+    const refresh = async () => {
+      refreshDevices();
+    };
+  }, []);
+
   const handleInitializeSDK = async () => {
     try {
       await initializeSDK();
@@ -97,7 +104,7 @@ export default function AddDevice() {
     setAlert({
       visible: true,
       title: 'Add device?',
-      message: `Do you want to add ${device.name}?`,
+      message: `Do you want to add ${device.mac}?`,
       confirmText: 'Yes',
       onConfirm: () => handleConfirmConnectDevice(device),
       cancelText: 'No',
@@ -108,10 +115,14 @@ export default function AddDevice() {
   const handleConfirmConnectDevice = async (device: Device) => {
     if (!profile) return;
     if (isDeviceConnected(device.mac)) {
-      Alert.alert(
-        'Already Connected',
-        `Device ${device.mac} is already connected`,
-      );
+      setAlert({
+        visible: true,
+        title: 'Already Connected',
+        message: `Device ${device.mac} is already connected`,
+        confirmText: 'OK',
+        onConfirm: () => setAlert({ ...alert, visible: false }),
+        onCancel: () => {},
+      });
       return;
     }
 
@@ -121,13 +132,26 @@ export default function AddDevice() {
       await pairDevice(profile.user_id, device.name ?? 'MY_SCALE', device.mac);
       // Add connection
       await connectDevice(device.mac);
-      Alert.alert('Success', `Connected to ${device.mac}`);
+      await refreshDevices();
+
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: `Connected to ${device.mac}`,
+        confirmText: 'OK',
+        onConfirm: () => setAlert({ ...alert, visible: false }),
+        onCancel: () => {},
+      });
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
-      Alert.alert(
-        'Connection Failed',
-        `Failed to connect to ${device.mac}\n\nError: ${errorMessage}`,
-      );
+      setAlert({
+        visible: true,
+        title: 'Connection Failed',
+        message: `Failed to connect to ${device.mac}\n\nError: ${errorMessage}`,
+        confirmText: 'OK',
+        onConfirm: () => setAlert({ ...alert, visible: false }),
+        onCancel: () => {},
+      });
       console.error('Connection error:', error);
     } finally {
       setConnecting(null);
@@ -138,6 +162,7 @@ export default function AddDevice() {
     try {
       setDisconnecting(device.mac);
       await disconnectDevice(device.mac);
+      await refreshDevices();
       Alert.alert('Disconnected', `Disconnected from ${device.mac}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred';
@@ -426,56 +451,56 @@ export default function AddDevice() {
             )}
           </View>
 
-          {/* Connected Devices */}
-          <View className="mb-4">
-            <Text className="text-lg mb-2 font-semibold">
-              Connected Devices ({connectedDevices.length})
-            </Text>
-            {connectedDevices.length === 0 ? (
-              <View className="rounded-lg bg-gray-50 p-4">
-                <Text className="text-center italic text-gray-500">
-                  No devices connected
-                </Text>
-              </View>
-            ) : (
-              connectedDevices.map((device, index) => {
-                const isDisconnectingThis = disconnecting === device.mac;
+          {/*/!* Connected Devices *!/*/}
+          {/*<View className="mb-4">*/}
+          {/*  <Text className="text-lg mb-2 font-semibold">*/}
+          {/*    Connected Devices ({connectedDevices.length})*/}
+          {/*  </Text>*/}
+          {/*  {connectedDevices.length === 0 ? (*/}
+          {/*    <View className="rounded-lg bg-gray-50 p-4">*/}
+          {/*      <Text className="text-center italic text-gray-500">*/}
+          {/*        No devices connected*/}
+          {/*      </Text>*/}
+          {/*    </View>*/}
+          {/*  ) : (*/}
+          {/*    connectedDevices.map((device, index) => {*/}
+          {/*      const isDisconnectingThis = disconnecting === device.mac;*/}
 
-                return (
-                  <View
-                    key={device.mac || index}
-                    className="mb-2 rounded-lg border border-green-200 bg-green-50 p-4">
-                    <View className="mb-2 flex-row items-center justify-between">
-                      <Text className="font-bold">MAC: {device.mac}</Text>
-                      <Text className="font-medium text-green-600">
-                        🟢 Active
-                      </Text>
-                    </View>
+          {/*      return (*/}
+          {/*        <View*/}
+          {/*          key={device.mac || index}*/}
+          {/*          className="mb-2 rounded-lg border border-green-200 bg-green-50 p-4">*/}
+          {/*          <View className="mb-2 flex-row items-center justify-between">*/}
+          {/*            <Text className="font-bold">MAC: {device.mac}</Text>*/}
+          {/*            <Text className="font-medium text-green-600">*/}
+          {/*              🟢 Active*/}
+          {/*            </Text>*/}
+          {/*          </View>*/}
 
-                    <Text className="text-sm mb-3 text-gray-600">
-                      Name: {device.name || 'Unknown Device'}
-                    </Text>
+          {/*          <Text className="text-sm mb-3 text-gray-600">*/}
+          {/*            Name: {device.name || 'Unknown Device'}*/}
+          {/*          </Text>*/}
 
-                    <Text className="mb-3 text-center font-medium text-green-600">
-                      📊 Ready to receive weight data
-                    </Text>
+          {/*          <Text className="mb-3 text-center font-medium text-green-600">*/}
+          {/*            📊 Ready to receive weight data*/}
+          {/*          </Text>*/}
 
-                    <View className="flex-row items-center justify-center">
-                      <Button
-                        title="Disconnect"
-                        onPress={() => handleDisconnectDevice(device)}
-                        disabled={isDisconnectingThis}
-                        color="#dc3545"
-                      />
-                      {isDisconnectingThis && (
-                        <ActivityIndicator size="small" className="ml-2" />
-                      )}
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </View>
+          {/*          <View className="flex-row items-center justify-center">*/}
+          {/*            <Button*/}
+          {/*              title="Disconnect"*/}
+          {/*              onPress={() => handleDisconnectDevice(device)}*/}
+          {/*              disabled={isDisconnectingThis}*/}
+          {/*              color="#dc3545"*/}
+          {/*            />*/}
+          {/*            {isDisconnectingThis && (*/}
+          {/*              <ActivityIndicator size="small" className="ml-2" />*/}
+          {/*            )}*/}
+          {/*          </View>*/}
+          {/*        </View>*/}
+          {/*      );*/}
+          {/*    })*/}
+          {/*  )}*/}
+          {/*</View>*/}
         </View>
       </ScrollView>
       <CustomAlert

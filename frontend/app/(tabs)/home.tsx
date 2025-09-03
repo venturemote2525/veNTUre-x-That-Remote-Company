@@ -31,6 +31,7 @@ export default function HomeScreen() {
         message: 'Please enable Bluetooth to use weight scales.',
       });
     }
+    console.log('bleEnabled', bleEnabled);
   }, []);
 
   return (
