@@ -8,7 +8,7 @@ type CustomAlertProps = {
   onConfirm: () => void;
   onCancel?: () => void;
   confirmText?: string;
-  cancelText?: string;
+  cancelText?: string | null;
 };
 
 export function CustomAlert({
@@ -35,7 +35,7 @@ export function CustomAlert({
             )}
           </View>
           <View className="flex-row gap-4">
-            {onCancel && (
+            {onCancel && cancelText && (
               <Pressable
                 className="flex-1 items-center justify-center rounded-lg bg-[#00AFB9] p-2"
                 onPress={onCancel}>
