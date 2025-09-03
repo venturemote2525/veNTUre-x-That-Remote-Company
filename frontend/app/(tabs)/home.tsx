@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
 
-  const { bleEnabled } = useICDevice();
+  const { bleEnabled, disconnectDevice, refreshDevices } = useICDevice();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',

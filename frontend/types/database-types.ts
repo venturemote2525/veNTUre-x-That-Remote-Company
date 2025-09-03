@@ -42,7 +42,7 @@ export interface AlertState {
   visible: boolean;
   title: string;
   message: string;
-  cancelText?: string;
+  cancelText?: string | null;
   onCancel?: () => void;
   confirmText?: string;
   onConfirm?: () => void;
