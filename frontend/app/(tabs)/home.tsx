@@ -50,7 +50,7 @@ export default function HomeScreen() {
           separator={true}>
           <DropdownItem
             label={'Add Device'}
-            onPress={() => router.push('/(user)/MyDevices')}
+            onPress={() => router.push('/(device)/MyDevices')}
             itemTextClassName="text-primary-500"
           />
           <DropdownItem label={'Manual Input'} />
