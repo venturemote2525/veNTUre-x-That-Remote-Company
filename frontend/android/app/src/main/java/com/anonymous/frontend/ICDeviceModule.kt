@@ -75,4 +75,30 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR", e.message)
         }
     }
+
+    @ReactMethod
+    fun getBleState(promise: Promise) {
+        try {
+            val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            if (adapter == null) {
+                // Device doesn't support Bluetooth
+                val result = Arguments.createMap()
+                result.putString("state", "Unsupported")
+                result.putBoolean("enabled", false)
+                promise.resolve(result)
+                return
+            }
+
+            val enabled = adapter.isEnabled
+            val state = if (enabled) "ICBleStatePoweredOn" else "ICBleStatePoweredOff"
+
+            val result = Arguments.createMap()
+            result.putString("state", state)
+            result.putBoolean("enabled", enabled)
+
+            promise.resolve(result)
+        } catch (e: Exception) {
+            promise.reject("BLE_STATE_ERROR", e.message, e)
+        }
+    }
 }

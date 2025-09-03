@@ -295,7 +295,15 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     const autoInitialize = async () => {
       if (!initializationRef.current && !isSDKInitialized) {
         try {
+          console.log('Auto initialise');
           await initializeSDK();
+          setIsSDKInitialized(true);
+          if (ICDeviceModule.getBleState) {
+            const { state, enabled } = await ICDeviceModule.getBleState();
+            console.log('Initial BLE state:', state, enabled);
+            setBleState(state);
+            setBleEnabled(enabled);
+          }
         } catch (error) {
           console.error('Auto-initialization failed:', error);
           // Don't show alert here as user didn't explicitly request initialization
