@@ -8,14 +8,14 @@ import { AlertState, DBDevice } from '@/types/database-types';
 import { Device } from '@/types/icdevice-types';
 import { retrieveDeviceInfo, unpairDevice } from '@/utils/device/api';
 import LoadingScreen from '@/components/LoadingScreen';
-import { Pressable } from 'react-native';
+import { Alert, Pressable } from 'react-native';
 import { CustomAlert } from '@/components/CustomAlert';
 
 export default function DeviceInfo() {
   const { deviceId } = useLocalSearchParams();
   const deviceIdStr = Array.isArray(deviceId) ? deviceId[0] : deviceId;
   const { profile } = useAuth();
-  const { disconnectDevice } = useICDevice();
+  const { disconnectDevice, refreshDevices } = useICDevice();
   const router = useRouter();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -53,17 +53,20 @@ export default function DeviceInfo() {
     try {
       await unpairDevice(profile.user_id, device.mac);
       await disconnectDevice(device.mac);
+      await refreshDevices();
       setAlert({ ...alert, visible: false });
       router.back();
-    } catch (error) {
-      console.log('Remove device error: ', error);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error occurred';
       setAlert({
         visible: true,
-        title: 'Error',
-        message: 'Error removing device',
+        title: 'Disconnection Failed',
+        message:
+          `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`,
         confirmText: 'OK',
         onConfirm: () => setAlert({ ...alert, visible: false }),
       });
+      console.error('Disconnection error:', error);
     }
   };
 
