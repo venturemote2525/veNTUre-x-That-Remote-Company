@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    body {
+        @apply text-body2 text-primary-500;
+    }
+}
+
+.text {
+    @apply text-body2 text-primary-500;
+}
+
 .button-rounded {
   @apply items-center rounded-full bg-secondary-500 py-3;
 }
@@ -11,7 +21,7 @@
 }
 
 .button-rounded-tertiary {
-  @apply bg-[#00AFB9] items-center rounded-full py-3;
+  @apply bg-tertiary-500 items-center rounded-full py-3;
 }
 
 .button {
