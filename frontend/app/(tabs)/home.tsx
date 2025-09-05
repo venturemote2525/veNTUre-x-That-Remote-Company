@@ -56,6 +56,7 @@ export default function HomeScreen() {
           />
           <DropdownItem
             label={'Manual Input'}
+            onPress={() => router.push('/(body)/manual-logging')}
             itemTextClassName="text-primary-500"
           />
         </CustomDropdown>
