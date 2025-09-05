@@ -49,14 +49,24 @@ class ReferenceObjectCatalog:
     DEFAULT_SIZES_MM: Dict[str, float] = {
         # ISO/IEC 7810 ID-1 (credit card): 85.60mm × 53.98mm → use long side
         "credit_card": 85.60,
-        # Common US teaspoon bowl length (approx across long axis)
-        "teaspoon": 140.0,
-        # Common US tablespoon
-        "tablespoon": 180.0,
-        # US quarter coin diameter
-        "coin_quarter": 24.26,
-        # Generic spoon (fallback)
-        "spoon": 160.0,
+        
+        # Specific utensil types (from utensil_measurements.py)
+        "dinner_spoon": 180.0,    # Standard dinner spoon
+        "dessert_spoon": 140.0,   # Dessert spoon
+        "teaspoon": 120.0,        # Tea spoon (smallest)
+        "dinner_fork": 200.0,     # Standard dinner fork
+        "dessert_fork": 160.0,    # Dessert fork
+        
+        # Chopsticks
+        "chopsticks": 240.0,      # Standard chopsticks
+        
+        # Generic fallbacks
+        "spoon": 160.0,           # Average spoon size
+        "fork": 180.0,            # Average fork size
+        "tablespoon": 180.0,      # Alias for dinner spoon
+        
+        # Coins
+        "coin_quarter": 24.26,    # US quarter coin diameter
     }
 
     @classmethod
