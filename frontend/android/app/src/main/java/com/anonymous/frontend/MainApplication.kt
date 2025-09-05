@@ -1,5 +1,7 @@
 package com.anonymous.frontend
 
+import com.anonymous.frontend.BuildConfig
+
 import android.app.Application
 import android.content.res.Configuration
 

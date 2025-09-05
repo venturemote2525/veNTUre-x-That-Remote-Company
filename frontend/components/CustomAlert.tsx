@@ -8,7 +8,7 @@ type CustomAlertProps = {
   onConfirm: () => void;
   onCancel?: () => void;
   confirmText?: string;
-  cancelText?: string;
+  cancelText?: string | null;
 };
 
 export function CustomAlert({
@@ -27,15 +27,15 @@ export function CustomAlert({
         style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
         <View className="w-[80%] gap-4 rounded-2xl bg-background-0 p-6">
           <View className="gap-1">
-            <Text className="font-heading text-body1 text-secondary-500">
+            <Text className="font-heading text-body2 text-secondary-500">
               {title}
             </Text>
             {message && (
-              <Text className="text-body2 text-primary-500">{message}</Text>
+              <Text className="text-body3 text-primary-500">{message}</Text>
             )}
           </View>
           <View className="flex-row gap-4">
-            {onCancel && (
+            {onCancel && cancelText && (
               <Pressable
                 className="flex-1 items-center justify-center rounded-lg bg-[#00AFB9] p-2"
                 onPress={onCancel}>
