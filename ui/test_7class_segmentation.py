@@ -357,9 +357,6 @@ def load_model():
         model.to(device)
         model.eval()
         
-        st.success(f"✅ Loaded Advanced Bring+Swiss SegFormer model from: {checkpoint_path.name}")
-        st.info(f"📱 Device: {device}")
-        st.info(f"🏷️ Classes: {CONFIG['classes']}")
         
         return model, device, CONFIG['classes']
         
@@ -608,12 +605,10 @@ def load_utensil_detector():
         # Try to load YOLO model first
         yolo_model_path = REPO_ROOT / "src" / "reference" / "models" / "utensil_detector_yolo.pt"
         if yolo_model_path.exists():
-            st.info(f"Found YOLO utensil model: {yolo_model_path}")
             # Use YOLO detector if available
             detector = YOLOUtensilDetector(str(yolo_model_path))
             return detector
         else:
-            st.warning(f"YOLO model not found at: {yolo_model_path}")
             # Fallback to hybrid detector (which will use heuristic)
             detector = HybridUtensilDetector()
             return detector
@@ -783,6 +778,96 @@ def create_reference_visualization(image, reference_detections):
     
     return vis_image
 
+def draw_scale_on_reference_objects(image, reference_detections):
+    """Draw scale measurements directly on detected reference objects."""
+    if not reference_detections:
+        return image
+    
+    for ref_det in reference_detections:
+        # Get bounding box coordinates (assuming bbox is in format (x1, y1, x2, y2))
+        if hasattr(ref_det, 'bbox'):
+            x1, y1, x2, y2 = ref_det.bbox
+        else:
+            continue
+            
+        # Calculate object dimensions
+        width = x2 - x1
+        height = y2 - y1
+        
+        # Use the longer dimension for the scale line
+        if width > height:
+            # Draw horizontal scale line
+            line_x1, line_y1 = x1, y1 + height // 2
+            line_x2, line_y2 = x2, y1 + height // 2
+            text_x = x1 + width // 2
+            text_y = y1 + height // 2 - 10
+        else:
+            # Draw vertical scale line
+            line_x1, line_y1 = x1 + width // 2, y1
+            line_x2, line_y2 = x1 + width // 2, y2
+            text_x = x1 + width // 2 + 10
+            text_y = y1 + height // 2
+        
+        # Draw the scale line with arrows
+        line_color = (255, 255, 0)  # Bright yellow
+        line_thickness = 3
+        
+        # Main scale line
+        cv2.line(image, (line_x1, line_y1), (line_x2, line_y2), line_color, line_thickness)
+        
+        # Draw arrow heads
+        arrow_length = 8
+        if width > height:  # Horizontal arrows
+            # Left arrow
+            cv2.line(image, (line_x1, line_y1), (line_x1 + arrow_length, line_y1 - arrow_length//2), line_color, line_thickness)
+            cv2.line(image, (line_x1, line_y1), (line_x1 + arrow_length, line_y1 + arrow_length//2), line_color, line_thickness)
+            # Right arrow
+            cv2.line(image, (line_x2, line_y2), (line_x2 - arrow_length, line_y2 - arrow_length//2), line_color, line_thickness)
+            cv2.line(image, (line_x2, line_y2), (line_x2 - arrow_length, line_y2 + arrow_length//2), line_color, line_thickness)
+        else:  # Vertical arrows
+            # Top arrow
+            cv2.line(image, (line_x1, line_y1), (line_x1 - arrow_length//2, line_y1 + arrow_length), line_color, line_thickness)
+            cv2.line(image, (line_x1, line_y1), (line_x1 + arrow_length//2, line_y1 + arrow_length), line_color, line_thickness)
+            # Bottom arrow
+            cv2.line(image, (line_x2, line_y2), (line_x2 - arrow_length//2, line_y2 - arrow_length), line_color, line_thickness)
+            cv2.line(image, (line_x2, line_y2), (line_x2 + arrow_length//2, line_y2 - arrow_length), line_color, line_thickness)
+        
+        # Calculate real-world length
+        pixel_length = max(width, height)
+        real_length_cm = pixel_length * ref_det.scale_mm_per_pixel / 10.0  # Convert mm to cm
+        
+        # Create scale text
+        object_name = ref_det.object_type.replace('_', ' ').title()
+        scale_text = f"{object_name}: {real_length_cm:.1f}cm"
+        
+        # Draw text with background
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        thickness = 2
+        (text_w, text_h), _ = cv2.getTextSize(scale_text, font, font_scale, thickness)
+        
+        # Adjust text position to stay within image bounds
+        h, w_img = image.shape[:2]
+        text_x = max(5, min(text_x - text_w//2, w_img - text_w - 5))
+        text_y = max(text_h + 5, min(text_y, h - 5))
+        
+        # Background for text
+        padding = 4
+        cv2.rectangle(image, 
+                     (text_x - padding, text_y - text_h - padding), 
+                     (text_x + text_w + padding, text_y + padding), 
+                     (0, 0, 0), -1)  # Black background
+        cv2.rectangle(image, 
+                     (text_x - padding, text_y - text_h - padding), 
+                     (text_x + text_w + padding, text_y + padding), 
+                     line_color, 2)  # Yellow border
+        
+        # Text
+        cv2.putText(image, scale_text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness)
+    
+    return image
+
+
 def create_volume_visualization(image, volume_results, pixel_to_cm):
     """Create visualization with volume information."""
     vis_image = image.copy()
@@ -830,7 +915,6 @@ def create_volume_visualization(image, volume_results, pixel_to_cm):
 
 def main():
     st.title("🍽️ Advanced Bring+Swiss Food Segmentation with Volume Detection")
-    st.markdown("**SegFormer Model** (MiT-B3 backbone) - Combined Bring+Swiss Dataset + Volume Estimation + Reference Scaling")
     
     # Load model and utensil detector
     model, device, class_names = load_model()
@@ -838,13 +922,43 @@ def main():
         return
     
     utensil_detector = load_utensil_detector()
-    if utensil_detector and REFERENCE_DETECTION_AVAILABLE:
-        st.success("✅ Reference utensil detector loaded for accurate scaling")
-    else:
-        st.info("ℹ️ Using manual scaling (no utensil detector available)")
     
     # Sidebar controls
     with st.sidebar:
+        st.header("🔧 Model Status")
+        
+        # Create compact model status table
+        model_status_data = []
+        
+        # Check SegFormer model status
+        segformer_status = "✅ Loaded" if model is not None else "❌ Failed"
+        model_status_data.append(["SegFormer", segformer_status])
+        
+        # Check YOLO utensil model status
+        yolo_model_path = REPO_ROOT / "src" / "reference" / "models" / "utensil_detector_yolo.pt"
+        if yolo_model_path.exists():
+            try:
+                from ultralytics import YOLO
+                yolo_status = "✅ Available"
+            except ImportError:
+                yolo_status = "⚠️ No ultralytics"
+        else:
+            yolo_status = "❌ Not found"
+        model_status_data.append(["YOLO Utensils", yolo_status])
+        
+        # Check depth model status (fast gradient-based)
+        depth_status = "✅ Gradient-based"
+        model_status_data.append(["Depth Analysis", depth_status])
+        
+        # Display as compact table
+        import pandas as pd
+        model_df = pd.DataFrame(model_status_data, columns=["Model", "Status"])
+        st.dataframe(model_df, hide_index=True, use_container_width=True)
+        
+        # Add device info
+        device_icon = "🔥" if str(device).startswith("cuda") else "💻"
+        st.caption(f"{device_icon} Device: {device}")
+        
         st.header("⚙️ Settings")
         
         confidence_threshold = st.slider(
@@ -856,66 +970,68 @@ def main():
             help="Minimum confidence for food detection"
         )
         
-        st.header("📏 Volume Detection")
-        
-        enable_volume = st.checkbox(
-            "Enable Volume Estimation",
-            value=True,
-            help="Calculate estimated volume and weight of detected foods"
-        )
-        
-        if enable_volume:
-            volume_method = st.selectbox(
-                "Volume Calculation Method",
-                ["ellipsoid", "depth_estimation"],
-                index=0,
-                help="Method for calculating food volume"
+        # Volume Detection in Expander
+        with st.expander("📏 Volume Detection", expanded=False):
+            enable_volume = st.checkbox(
+                "Enable Volume Estimation",
+                value=True,
+                help="Calculate estimated volume and weight of detected foods"
             )
             
-            use_reference_detection = st.checkbox(
-                "Auto-detect Reference Objects",
-                value=REFERENCE_DETECTION_AVAILABLE,
-                disabled=not REFERENCE_DETECTION_AVAILABLE,
-                help="Automatically detect utensils for accurate scaling"
-            )
-            
-            pixel_to_cm = st.number_input(
-                "Manual Pixel to CM Ratio",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.0,
-                step=0.01,
-                format="%.3f",
-                help="Manual conversion factor (0 = auto-detect using references or estimation)"
-            )
-            
-            show_reference_guide = st.checkbox(
-                "Show Reference Size Guide",
-                value=False,
-                help="Display common reference object sizes"
-            )
-            
-            if show_reference_guide:
-                st.markdown("**Reference Objects:**")
-                st.markdown("🪙 **Coin (Quarter)**: 2.4cm diameter")
-                st.markdown("📱 **Phone**: ~15cm × 7.5cm") 
-                st.markdown("✋ **Hand**: ~18cm × 8.5cm")
-                st.markdown("🍽️ **Plate**: ~25cm diameter")
+            if enable_volume:
+                volume_method = st.selectbox(
+                    "Volume Calculation Method",
+                    ["ellipsoid", "depth_estimation"],
+                    index=0,
+                    help="Method for calculating food volume"
+                )
+                
+                use_reference_detection = st.checkbox(
+                    "Auto-detect Reference Objects",
+                    value=REFERENCE_DETECTION_AVAILABLE,
+                    disabled=not REFERENCE_DETECTION_AVAILABLE,
+                    help="Automatically detect utensils for accurate scaling"
+                )
+                
+                pixel_to_cm = st.number_input(
+                    "Manual Pixel to CM Ratio",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.0,
+                    step=0.01,
+                    format="%.3f",
+                    help="Manual conversion factor (0 = auto-detect using references or estimation)"
+                )
+                
+                show_reference_guide = st.checkbox(
+                    "Show Reference Size Guide",
+                    value=False,
+                    help="Display common reference object sizes"
+                )
+                
+                if show_reference_guide:
+                    st.markdown("**Reference Objects:**")
+                    st.markdown("🪙 **Coin (Quarter)**: 2.4cm diameter")
+                    st.markdown("📱 **Phone**: ~15cm × 7.5cm") 
+                    st.markdown("✋ **Hand**: ~18cm × 8.5cm")
+                    st.markdown("🍽️ **Plate**: ~25cm diameter")
         
-        st.header("🎨 Food Classes")
-        st.markdown("🔴 **Red**: Fruit")  
-        st.markdown("🟢 **Green**: Vegetable")
-        st.markdown("🔵 **Blue**: Carbohydrate")
-        st.markdown("🟣 **Magenta**: Protein")
-        st.markdown("🟡 **Yellow**: Dairy")
-        st.markdown("🔵 **Cyan**: Fat")
-        st.markdown("⚪ **White**: Other")
+        # Food Classes in Expander
+        with st.expander("🎨 Food Classes", expanded=False):
+            st.markdown("🔴 **Red**: Fruit")  
+            st.markdown("🟢 **Green**: Vegetable")
+            st.markdown("🔵 **Blue**: Carbohydrate")
+            st.markdown("🟣 **Magenta**: Protein")
+            st.markdown("🟡 **Yellow**: Dairy")
+            st.markdown("🔵 **Cyan**: Fat")
+            st.markdown("⚪ **White**: Other")
         
-        st.header("ℹ️ Model Info")
-        st.write(f"**Architecture**: SegFormer + MiT-B3")
-        st.write(f"**Training**: Combined Bring+Swiss Dataset")
-        st.write(f"**Classes**: {len(class_names)-1} + background")
-        st.write(f"**Loss**: Combined Focal + Dice Loss")
+        # Model Info in Expander
+        with st.expander("ℹ️ Model Info", expanded=False):
+            st.write(f"**Architecture**: SegFormer + MiT-B3")
+            st.write(f"**Training**: Combined Bring+Swiss Dataset")
+            st.write(f"**Classes**: {len(class_names)-1} + background")
+            st.write(f"**Loss**: Combined Focal + Dice Loss")
     
     # File uploader
     uploaded_file = st.file_uploader(
@@ -963,8 +1079,20 @@ def main():
         # Show reference detection results
         if reference_detections:
             st.success(f"✅ Detected {len(reference_detections)} reference objects for accurate scaling!")
+            
+            # Create reference objects table
+            ref_table_data = []
             for ref_det in reference_detections:
-                st.info(f"📏 {ref_det.object_type}: {ref_det.scale_mm_per_pixel:.3f} mm/pixel (confidence: {ref_det.confidence:.3f})")
+                ref_table_data.append([
+                    ref_det.object_type.replace('_', ' ').title(),
+                    f"{ref_det.scale_mm_per_pixel:.3f}",
+                    f"{ref_det.confidence:.3f}"
+                ])
+            
+            # Display reference table
+            import pandas as pd
+            ref_df = pd.DataFrame(ref_table_data, columns=["Object", "Scale (mm/px)", "Confidence"])
+            st.dataframe(ref_df, hide_index=True, use_container_width=True)
         elif enable_volume and use_reference_detection:
             st.warning("⚠️ No reference objects detected. Using estimated scaling.")
         
@@ -972,20 +1100,28 @@ def main():
             st.success(f"Detected {len(detections)} food items!")
             
             if enable_volume and volume_results:
-                # Show detection summary with volume
+                # Show detection summary with volume in table
                 total_volume = 0
                 total_weight = 0
                 
+                # Create table data
+                table_data = []
                 for i, (det, vol_result) in enumerate(zip(detections, volume_results), 1):
                     total_volume += vol_result['volume_cm3']
                     total_weight += vol_result['weight_grams']
                     
-                    st.markdown(
-                        f"**{i}. {det['class_name'].title()}** - "
-                        f"Confidence: {det['confidence']:.3f} - "
-                        f"Volume: {vol_result['volume_cm3']:.1f}cm³ - "
-                        f"Weight: {vol_result['weight_grams']:.1f}g"
-                    )
+                    table_data.append([
+                        i,
+                        det['class_name'].title(),
+                        f"{det['confidence']:.3f}",
+                        f"{vol_result['volume_cm3']:.1f}",
+                        f"{vol_result['weight_grams']:.1f}"
+                    ])
+                
+                # Display table
+                import pandas as pd
+                results_df = pd.DataFrame(table_data, columns=["#", "Food Type", "Confidence", "Volume (cm³)", "Weight (g)"])
+                st.dataframe(results_df, hide_index=True, use_container_width=True)
                 
                 # Show totals
                 st.markdown("---")
@@ -997,9 +1133,20 @@ def main():
                 with col3:
                     st.metric("Total Weight", f"{total_weight:.1f} g")
             else:
-                # Show detection summary without volume
+                # Show detection summary without volume in table
+                table_data = []
                 for i, det in enumerate(detections, 1):
-                    st.markdown(f"**{i}. {det['class_name'].title()}** - Confidence: {det['confidence']:.3f} - Area: {det['area']} pixels")
+                    table_data.append([
+                        i,
+                        det['class_name'].title(),
+                        f"{det['confidence']:.3f}",
+                        f"{det['area']} px"
+                    ])
+                
+                # Display table
+                import pandas as pd
+                results_df = pd.DataFrame(table_data, columns=["#", "Food Type", "Confidence", "Area"])
+                st.dataframe(results_df, hide_index=True, use_container_width=True)
         else:
             st.warning(f"No food items detected above confidence threshold {confidence_threshold:.3f}")
             st.info("Try lowering the confidence threshold.")
@@ -1019,7 +1166,11 @@ def main():
         if enable_volume and volume_results:
             # Create volume-enhanced visualization
             volume_vis = create_volume_visualization(image_rgb, volume_results, pixel_to_cm)
-            vis_title = "7-Class Segmentation + Volume Detection"
+            vis_title = "Food Analysis with Volume"
+            
+            # Add scale overlay on detected utensils before applying mask overlay
+            if reference_detections:
+                volume_vis = draw_scale_on_reference_objects(volume_vis, reference_detections)
             
             # Apply mask overlay to volume visualization too
             if show_mask_overlay:
@@ -1027,7 +1178,7 @@ def main():
             else:
                 vis_image = volume_vis
         else:
-            vis_title = "7-Class Segmentation Result"
+            vis_title = "Food Segmentation"
         
         # Add reference detections to visualization if available
         if reference_detections:
@@ -1264,16 +1415,6 @@ def main():
     else:
         st.info("👆 Upload a food image to test the 7-class segmentation model")
         
-        # Show model info
-        st.markdown("### 📊 Model Information")
-        st.markdown(f"""
-        - **Architecture**: SegFormer with MiT-B3 transformer backbone
-        - **Dataset**: Combined Bring+Swiss Dataset (7 classes)
-        - **Training**: 10 epochs with advanced augmentation
-        - **Loss Function**: Combined Focal + Dice Loss
-        - **Input Size**: 512×512 pixels
-        - **Classes**: fruit, vegetable, carbohydrate, protein, dairy, fat, other
-        """)
 
 if __name__ == "__main__":
     main()
