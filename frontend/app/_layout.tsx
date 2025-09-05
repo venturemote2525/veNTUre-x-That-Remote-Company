@@ -7,15 +7,14 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { ICDeviceProvider, useICDevice } from '@/context/ICDeviceContext';
 import { ThemeProvider, useThemeMode } from '@/context/ThemeContext';
-import { CustomAlert } from '@/components/CustomAlert';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    'Poppins-Bold': require('@/assets/fonts/Fredoka-Bold.ttf'),
-    'Poppins-SemiBold': require('@/assets/fonts/Fredoka-SemiBold.ttf'),
-    'Poppins-Medium': require('@/assets/fonts/Fredoka-Medium.ttf'),
-    'Poppins-Regular': require('@/assets/fonts/Fredoka-Regular.ttf'),
+    'Fredoka-Bold': require('@/assets/fonts/Fredoka-Bold.ttf'),
+    'Fredoka-SemiBold': require('@/assets/fonts/Fredoka-SemiBold.ttf'),
+    'Fredoka-Medium': require('@/assets/fonts/Fredoka-Medium.ttf'),
+    'Fredoka-Regular': require('@/assets/fonts/Fredoka-Regular.ttf'),
   });
 
   if (!loaded) {

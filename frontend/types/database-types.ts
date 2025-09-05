@@ -37,6 +37,15 @@ export interface DBDevice {
   mac: string;
 }
 
+// -------------------- manual_logs --------------------
+
+export interface ManualLogEntry {
+  user_id: string;
+  weight?: number;
+  height?: number;
+  logged_at: string;
+}
+
 // -------------------- CustomAlert --------------------
 
 export interface AlertState {

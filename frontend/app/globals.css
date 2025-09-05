@@ -16,6 +16,10 @@
   @apply items-center rounded-full bg-secondary-500 py-3;
 }
 
+.button-rounded-text {
+  @apply text-background-0 font-bodySemiBold text-body2;
+}
+
 .button-rounded-white {
   @apply items-center rounded-full bg-background-0 py-3;
 }
