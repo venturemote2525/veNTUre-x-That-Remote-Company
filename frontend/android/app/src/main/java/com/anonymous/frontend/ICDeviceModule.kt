@@ -5,10 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.anonymous.frontend.device.PermissionManager
 import com.anonymous.frontend.device.ScanManager
@@ -22,59 +19,86 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     override fun getName(): String = "ICDeviceModule"
 
     @ReactMethod
-    fun initializeSDK() {
-        if (!permissionManager.hasBLEPermission()) {
-            permissionManager.requestBLEPermission()
-            return
-        }
-        scanManager.initSDK()
+    fun initializeSDK(promise: Promise) = scanManager.initSDK(promise)
+
+    @ReactMethod
+    fun isSDKInitialized(promise: Promise) {
+        promise.resolve(scanManager.isSDKInitialized())
     }
 
     @ReactMethod
-    fun startScan() {
-        if (!permissionManager.hasBLEPermission()) {
-            permissionManager.requestBLEPermission()
-            return
-        }
-        scanManager.startScan()
+    fun startScan(promise: Promise) = scanManager.startScan(promise)
+
+    @ReactMethod
+    fun stopScan(promise: Promise) = scanManager.stopScan(promise)
+
+    @ReactMethod
+    fun connectDevice(mac: String, promise: Promise) = scanManager.connectDevice(mac, promise)
+
+    @ReactMethod
+    fun disconnectDevice(mac: String, promise: Promise) = scanManager.disconnectDevice(mac, promise)
+
+    @ReactMethod
+    fun getScannedDevices(promise: Promise) = scanManager.getScannedDevices(promise)
+
+    @ReactMethod
+    fun getConnectedDevices(promise: Promise) = scanManager.getConnectedDevices(promise)
+
+    @ReactMethod
+    fun clearScannedDevices(promise: Promise) = scanManager.clearScannedDevices(promise)
+
+    @ReactMethod
+    fun addListener(eventName: String) {
+        scanManager.incrementListenerCount(eventName)
     }
 
     @ReactMethod
-    fun stopScan() = scanManager.stopScan()
+    fun removeListeners(count: Double) {
+        scanManager.decrementListenerCount(count.toInt())
+    }
 
     @ReactMethod
-    fun addDevice(mac: String, name: String) = scanManager.addDevice(mac, name)
+    fun isDeviceConnected(macAddress: String, promise: Promise) {
+        promise.resolve(scanManager.isDeviceConnected(macAddress))
+    }
 
     @ReactMethod
-    fun removeDevice(mac: String) = scanManager.removeDevice(mac)
+    fun isScanning(promise: Promise) {
+        promise.resolve(scanManager.isScanning())
+    }
 
     @ReactMethod
-    fun getScannedDevices() = emitToJS(
-        "onScannedDevices",
-        Arguments.createArray().apply {
-            scanManager.getScannedDevices().forEach { device ->
-                pushMap(Arguments.createMap().apply {
-                    putString("mac", device.mac)
-                    putString("name", device.name)
-                })
-            }
+    fun getBodyFatAlgorithmsManager(promise: Promise) {
+        try {
+            promise.resolve(null)
+        } catch (e: Exception) {
+            promise.reject("ERROR", e.message)
         }
-    )
+    }
 
     @ReactMethod
-    fun getConnectedDevices() = emitToJS(
-        "onConnectedDevices",
-        Arguments.createArray().apply {
-            scanManager.getConnectedDevices().forEach { device ->
-                pushMap(Arguments.createMap().apply {
-                    putString("mac", device.mac)
-                    putString("name", device.name)
-                })
+    fun getBleState(promise: Promise) {
+        try {
+            val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            if (adapter == null) {
+                // Device doesn't support Bluetooth
+                val result = Arguments.createMap()
+                result.putString("state", "Unsupported")
+                result.putBoolean("enabled", false)
+                promise.resolve(result)
+                return
             }
-        }
-    )
 
-    private fun emitToJS(event: String, params: Any?) =
-        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit(event, params)
+            val enabled = adapter.isEnabled
+            val state = if (enabled) "ICBleStatePoweredOn" else "ICBleStatePoweredOff"
+
+            val result = Arguments.createMap()
+            result.putString("state", state)
+            result.putBoolean("enabled", enabled)
+
+            promise.resolve(result)
+        } catch (e: Exception) {
+            promise.reject("BLE_STATE_ERROR", e.message, e)
+        }
+    }
 }

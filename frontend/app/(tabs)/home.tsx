@@ -6,11 +6,34 @@ import { Pressable, useColorScheme } from 'react-native';
 import { faUtensils, faChild } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
+import { useEffect, useState } from 'react';
+import { useICDevice } from '@/context/ICDeviceContext';
+import { AlertState } from '@/types/database-types';
+import { CustomAlert } from '@/components/CustomAlert';
 
 export default function HomeScreen() {
   const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
+
+  const { bleEnabled, disconnectDevice, refreshDevices } = useICDevice();
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  useEffect(() => {
+    if (!bleEnabled) {
+      setAlert({
+        visible: true,
+        title: 'Bluetooth not enabled',
+        message: 'Please enable Bluetooth to use weight scales.',
+      });
+    }
+    console.log('bleEnabled', bleEnabled);
+  }, []);
+
   return (
     <ThemedSafeAreaView>
       {/* Header */}
@@ -28,7 +51,7 @@ export default function HomeScreen() {
           separator={true}>
           <DropdownItem
             label={'Add Device'}
-            onPress={() => router.push('/(user)/MyDevices')}
+            onPress={() => router.push('/(device)/MyDevices')}
             itemTextClassName="text-primary-500"
           />
           <DropdownItem
@@ -87,6 +110,15 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </View>
+
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={() => {
+          setAlert({ ...alert, visible: false });
+        }}
+      />
     </ThemedSafeAreaView>
   );
 }

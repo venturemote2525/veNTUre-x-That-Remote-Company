@@ -8,14 +8,14 @@ import { AlertState, DBDevice } from '@/types/database-types';
 import { Device } from '@/types/icdevice-types';
 import { retrieveDeviceInfo, unpairDevice } from '@/utils/device/api';
 import LoadingScreen from '@/components/LoadingScreen';
-import { Pressable } from 'react-native';
+import { Alert, Pressable } from 'react-native';
 import { CustomAlert } from '@/components/CustomAlert';
 
 export default function DeviceInfo() {
-  const { deviceId } = useLocalSearchParams()
+  const { deviceId } = useLocalSearchParams();
   const deviceIdStr = Array.isArray(deviceId) ? deviceId[0] : deviceId;
   const { profile } = useAuth();
-  const { removeDevice } = useICDevice();
+  const { disconnectDevice, refreshDevices } = useICDevice();
   const router = useRouter();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -32,7 +32,7 @@ export default function DeviceInfo() {
       } catch (error) {
         console.log(error);
       }
-    }
+    };
     fetchDeviceInfo();
   }, [deviceId]);
 
@@ -52,18 +52,21 @@ export default function DeviceInfo() {
     if (!profile) return;
     try {
       await unpairDevice(profile.user_id, device.mac);
-      removeDevice(device.mac);
+      await disconnectDevice(device.mac);
+      await refreshDevices();
       setAlert({ ...alert, visible: false });
       router.back();
-    } catch (error) {
-      console.log('Remove device error: ', error);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error occurred';
       setAlert({
         visible: true,
-        title: 'Error',
-        message: 'Error removing device',
+        title: 'Disconnection Failed',
+        message:
+          `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`,
         confirmText: 'OK',
         onConfirm: () => setAlert({ ...alert, visible: false }),
       });
+      console.error('Disconnection error:', error);
     }
   };
 
@@ -72,9 +75,11 @@ export default function DeviceInfo() {
       {device ? (
         <View>
           <Header title={device.name} />
-          <View className='px-4'>
+          <View className="px-4">
             <Text>MAC: {device.mac}</Text>
-            <Pressable className='button-rounded' onPress={() => handleRemoveDevice(device)}>
+            <Pressable
+              className="button-rounded"
+              onPress={() => handleRemoveDevice(device)}>
               <Text>Remove Device</Text>
             </Pressable>
           </View>
@@ -93,5 +98,5 @@ export default function DeviceInfo() {
         onCancel={alert.onCancel}
       />
     </ThemedSafeAreaView>
-  )
+  );
 }

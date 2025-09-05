@@ -3,3 +3,4 @@
 .env
 /.expo
 *.aar
+.env.local

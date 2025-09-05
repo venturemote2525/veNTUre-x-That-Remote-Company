@@ -1,16 +1,16 @@
-import { View, Text } from '@/components/Themed'
-import { useICDevice } from "@/context/ICDeviceContext"
+import { Text, View } from '@/components/Themed';
+import { useICDevice } from '@/context/ICDeviceContext';
 
 export default function BluetoothStatus() {
-    const { bluetoothEnabled } = useICDevice();
+  const { bleEnabled } = useICDevice();
 
-    if (bluetoothEnabled) return null;
+  if (bleEnabled) return null;
 
-    return (
-        <View className="rounded-full bg-secondary-500 px-4 py-1 items-center">
-            <Text className="font-bodySemiBold text-background-500">
-                Bluetooth not enabled
-            </Text>
-        </View>
-    );
+  return (
+    <View className="items-center rounded-full bg-secondary-500 px-4 py-1">
+      <Text className="font-bodySemiBold text-background-500">
+        Bluetooth not enabled
+      </Text>
+    </View>
+  );
 }
