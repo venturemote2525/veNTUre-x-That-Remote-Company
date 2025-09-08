@@ -31,6 +31,11 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
         const val TAG = "ICScanManager"
     }
 
+    private val deviceManager: ICDeviceManager = ICDeviceManager.shared()
+    fun getDeviceManager(): ICDeviceManager {
+        return deviceManager
+    }
+
     private val scannedDevices = mutableMapOf<String, ICDevice>()
     private val connectedDevices = mutableMapOf<String, ICDevice>()
     private var listenerCount = 0
@@ -57,13 +62,31 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
 
     // -------------------- INIT SDK --------------------
 
-    fun initSDK(promise: Promise) {
+    fun initSDK(userInfoMap: ReadableMap, promise: Promise) {
         try {
             val config = ICDeviceManagerConfig()
             config.context = reactContext.applicationContext
-            ICDeviceManager.shared().setDelegate(deviceManagerDelegate)
+            deviceManager.setDelegate(deviceManagerDelegate)
+
+            Log.d(TAG, "Set user info")
+            val userInfo = ICUserInfo()
+            userInfo.nickName = userInfoMap.getString("name") ?: ""
+            userInfo.nickNameCS = 1
+            userInfo.age = userInfoMap.getInt("age")
+            userInfo.height = userInfoMap.getInt("height")
+            val genderStr = userInfoMap.getString("gender") ?: "MALE"
+            userInfo.sex = when (genderStr.uppercase()) {
+                "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+                "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+                else -> ICConstant.ICSexType.ICSexTypeMale
+            }
+            userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+            Log.d(TAG, "Set current user info: $userInfo")
+            deviceManager.updateUserInfo(userInfo)
+
             sdkInitialized = true
-            ICDeviceManager.shared().initMgrWithConfig(config)
+            deviceManager.initMgrWithConfig(config)
+            restoreConnectedDevices()
             Log.d(TAG, "SDK initialized")
             promise.resolve(true)
 
@@ -87,7 +110,7 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
         }
         try {
             scannedDevices.clear()
-            ICDeviceManager.shared().scanDevice(scanDelegate)
+            deviceManager.scanDevice(scanDelegate)
             scanning = true
             Log.d(TAG, "Scan started")
             promise.resolve(true)
@@ -98,7 +121,7 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
 
     fun stopScan(promise: Promise) {
         try {
-            ICDeviceManager.shared().stopScan()
+            deviceManager.stopScan()
             scanning = false
             Log.d(TAG, "Scan stopped")
             promise.resolve(true)
@@ -115,7 +138,7 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             promise.reject("DEVICE_NOT_FOUND", "Device with MAC $mac not found in scanned devices")
             return
         }
-        ICDeviceManager.shared().addDevice(device) { d, code ->
+        deviceManager.addDevice(device) { d, code ->
             Log.d(TAG, "Connect callback $mac -> $code")
             if (code == ICConstant.ICAddDeviceCallBackCode.ICAddDeviceCallBackCodeSuccess) {
                 connectedDevices[mac] = d
@@ -133,7 +156,7 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
                 promise.reject("DEVICE_NOT_FOUND", "Device with MAC $mac not found")
                 return
             }
-            ICDeviceManager.shared().removeDevice(device, object : ICConstant.ICRemoveDeviceCallBack {
+            deviceManager.removeDevice(device, object : ICConstant.ICRemoveDeviceCallBack {
                 override fun onCallBack(device: ICDevice, code: ICConstant.ICRemoveDeviceCallBackCode) {
                     Log.d(TAG, "Device remove callback: ${device.macAddr} -> $code")
                     when (code) {
@@ -213,6 +236,9 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
                 ICConstant.ICDeviceConnectState.ICDeviceConnectStateConnected -> {
                     connectedDevices[device.macAddr] = device
                     Log.d(TAG, "Device ${device.macAddr} connected")
+                    // Save to persistent storage
+                    val prefs = reactContext.getSharedPreferences("ConnectedDevices", Context.MODE_PRIVATE)
+                    prefs.edit().putString(device.macAddr, device.macAddr).apply()
                 }
                 ICConstant.ICDeviceConnectState.ICDeviceConnectStateDisconnected -> {
                     connectedDevices.remove(device.macAddr)
@@ -469,6 +495,31 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             }
             emitToJS("onBleState", Arguments.createMap().apply { putString("state", stateName) })
         }
+    }
+
+    fun restoreConnectedDevices() {
+        val prefs = reactContext.getSharedPreferences("ConnectedDevices", Context.MODE_PRIVATE)
+        val macs = prefs.all.keys
+        macs.forEach { mac ->
+            val device = ICDevice()
+            device.setMacAddr(mac)
+            deviceManager.addDevice(device) { d, code ->
+                if (code == ICConstant.ICAddDeviceCallBackCode.ICAddDeviceCallBackCodeSuccess) {
+                    connectedDevices[mac] = d
+                    Log.d(TAG, "Restored connected device: $mac")
+                }
+            }
+        }
+    }
+
+    // -------------------- ACCESSORS --------------------
+
+    fun getConnectedDevice(mac: String): ICDevice? {
+        return connectedDevices[mac];
+    }
+
+    fun getAllConnectedDevices(): Collection<ICDevice> {
+        return connectedDevices.values
     }
 
     fun cleanup() {

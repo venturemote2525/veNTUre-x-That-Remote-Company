@@ -11,7 +11,11 @@ import {
   ICWeightData,
   ICWeightMeasurement,
   ICDeviceInfo,
+  ICUserInfo,
 } from '@/types/icdevice-types';
+import { UserProfile } from '@/types/database-types';
+import { useAuth } from '@/context/AuthContext';
+import { calculateAge } from '@/utils/helpers';
 
 const { ICDeviceModule } = NativeModules;
 const emitter = ICDeviceModule ? new NativeEventEmitter(ICDeviceModule) : null;
@@ -32,7 +36,7 @@ interface ICDeviceContextType {
   clearWeightData: () => void;
 
   // Device management methods
-  initializeSDK: () => Promise<void>;
+  initializeSDK: (profile: UserProfile) => Promise<void>;
   connectDevice: (macAddress: string) => Promise<void>;
   disconnectDevice: (macAddress: string) => Promise<void>;
   startScan: () => Promise<void>;
@@ -43,6 +47,9 @@ interface ICDeviceContextType {
 
   // Utility methods
   getBodyFatAlgorithmsManager: () => any;
+
+  // Settings
+  setUserInfo: (macAddress: string, userInfo: ICUserInfo) => Promise<void>;
 }
 
 const ICDeviceContext = createContext<ICDeviceContextType>({
@@ -69,9 +76,12 @@ const ICDeviceContext = createContext<ICDeviceContextType>({
   isDeviceConnected: async () => false,
 
   getBodyFatAlgorithmsManager: () => null,
+
+  setUserInfo: async () => {},
 });
 
 export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
+  const { profile } = useAuth();
   const [scannedDevices, setScannedDevices] = useState<ICDevice[]>([]);
   const [connectedDevices, setConnectedDevices] = useState<ICDevice[]>([]);
   const [weightData, setWeightData] = useState<ICWeightMeasurement[]>([]);
@@ -107,7 +117,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Initialize SDK
-  const initializeSDK = async (): Promise<void> => {
+  const initializeSDK = async (profile: UserProfile): Promise<void> => {
     if (!ICDeviceModule) {
       throw new Error('ICDeviceModule not available');
     }
@@ -117,10 +127,18 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    console.log('Initializing SDK...');
     try {
+      const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
+      const userInfo: ICUserInfo = {
+        name: profile.username,
+        age: calculateAge(profile.dob),
+        height: profile.height,
+        gender: gender,
+      };
       initializationRef.current = true;
       console.log('Initializing ICDevice SDK...');
-      await ICDeviceModule.initializeSDK();
+      await ICDeviceModule.initializeSDK(userInfo);
     } catch (error) {
       initializationRef.current = false;
       console.error('Failed to initialize SDK:', error);
@@ -272,6 +290,36 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
+  const setUserInfo = async (
+    macAddress: string,
+    userInfo: ICUserInfo,
+  ): Promise<void> => {
+    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
+
+    try {
+      await ICDeviceModule.setUserInfo(macAddress, userInfo);
+      console.log(`setUserInfo success for device ${macAddress}`);
+    } catch (error) {
+      console.error(`setUserInfo failed for device ${macAddress}:`, error);
+      throw error;
+    }
+  };
+
+  const setCurrentUserInfo = async (
+    macAddress: string,
+    userInfo: ICUserInfo,
+  ): Promise<void> => {
+    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
+
+    try {
+      await ICDeviceModule.updateUserInfo_W(macAddress, userInfo);
+      console.log(`updateUserInfo_W success for device ${macAddress}`);
+    } catch (error) {
+      console.error(`updateUserInfo_W failed for device ${macAddress}:`, error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (!ICDeviceModule || !emitter) {
       console.warn('ICDeviceModule or emitter not available');
@@ -292,11 +340,11 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     requestPermissions();
 
     // Auto-initialize SDK on mount
-    const autoInitialize = async () => {
+    const autoInitialize = async (profile: UserProfile) => {
       if (!initializationRef.current && !isSDKInitialized) {
         try {
           console.log('Auto initialise');
-          await initializeSDK();
+          await initializeSDK(profile);
           setIsSDKInitialized(true);
           if (ICDeviceModule.getBleState) {
             const { state, enabled } = await ICDeviceModule.getBleState();
@@ -311,7 +359,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    autoInitialize();
+    if (profile) autoInitialize(profile);
 
     // SDK initialization callback
     const sdkInitSub = emitter.addListener(
@@ -525,7 +573,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       upgradeProgressSub.remove();
       bleStateSub.remove();
     };
-  }, []);
+  }, [profile]);
 
   // Debug logging
   useEffect(() => {
@@ -545,6 +593,41 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     isSDKInitialized,
     bleState,
   ]);
+  const setCurrentUserForAllDevices = async (profile: UserProfile) => {
+    if (connectedDevices.length === 0) return;
+
+    const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
+    const userInfo: ICUserInfo = {
+      name: profile.username,
+      age: calculateAge(profile.dob),
+      height: profile.height,
+      gender: gender,
+    };
+    console.log('user: ', userInfo);
+    console.log('connected: ', connectedDevices);
+    await Promise.all(
+      connectedDevices.map(async device => {
+        const connected = await isDeviceConnected(device.mac);
+        console.log('device is connected: ', connected);
+        setUserInfo(device.mac, userInfo).catch(err =>
+          console.error(`Failed to set user for device ${device.mac}:`, err),
+        );
+        setCurrentUserInfo(device.mac, userInfo).catch(err =>
+          console.error(
+            `Failed to set current user for device ${device.mac}:`,
+            err,
+          ),
+        );
+      }),
+    );
+
+    console.log('Current user set for all connected devices');
+  };
+  // useEffect(() => {
+  //   if (profile && connectedDevices.length > 0) {
+  //     setCurrentUserForAllDevices(profile);
+  //   }
+  // }, [profile, connectedDevices]);
 
   return (
     <ICDeviceContext.Provider
@@ -572,6 +655,8 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         isDeviceConnected,
 
         getBodyFatAlgorithmsManager,
+
+        setUserInfo,
       }}>
       {children}
     </ICDeviceContext.Provider>

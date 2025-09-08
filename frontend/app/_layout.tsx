@@ -23,13 +23,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ICDeviceProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ICDeviceProvider>
         <ThemeProvider>
           <RootLayoutNav />
         </ThemeProvider>
-      </AuthProvider>
-    </ICDeviceProvider>
+      </ICDeviceProvider>
+    </AuthProvider>
   );
 }
 
