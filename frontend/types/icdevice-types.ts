@@ -33,3 +33,10 @@ export interface ICDeviceInfo {
 
   [key: string]: any;
 }
+
+export interface ICUserInfo {
+  name: string;
+  gender: 'FEMALE' | 'MALE';
+  age: number;
+  height: number;
+}

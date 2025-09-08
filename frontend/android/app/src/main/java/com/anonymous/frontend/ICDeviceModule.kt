@@ -9,17 +9,25 @@ import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.anonymous.frontend.device.PermissionManager
 import com.anonymous.frontend.device.ScanManager
+import com.anonymous.frontend.device.SettingManager
+import cn.icomon.icdevicemanager.model.device.ICUserInfo
+import cn.icomon.icdevicemanager.model.other.ICConstant
 
 class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     private val permissionManager = PermissionManager(reactContext)
     private val scanManager = ScanManager(reactContext)
+    private val settingManager = SettingManager(reactContext, scanManager)
 
     override fun getName(): String = "ICDeviceModule"
 
+    companion object {
+        const val TAG = "ICDeviceModule"
+    }
+
     @ReactMethod
-    fun initializeSDK(promise: Promise) = scanManager.initSDK(promise)
+    fun initializeSDK(userInfoMap: ReadableMap, promise: Promise) = scanManager.initSDK(userInfoMap, promise)
 
     @ReactMethod
     fun isSDKInitialized(promise: Promise) {
@@ -100,5 +108,64 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         } catch (e: Exception) {
             promise.reject("BLE_STATE_ERROR", e.message, e)
         }
+    }
+
+    // -------------------- SETTINGS METHODS --------------------
+
+    @ReactMethod
+    fun setUserInfo(mac: String, userInfoMap: ReadableMap, promise: Promise) {
+        Log.d(TAG, "Set user info")
+        val userInfo = ICUserInfo()
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.nickNameCS = 1
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+        Log.d(TAG, "Set current user info: $userInfo")
+        settingManager.setUserInfo(mac, userInfo, promise)
+    }
+
+    @ReactMethod
+    fun setCurrentUserInfo_W(mac: String, userInfoMap: ReadableMap, promise: Promise) {
+        Log.d(TAG, "Set user info")
+        val userInfo = ICUserInfo()
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.nickNameCS = 1
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+        Log.d(TAG, "Set current user info: $userInfo")
+        settingManager.setCurrentUserInfo_W(mac, userInfo, promise)
+    }
+
+    @ReactMethod
+    fun updateUserInfo_W(mac: String, userInfoMap: ReadableMap, promise: Promise) {
+        Log.d(TAG, "Set user info")
+        val userInfo = ICUserInfo()
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.nickNameCS = 1
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+        Log.d(TAG, "Set current user info: $userInfo")
+        settingManager.updateUserInfo_W(mac, userInfo, promise)
     }
 }
