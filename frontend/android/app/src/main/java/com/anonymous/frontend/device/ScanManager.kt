@@ -70,8 +70,8 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
 
             Log.d(TAG, "Set user info")
             val userInfo = ICUserInfo()
+            Log.d(TAG, "Original user info: $userInfo")
             userInfo.nickName = userInfoMap.getString("name") ?: ""
-            userInfo.nickNameCS = 1
             userInfo.age = userInfoMap.getInt("age")
             userInfo.height = userInfoMap.getInt("height")
             val genderStr = userInfoMap.getString("gender") ?: "MALE"
@@ -99,6 +99,24 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             Log.e(TAG, "Failed to initialize SDK: ${e.message}")
             promise.reject("INIT_ERROR", e.message)
         }
+    }
+
+    fun updateUserInfo(userInfoMap: ReadableMap) {
+        Log.d(TAG, "Set user info")
+        val userInfo = ICUserInfo()
+        Log.d(TAG, "Original user info: $userInfo")
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+        Log.d(TAG, "Set current user info: $userInfo")
+        deviceManager.updateUserInfo(userInfo)
     }
 
     // -------------------- SCAN --------------------
@@ -142,6 +160,7 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             Log.d(TAG, "Connect callback $mac -> $code")
             if (code == ICConstant.ICAddDeviceCallBackCode.ICAddDeviceCallBackCodeSuccess) {
                 connectedDevices[mac] = d
+                Log.d(TAG, "Connect device: $d")
                 promise.resolve(true)
             } else {
                 promise.reject("CONNECTION_ERROR", "Failed with code $code")
@@ -300,7 +319,25 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             emitToJS("onReceiveRSSI", params)
         }
 
-        override fun onReceiveUserInfo(device: ICDevice, userInfo: ICUserInfo) {}
+        override fun onReceiveUserInfo(device: ICDevice, userInfo: ICUserInfo) {
+            Log.d(TAG, "Received user info from ${device.macAddr}: $userInfo")
+
+            val userMap = Arguments.createMap().apply {
+                putString("nickname", userInfo.nickName)
+                putInt("age", userInfo.age)
+                putInt("height", userInfo.height)
+                putString("sex", userInfo.sex.name)
+                putString("peopleType", userInfo.peopleType.name)
+            }
+
+            val params = Arguments.createMap().apply {
+                putString("mac", device.macAddr)
+                putMap("userInfo", userMap)
+            }
+
+            emitToJS("onReceiveUserInfo", params)
+        }
+
         override fun onReceiveUserInfoList(device: ICDevice, list: List<ICUserInfo>) {}
         override fun onReceiveHR(device: ICDevice, hr: Int) {}
 
