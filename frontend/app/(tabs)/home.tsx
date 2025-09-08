@@ -10,13 +10,21 @@ import { useEffect, useState } from 'react';
 import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
+  const { profile } = useAuth();
 
-  const { bleEnabled, disconnectDevice, refreshDevices } = useICDevice();
+  const {
+    bleEnabled,
+    disconnectDevice,
+    refreshDevices,
+    setCurrentUserForAllDevices,
+    updateUserInfo,
+  } = useICDevice();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',
@@ -110,6 +118,18 @@ export default function HomeScreen() {
             <Text className="text">Weight:</Text>
           </View>
         </Pressable>
+        {profile && (
+          <Pressable
+            className="button"
+            onPress={() => setCurrentUserForAllDevices(profile)}>
+            <Text>Set current user for all devices</Text>
+          </Pressable>
+        )}
+        {profile && (
+          <Pressable className="button" onPress={() => updateUserInfo(profile)}>
+            <Text>Update user info</Text>
+          </Pressable>
+        )}
       </View>
 
       <CustomAlert
