@@ -338,7 +338,9 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             emitToJS("onReceiveUserInfo", params)
         }
 
-        override fun onReceiveUserInfoList(device: ICDevice, list: List<ICUserInfo>) {}
+        override fun onReceiveUserInfoList(device: ICDevice, list: List<ICUserInfo>) {
+            Log.d(TAG, "Received user list from ${device.macAddr}: $list")
+        }
         override fun onReceiveHR(device: ICDevice, hr: Int) {}
 
         // Weight scale callbacks
@@ -532,6 +534,26 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
             }
             emitToJS("onBleState", Arguments.createMap().apply { putString("state", stateName) })
         }
+    }
+
+    fun setUserList(userInfoMap: ReadableMap) {
+        val userList = mutableListOf<ICUserInfo>()
+        Log.d(TAG, "Set user list")
+        val userInfo = ICUserInfo()
+        Log.d(TAG, "Original user info: $userInfo")
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
+        userList.add(userInfo)
+        Log.d(TAG, "Setting user list: $userList")
+        deviceManager.setUserList(userList)
     }
 
     fun restoreConnectedDevices() {

@@ -53,6 +53,8 @@ interface ICDeviceContextType {
 
   setCurrentUserForAllDevices(profile: UserProfile): Promise<void>;
   updateUserInfo(profile: UserProfile): Promise<void>;
+  getUserList(): Promise<void>;
+  setUserList(profile: UserProfile): Promise<void>;
 }
 
 const ICDeviceContext = createContext<ICDeviceContextType>({
@@ -83,6 +85,9 @@ const ICDeviceContext = createContext<ICDeviceContextType>({
   setUserInfo: async () => {},
   setCurrentUserForAllDevices: async () => {},
   updateUserInfo: async () => {},
+
+  getUserList: async () => {},
+  setUserList: async () => {},
 });
 
 export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
@@ -302,7 +307,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
 
     try {
-      await ICDeviceModule.setUserInfo(macAddress, userInfo);
+      await ICDeviceModule.updateUserInfo_W(macAddress, userInfo);
       console.log(`setUserInfo success for device ${macAddress}`);
     } catch (error) {
       console.error(`setUserInfo failed for device ${macAddress}:`, error);
@@ -647,6 +652,57 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Current user set for all connected devices');
   };
+
+  const getUserList = async () => {
+    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
+
+    if (connectedDevices.length === 0) {
+      console.warn('No connected devices to get user list from');
+      return;
+    }
+
+    try {
+      // Fetch user list for each connected device
+      const allUserLists = await Promise.all(
+        connectedDevices.map(async device => {
+          try {
+            const users = await ICDeviceModule.getUserList_W(device.mac);
+            console.log(`Users from device ${device.mac}:`, users);
+            return { mac: device.mac, users };
+          } catch (error) {
+            console.error(
+              `Failed to get user list for device ${device.mac}:`,
+              error,
+            );
+            return { mac: device.mac, users: [] };
+          }
+        }),
+      );
+
+      return allUserLists;
+    } catch (error) {
+      console.error(`getUserList_W failed: `, error);
+      throw error;
+    }
+  };
+
+  const setUserList = async (profile: UserProfile) => {
+    try {
+      const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
+      const userInfo: ICUserInfo = {
+        name: profile.username,
+        age: calculateAge(profile.dob),
+        height: profile.height,
+        gender: gender,
+      };
+      console.log('Set user list');
+      await ICDeviceModule.setUserList(userInfo);
+    } catch (error) {
+      console.error('Failed to set user list:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (profile && connectedDevices.length > 0) {
       setCurrentUserForAllDevices(profile);
@@ -683,6 +739,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         setUserInfo,
         setCurrentUserForAllDevices,
         updateUserInfo,
+
+        getUserList,
+        setUserList,
       }}>
       {children}
     </ICDeviceContext.Provider>
