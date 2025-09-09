@@ -41,4 +41,40 @@ class SettingManager(private val reactContext: ReactApplicationContext, private 
             }
         })
     }
+
+    fun updateUserInfo_W(mac: String, userInfo: ICUserInfo, promise: Promise) {
+        val device = getDevice(mac)
+        Log.d(TAG, "Device: $device")
+        if (device == null) {
+            promise.reject("DEVICE_NOT_FOUND", "Device not connected")
+            return
+        }
+        Log.d(TAG, "updateUserInfo_W for $mac. User: $userInfo")
+        settingManager.updateUserInfo_W(device, userInfo, object : ICDeviceManagerSettingManager.ICSettingCallback {
+            override fun onCallBack(code: ICConstant.ICSettingCallBackCode) {
+                when (code) {
+                    ICConstant.ICSettingCallBackCode.ICSettingCallBackCodeSuccess -> promise.resolve(true)
+                    else -> promise.reject("SET_USER_FAIL", "Failed with code $code")
+                }
+            }
+        })
+    }
+
+    fun getUserList_W(mac: String, promise: Promise) {
+        val device = getDevice(mac)
+        Log.d(TAG, "Device: $device")
+        if (device == null) {
+            promise.reject("DEVICE_NOT_FOUND", "Device not connected")
+            return
+        }
+        settingManager.getUserList_W(device, object : ICDeviceManagerSettingManager.ICSettingCallback {
+            override fun onCallBack(code: ICConstant.ICSettingCallBackCode) {
+                when (code) {
+                    ICConstant.ICSettingCallBackCode.ICSettingCallBackCodeSuccess -> Log.d(TAG, "getUserList_W successful")
+                    else -> promise.reject("GET_USER_LIST_FAIL", "Failed with code $code")
+                }
+            }
+        })
+    }
+
 }

@@ -131,4 +131,33 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         Log.d(TAG, "Set current user info: $userInfo")
         settingManager.setUserInfo(mac, userInfo, promise)
     }
+
+    @ReactMethod
+    fun updateUserInfo_W(mac: String, userInfoMap: ReadableMap, promise: Promise) {
+        Log.d(TAG, "Set user info")
+        val userInfo = ICUserInfo()
+        userInfo.nickName = userInfoMap.getString("name") ?: ""
+        userInfo.age = userInfoMap.getInt("age")
+        userInfo.height = userInfoMap.getInt("height")
+        val genderStr = userInfoMap.getString("gender") ?: "MALE"
+        userInfo.sex = when (genderStr.uppercase()) {
+            "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
+            "MALE" -> ICConstant.ICSexType.ICSexTypeMale
+            else -> ICConstant.ICSexType.ICSexTypeMale
+        }
+        Log.d(TAG, "Set current user info: $userInfo")
+        settingManager.updateUserInfo_W(mac, userInfo, promise)
+    }
+
+    @ReactMethod
+    fun getUserList_W(mac: String, promise: Promise) {
+        Log.d(TAG, "Get user list W")
+        settingManager.getUserList_W(mac, promise)
+    }
+
+    @ReactMethod
+    fun setUserList(userInfoMap: ReadableMap) {
+        Log.d(TAG, "Set user list")
+        scanManager.setUserList(userInfoMap)
+    }
 }

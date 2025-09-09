@@ -24,6 +24,8 @@ export default function HomeScreen() {
     refreshDevices,
     setCurrentUserForAllDevices,
     updateUserInfo,
+    getUserList,
+    setUserList,
   } = useICDevice();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -128,6 +130,14 @@ export default function HomeScreen() {
         {profile && (
           <Pressable className="button" onPress={() => updateUserInfo(profile)}>
             <Text>Update user info</Text>
+          </Pressable>
+        )}
+        <Pressable className="button" onPress={() => getUserList()}>
+          <Text>Get user list</Text>
+        </Pressable>
+        {profile && (
+          <Pressable className="button" onPress={() => setUserList(profile)}>
+            <Text>Set user info</Text>
           </Pressable>
         )}
       </View>
