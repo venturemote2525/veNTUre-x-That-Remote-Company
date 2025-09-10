@@ -1,4 +1,4 @@
-// Replace your components/Auth/PasswordInput.tsx with this enhanced version
+
 import React, { useState } from 'react';
 import { TextInputProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';

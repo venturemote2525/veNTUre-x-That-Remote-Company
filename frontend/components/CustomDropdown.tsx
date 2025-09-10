@@ -1,4 +1,4 @@
-// Replace your components/CustomDropdown.tsx with this enhanced version
+// components/CustomDropdown.tsx
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 import Animated, {
@@ -11,10 +11,13 @@ import { BlurView } from 'expo-blur';
 import { View, Text } from '@/components/Themed';
 import { Colors, Shadows, Animations } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 type DropdownItemProps = {
   label: string;
   onPress?: () => void;
+  icon?: IconDefinition; // Add this line
   itemClassName?: string;
   itemTextClassName?: string;
 };
@@ -22,6 +25,7 @@ type DropdownItemProps = {
 export function DropdownItem({
   label,
   onPress,
+  icon, // Add this
   itemClassName,
   itemTextClassName,
 }: DropdownItemProps) {
@@ -32,7 +36,17 @@ export function DropdownItem({
         paddingVertical: 12,
         borderRadius: 12,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        flexDirection: 'row', // Add this
+        alignItems: 'center', // Add this
+        gap: 12, // Add this for spacing between icon and text
       }}>
+        {icon && ( // Add this to render the icon if provided
+          <FontAwesomeIcon
+            icon={icon}
+            size={16}
+            color={Colors.light.colors.primary[600]}
+          />
+        )}
         <Text style={{
           fontSize: 16,
           fontWeight: '500',

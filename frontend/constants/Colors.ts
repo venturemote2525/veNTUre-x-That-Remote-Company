@@ -1,6 +1,4 @@
-/**
- * Enhanced color system - Replace your entire constants/Colors.ts with this
- */
+
 export const Colors = {
   light: {
     // Keep your existing colors for compatibility

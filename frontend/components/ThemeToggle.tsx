@@ -1,4 +1,4 @@
-// Replace your components/ThemeToggle.tsx with this enhanced version
+
 import React, { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -19,7 +19,7 @@ export default function ThemeToggle() {
   const scale = useSharedValue(1);
 
   useEffect(() => {
-    position.value = withSpring(mode === 'light' ? 0 : 1, Animations.bounce);
+    position.value = withSpring(mode === 'light' ? 0 : 1, Animations.spring);
   }, [mode]);
 
   const sliderStyle = useAnimatedStyle(() => ({
@@ -32,8 +32,15 @@ export default function ThemeToggle() {
   }));
 
   const handlePress = (newMode: 'light' | 'dark') => {
-    scale.value = withSpring(0.9, { ...Animations.spring, duration: 100 }, () => {
-      scale.value = withSpring(1, Animations.spring);
+    // Create a proper spring config without duration (spring animations don't use duration)
+    const springConfig = {
+      damping: Animations.spring.damping,
+      stiffness: Animations.spring.stiffness,
+      mass: Animations.spring.mass,
+    };
+    
+    scale.value = withSpring(0.9, springConfig, () => {
+      scale.value = withSpring(1, springConfig);
     });
     setMode(newMode);
   };
