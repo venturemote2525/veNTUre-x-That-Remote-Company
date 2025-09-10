@@ -1,4 +1,4 @@
-// Replace your components/Header.tsx with this enhanced version
+
 import React from 'react';
 import { useNavigation } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
