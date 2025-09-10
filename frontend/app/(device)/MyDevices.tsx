@@ -12,12 +12,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import BluetoothStatus from '@/components/devices/BluetoothStatus';
 
 export default function MyDevices() {
-  const {
-    connectedDevices,
-    weightData,
-    getLatestWeightForDevice,
-    isSDKInitialized,
-  } = useICDevice();
+  const { connectedDevices, weightData, isSDKInitialized } = useICDevice();
 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -45,26 +40,6 @@ export default function MyDevices() {
     }, []),
   );
 
-  const getDeviceStatus = (mac: string) => {
-    const latestWeight = getLatestWeightForDevice(mac);
-    if (latestWeight) {
-      const timeAgo = Math.floor(
-        (Date.now() - latestWeight.timestamp) / 1000 / 60,
-      ); // minutes ago
-      return `${latestWeight.data.weight}kg • ${timeAgo}m ago`;
-    }
-    return 'No recent data';
-  };
-
-  const getStatusColor = (mac: string) => {
-    const latestWeight = getLatestWeightForDevice(mac);
-    if (latestWeight) {
-      const hoursAgo = (Date.now() - latestWeight.timestamp) / 1000 / 60 / 60;
-      return hoursAgo < 24 ? 'text-green-600' : 'text-yellow-600';
-    }
-    return 'text-gray-400';
-  };
-
   if (loading) {
     return (
       <ThemedSafeAreaView>
@@ -76,7 +51,7 @@ export default function MyDevices() {
   return (
     <ThemedSafeAreaView>
       <Header title="My Devices" />
-      <View className="flex-1 px-4">
+      <View className="flex-1 gap-4 px-4">
         <BluetoothStatus />
         {/* SDK Status */}
         {!isSDKInitialized && (
@@ -88,17 +63,17 @@ export default function MyDevices() {
         )}
 
         <ScrollView
-          contentContainerStyle={{ gap: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ flexGrow: 1, gap: 16 }}
           showsVerticalScrollIndicator={false}>
-          {/* Connected Devices Section */}
-          <View>
+          {/* Paired Devices Section */}
+          <View className="flex-1">
             <Text className="text-lg mb-3 font-bodyBold text-secondary-500">
-              Connected Devices ({connectedDevices.length})
+              Paired Devices ({pairedDevices.length})
             </Text>
 
             {pairedDevices.length === 0 ? (
-              <View className="rounded-2xl bg-background-0 px-6 py-8">
-                <Text className="text-center text-primary-300">
+              <View className="flex-1 justify-center rounded-2xl bg-background-0 px-6 py-8">
+                <Text className="text-center font-bodyBold text-primary-300">
                   No connected devices
                 </Text>
                 <Text className="text-sm mt-1 text-center text-gray-400">
@@ -120,10 +95,9 @@ export default function MyDevices() {
                       })
                     }
                     className="mb-3 rounded-2xl bg-background-0 px-6 py-4">
-                    <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center justify-between gap-4">
                       <View className="flex-1">
-                        <View className="mb-1 flex-row items-center">
-                          <View className="mr-2 h-2 w-2 rounded-full bg-green-500" />
+                        <View className="mb-1 flex-row items-center justify-between">
                           <Text className="font-bodyBold text-body2 text-secondary-500">
                             {device.name || 'Weight Scale'}
                           </Text>
@@ -136,11 +110,6 @@ export default function MyDevices() {
 
                         <Text className="text-sm font-bodySemiBold text-primary-300">
                           {device.mac}
-                        </Text>
-
-                        <Text
-                          className={`text-xs mt-1 ${getStatusColor(device.mac)}`}>
-                          {getDeviceStatus(device.mac)}
                         </Text>
                       </View>
 
@@ -221,7 +190,7 @@ export default function MyDevices() {
         </ScrollView>
 
         {/* Add Device Button - Fixed at bottom */}
-        <View className="absolute bottom-4 left-4 right-4">
+        <View className="mb-4">
           <Pressable
             onPress={() => router.push('/(device)/AddDevice')}
             className="button-rounded">
