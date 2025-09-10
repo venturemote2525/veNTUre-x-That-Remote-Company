@@ -11,20 +11,15 @@ import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useAuth } from '@/context/AuthContext';
+import { BlurView } from 'expo-blur';
+import BluetoothStatus from '@/components/devices/BluetoothStatus';
 
 export default function HomeScreen() {
   const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { profile } = useAuth();
 
-  const {
-    bleEnabled,
-    disconnectDevice,
-    refreshDevices,
-    setCurrentUserForAllDevices,
-    updateUserInfo,
-  } = useICDevice();
+  const { bleEnabled } = useICDevice();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',
@@ -38,9 +33,11 @@ export default function HomeScreen() {
         title: 'Bluetooth not enabled',
         message: 'Please enable Bluetooth to use weight scales.',
       });
+    } else {
+      setAlert(prev => ({ ...prev, visible: false }));
     }
     console.log('bleEnabled', bleEnabled);
-  }, []);
+  }, [bleEnabled]);
 
   return (
     <ThemedSafeAreaView>
@@ -71,6 +68,8 @@ export default function HomeScreen() {
       </View>
       {/* Main */}
       <View className="flex-1 gap-4 px-4">
+        {/* Bluetooth Status */}
+        <BluetoothStatus />
         {/* Food */}
         <Pressable
           onPress={() => router.push('/(tabs)/food')}
@@ -118,18 +117,6 @@ export default function HomeScreen() {
             <Text className="text">Weight:</Text>
           </View>
         </Pressable>
-        {profile && (
-          <Pressable
-            className="button"
-            onPress={() => setCurrentUserForAllDevices(profile)}>
-            <Text>Set current user for all devices</Text>
-          </Pressable>
-        )}
-        {profile && (
-          <Pressable className="button" onPress={() => updateUserInfo(profile)}>
-            <Text>Update user info</Text>
-          </Pressable>
-        )}
       </View>
 
       <CustomAlert

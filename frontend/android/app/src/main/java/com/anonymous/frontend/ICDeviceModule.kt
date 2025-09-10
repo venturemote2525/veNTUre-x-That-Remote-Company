@@ -27,7 +27,7 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun initializeSDK(userInfoMap: ReadableMap, promise: Promise) = scanManager.initSDK(userInfoMap, promise)
+    fun initializeSDK(promise: Promise) = scanManager.initSDK(promise)
 
     @ReactMethod
     fun updateUserInfo(userInfoMap: ReadableMap) = scanManager.updateUserInfo(userInfoMap)

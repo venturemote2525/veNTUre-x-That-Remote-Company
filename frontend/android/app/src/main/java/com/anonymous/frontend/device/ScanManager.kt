@@ -62,27 +62,16 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
 
     // -------------------- INIT SDK --------------------
 
-    fun initSDK(userInfoMap: ReadableMap, promise: Promise) {
+    /**
+     * Initialise SDK with configuration, restores previously connected devices,
+     * and registers bluetooth listener
+     * @param promise Resolves true if initialization succeeds, rejects otherwise.
+     */
+    fun initSDK(promise: Promise) {
         try {
             val config = ICDeviceManagerConfig()
             config.context = reactContext.applicationContext
             deviceManager.setDelegate(deviceManagerDelegate)
-
-            Log.d(TAG, "Set user info")
-            val userInfo = ICUserInfo()
-            Log.d(TAG, "Original user info: $userInfo")
-            userInfo.nickName = userInfoMap.getString("name") ?: ""
-            userInfo.age = userInfoMap.getInt("age")
-            userInfo.height = userInfoMap.getInt("height")
-            val genderStr = userInfoMap.getString("gender") ?: "MALE"
-            userInfo.sex = when (genderStr.uppercase()) {
-                "FEMALE" -> ICConstant.ICSexType.ICSexTypeFemal
-                "MALE" -> ICConstant.ICSexType.ICSexTypeMale
-                else -> ICConstant.ICSexType.ICSexTypeMale
-            }
-            userInfo.peopleType = ICConstant.ICPeopleType.ICPeopleTypeNormal
-            Log.d(TAG, "Set current user info: $userInfo")
-            deviceManager.updateUserInfo(userInfo)
 
             sdkInitialized = true
             deviceManager.initMgrWithConfig(config)
