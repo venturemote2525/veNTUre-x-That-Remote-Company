@@ -1,4 +1,4 @@
-// body.tsx - Updated with dark blue selection color
+
 import DateSelector from '@/components/DateSelector';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
@@ -113,7 +113,7 @@ export default function BodyScreen() {
             onPress={() => setGraphView('weekly')}
             className={`px-6 py-3 rounded-full ${
               graphView === 'weekly' 
-                ? 'bg-secondary-500'  // Changed to secondary-500 (dark blue)
+                ? 'bg-secondary-500'  
                 : 'bg-background-0 border border-primary-200'
             }`}
             scaleAmount={0.95}
@@ -128,7 +128,7 @@ export default function BodyScreen() {
             onPress={() => setGraphView('monthly')}
             className={`px-6 py-3 rounded-full ${
               graphView === 'monthly' 
-                ? 'bg-secondary-500'  // Changed to secondary-500 (dark blue)
+                ? 'bg-secondary-500'  
                 : 'bg-background-0 border border-primary-200'
             }`}
             scaleAmount={0.95}

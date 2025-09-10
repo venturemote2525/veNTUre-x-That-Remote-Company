@@ -1,4 +1,4 @@
-// home.tsx - Enhanced version
+
 import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { AddIcon, Icon } from '@/components/ui/icon';
