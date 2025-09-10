@@ -1,9 +1,13 @@
+// body.tsx - Updated with dark blue selection color
 import DateSelector from '@/components/DateSelector';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { ScrollView, Pressable, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
+import { ScrollView, Dimensions } from 'react-native';
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import { AnimatedPressable, useFadeIn, GradientCard, AnimatedCounter } from '@/components/AnimatedComponents';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '@/constants/Colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -23,88 +27,181 @@ const graphData = {
 export default function BodyScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [graphView, setGraphView] = useState<'weekly' | 'monthly'>('weekly');
+  const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bmi' | 'bodyFat'>('weight');
+  const fadeIn = useFadeIn(100);
 
-  // labels based on selected view
-  const labels = graphView === 'weekly'
-    ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+  const metrics = [
+    { id: 1, type: 'weight', value: 68, unit: 'kg', trend: '↗️', change: '+0.5' },
+    { id: 2, type: 'bmi', value: 22.1, unit: '', trend: '→', change: '0.0' },
+    { id: 3, type: 'body fat', value: 18.5, unit: '%', trend: '↘️', change: '-0.3' },
+  ];
 
   return (
-    <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-1">
+    <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0">
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
+        style={fadeIn}
       >
+        {/* Enhanced Date Selector */}
         <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-        {/* Today's Metrics */}
+        {/* Metrics Cards with Animations */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           className="flex-row gap-4 mt-6 mb-6"
         >
-          {tempBodyData.map(item => (
-            <View
+          {metrics.map((item, index) => (
+            <AnimatedPressable
               key={item.id}
-              className="bg-background-0 rounded-2xl w-[120px] h-[60px] items-center justify-center"
+              onPress={() => setSelectedMetric(item.type as any)}
+              scaleAmount={0.95}
             >
-              <Text className="font-bodyBold text-body2">{item.type.toUpperCase()}</Text>
-              <Text className="font-bodySemiBold text-head2 text-primary-500">
-                {item.value}
-                {item.type === 'weight' ? ' kg' : item.type === 'bmi' ? '' : '%'}
-              </Text>
-            </View>
+              <View
+                className={`rounded-xl p-4 ${selectedMetric === item.type 
+                  ? 'bg-secondary-500'  // Changed to secondary-500 (dark blue)
+                  : 'bg-background-0 border border-primary-100'
+                }`}
+                style={{ 
+                  width: 140, 
+                  height: 120, 
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 2,
+                  },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  elevation: 3,
+                }}
+              >
+                <View className="items-center justify-center h-full">
+                  <Text className={`font-bodyBold text-body2 ${selectedMetric === item.type ? 'text-background-0' : 'text-typography-800'}`}>
+                    {item.type.toUpperCase()}
+                  </Text>
+                  <View className="flex-row items-end gap-1 mt-2">
+                    <AnimatedCounter
+                      value={item.value}
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 'bold',
+                        color: selectedMetric === item.type ? 'white' : Colors.light.colors.primary[500],
+                      }}
+                    />
+                    <Text className={`font-body text-body3 ${selectedMetric === item.type ? 'text-background-0/90' : 'text-typography-600'} mb-1`}>
+                      {item.unit}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-1 mt-2">
+                    <Text className={selectedMetric === item.type ? 'text-background-0' : 'text-typography-800'}>
+                      {item.trend}
+                    </Text>
+                    <Text className={`font-body text-body3 ${selectedMetric === item.type ? 'text-background-0/90' : 'text-typography-600'}`}>
+                      {item.change}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </AnimatedPressable>
           ))}
         </ScrollView>
 
-        {/*weekly and Monthly */}
+        {/* View Toggle */}
         <View className="flex-row justify-center gap-4 mb-6">
-          <Pressable
+          <AnimatedPressable
             onPress={() => setGraphView('weekly')}
-            className={`px-4 py-2 rounded-full ${
-              graphView === 'weekly' ? 'bg-primary-500' : 'bg-gray-300'
+            className={`px-6 py-3 rounded-full ${
+              graphView === 'weekly' 
+                ? 'bg-secondary-500'  // Changed to secondary-500 (dark blue)
+                : 'bg-background-0 border border-primary-200'
             }`}
+            scaleAmount={0.95}
           >
-            <Text className="text-background-0">Weekly</Text>
-          </Pressable>
-          <Pressable
+            <Text className={`font-bodySemiBold ${
+              graphView === 'weekly' ? 'text-background-0' : 'text-secondary-500'
+            }`}>
+              Weekly
+            </Text>
+          </AnimatedPressable>
+          <AnimatedPressable
             onPress={() => setGraphView('monthly')}
-            className={`px-4 py-2 rounded-full ${
-              graphView === 'monthly' ? 'bg-primary-500' : 'bg-gray-300'
+            className={`px-6 py-3 rounded-full ${
+              graphView === 'monthly' 
+                ? 'bg-secondary-500'  // Changed to secondary-500 (dark blue)
+                : 'bg-background-0 border border-primary-200'
             }`}
+            scaleAmount={0.95}
           >
-            <Text className="text-background-0">Monthly</Text>
-          </Pressable>
+            <Text className={`font-bodySemiBold ${
+              graphView === 'monthly' ? 'text-background-0' : 'text-secondary-500'
+            }`}>
+              Monthly
+            </Text>
+          </AnimatedPressable>
         </View>
 
-        {/* Graphs */}
-        {(['weight', 'bmi', 'bodyFat'] as const).map((metric) => (
-  <View className="mb-6" key={metric}>
-    <Text className="font-bodyBold text-body1 mb-1">
-      {metric === 'weight' ? 'Weight' : metric === 'bmi' ? 'BMI' : 'Body Fat'}
-    </Text>
-    <LineChart
-      data={{
-        labels: labels,
-        datasets: [{ data: graphData[metric] }], // ✅ metric is now typed correctly
-      }}
-      width={screenWidth - 32}
-      height={220}
-      yAxisSuffix={metric === 'weight' ? 'kg' : metric === 'bodyFat' ? '%' : ''}
-      chartConfig={{
-        backgroundColor: '#fff',
-        backgroundGradientFrom: '#fff',
-        backgroundGradientTo: '#fff',
-        color: () =>
-          metric === 'weight' ? '#3b82f6' :
-          metric === 'bmi' ? '#10b981' :
-          '#f97316',
-      }}
-      style={{ borderRadius: 16 }}
-    />
-  </View>
-))}
+        {/* Enhanced Chart */}
+        <View
+          className="bg-background-0 rounded-xl p-5 mb-5"
+          style={{ 
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            elevation: 3,
+          }}
+        >
+          <Text className="font-bodyBold text-body1 text-secondary-500 mb-4 text-center">
+            {selectedMetric === 'weight' ? 'Weight Trend' : 
+             selectedMetric === 'bmi' ? 'BMI Progress' : 'Body Fat %'}
+          </Text>
+          <LineChart
+            data={{
+              labels: graphView === 'weekly' 
+                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                : ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+              datasets: [{
+                data: graphView === 'weekly' 
+                  ? [67.5, 67.8, 68.0, 68.2, 68.1, 68.0, 68.0]
+                  : [67.0, 67.5, 67.8, 68.0],
+              }],
+            }}
+            width={screenWidth - 80}
+            height={220}
+            yAxisSuffix={selectedMetric === 'weight' ? 'kg' : selectedMetric === 'bodyFat' ? '%' : ''}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              decimalPlaces: 1,
+              color: () => Colors.light.colors.primary[500],
+              labelColor: () => Colors.light.colors.primary[700],
+              style: { borderRadius: 16 },
+              propsForDots: {
+                r: '6',
+                strokeWidth: '2',
+                stroke: Colors.light.colors.primary[500],
+              },
+              propsForBackgroundLines: {
+                stroke: Colors.light.colors.secondary[200],
+                strokeWidth: 1,
+              },
+            }}
+            bezier
+            style={{ marginVertical: 8, borderRadius: 16 }}
+          />
+        </View>
 
+        {/* Subtle Progress Message */}
+        <View className="bg-secondary-50 rounded-xl p-4 border border-secondary-200">
+          <Text className="font-body text-body2 text-typography-800 text-center">
+            You've maintained a healthy {selectedMetric} range this week. Keep it up!
+          </Text>
+        </View>
       </ScrollView>
     </ThemedSafeAreaView>
   );
