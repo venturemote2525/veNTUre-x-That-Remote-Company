@@ -1,27 +1,100 @@
+// Replace your components/Header.tsx with this enhanced version
+import React from 'react';
+import { useNavigation } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { View, Text } from '@/components/Themed';
 import { ChevronLeftIcon, Icon } from '@/components/ui/icon';
-import { useNavigation } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Colors, Shadows } from '@/constants/Colors';
+import { AnimatedPressable, useSlideIn } from '@/components/AnimatedComponents';
 
 type HeaderProps = {
   title?: string;
   onBackPress?: () => void;
+  transparent?: boolean;
 };
 
-export default function Header({ title, onBackPress }: HeaderProps) {
+export default function Header({ title, onBackPress, transparent = false }: HeaderProps) {
   const navigation = useNavigation();
+  const headerSlide = useSlideIn('down', 0);
+
+  const handleBackPress = () => {
+    if (onBackPress) onBackPress();
+    else navigation.goBack();
+  };
+
+  if (transparent) {
+    return (
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 8, 
+        paddingVertical: 12,
+        backgroundColor: 'transparent'
+      }}>
+        <AnimatedPressable onPress={handleBackPress}>
+          <View style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            ...Shadows.small,
+          }}>
+            <Icon as={ChevronLeftIcon} size="lg" style={{ color: 'white' }} />
+          </View>
+        </AnimatedPressable>
+        
+        {title && (
+          <Text style={{
+            marginLeft: 12,
+            fontSize: 18,
+            fontWeight: '600',
+            color: 'white',
+            textShadowColor: 'rgba(0, 0, 0, 0.3)',
+            textShadowOffset: { width: 1, height: 1 },
+            textShadowRadius: 3,
+          }}>
+            {title}
+          </Text>
+        )}
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-row items-center gap-2 px-2 py-3">
-      <Pressable
-        onPress={() => {
-          if (onBackPress) onBackPress();
-          else navigation.goBack();
+    <View style={{ 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      paddingHorizontal: 8, 
+      paddingVertical: 12 
+    }}>
+      <AnimatedPressable onPress={handleBackPress}>
+        <LinearGradient
+          colors={Colors.light.gradients.secondary}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            ...Shadows.small,
+          }}
+        >
+          <Icon as={ChevronLeftIcon} size="lg" style={{ color: 'white' }} />
+        </LinearGradient>
+      </AnimatedPressable>
+      
+      {title && (
+        <Text style={{
+          marginLeft: 12,
+          fontSize: 18,
+          fontWeight: '600',
+          color: Colors.light.colors.primary[600],
         }}>
-        <Icon as={ChevronLeftIcon} size={'xl'} className="text-secondary-500" />
-      </Pressable>
-      <Text className="text-body1 font-bodyBold text-secondary-500">
-        {title}
-      </Text>
+          {title}
+        </Text>
+      )}
     </View>
   );
 }

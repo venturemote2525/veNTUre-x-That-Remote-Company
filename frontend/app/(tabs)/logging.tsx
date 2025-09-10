@@ -1,13 +1,18 @@
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Pressable, Image } from 'react-native';
+import { Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/context/AuthContext';
 import { uploadImage } from '@/utils/food/api';
 import LoadingScreen from '@/components/LoadingScreen';
 import uuid from 'react-native-uuid';
+import { AnimatedPressable, useFadeIn, GradientCard, useSlideIn } from '@/components/AnimatedComponents';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '@/constants/Colors';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faCamera, faImages, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
 export default function LoggingScreen() {
   const { profile } = useAuth();
@@ -19,6 +24,9 @@ export default function LoggingScreen() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const id = uuid.v4();
+
+  const fadeIn = useFadeIn(200);
+  const slideUp = useSlideIn('up', 300);
 
   useEffect(() => {
     if (paramMeal) {
@@ -103,7 +111,7 @@ export default function LoggingScreen() {
 
   return (
     <ThemedSafeAreaView edges={['top']} className="px-4 py-8">
-      <View className="flex-1 items-center gap-8 pt-16">
+      <View className="flex-1 items-center gap-8 pt-16" style={fadeIn}>
         {image ? (
           <Image
             source={{ uri: `data:image/jpeg;base64,${image}` }}
@@ -117,25 +125,64 @@ export default function LoggingScreen() {
           </View>
         )}
         <View className="gap-4">
-          <Pressable className="button-white w-80" onPress={pickImage}>
-            <Text className="font-bodySemiBold text-body2 text-secondary-500">
+          <AnimatedPressable 
+            className="w-80 rounded-xl border border-secondary-200 bg-background-0 p-4"
+            style={{ 
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 3,
+            }}
+            onPress={pickImage}
+          >
+            <Text className="font-bodySemiBold text-body2 text-secondary-500 text-center">
               Pick a photo from gallery
             </Text>
-          </Pressable>
+          </AnimatedPressable>
 
-          <Pressable className="button-white w-80" onPress={takePhoto}>
-            <Text className="font-bodySemiBold text-body2 text-secondary-500">
+          <AnimatedPressable 
+            className="w-80 rounded-xl border border-secondary-200 bg-background-0 p-4"
+            style={{ 
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 3,
+            }}
+            onPress={takePhoto}
+          >
+            <Text className="font-bodySemiBold text-body2 text-secondary-500 text-center">
               Take a photo
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
       {image && (
-        <Pressable onPress={confirmPhoto} className="button-rounded w-full">
-          <Text className="font-bodySemiBold text-background-0">
+        <AnimatedPressable 
+          onPress={confirmPhoto} 
+          className="w-full rounded-full bg-secondary-500 p-4"
+          style={{ 
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Text className="font-bodySemiBold text-background-0 text-center">
             Use this photo
           </Text>
-        </Pressable>
+        </AnimatedPressable>
       )}
     </ThemedSafeAreaView>
   );

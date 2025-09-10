@@ -1,6 +1,16 @@
+// Replace your components/CustomDropdown.tsx with this enhanced version
 import React, { useState } from 'react';
+import { ScrollView } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { View, Text } from '@/components/Themed';
-import { Pressable, ScrollView } from 'react-native';
+import { Colors, Shadows, Animations } from '@/constants/Colors';
+import { AnimatedPressable } from '@/components/AnimatedComponents';
 
 type DropdownItemProps = {
   label: string;
@@ -16,11 +26,22 @@ export function DropdownItem({
   itemTextClassName,
 }: DropdownItemProps) {
   return (
-    <Pressable onPress={onPress} className={`${itemClassName ?? ''}`}>
-      <Text className={`px-2 font-bodySemiBold ${itemTextClassName ?? ''}`}>
-        {label}
-      </Text>
-    </Pressable>
+    <AnimatedPressable onPress={onPress} scaleAmount={0.95}>
+      <View style={{
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      }}>
+        <Text style={{
+          fontSize: 16,
+          fontWeight: '500',
+          color: Colors.light.colors.primary[600],
+        }}>
+          {label}
+        </Text>
+      </View>
+    </AnimatedPressable>
   );
 }
 
@@ -39,15 +60,44 @@ export default function CustomDropdown({
   children,
   menuClassName,
   separator,
-  gap = 0,
+  gap = 8,
   maxHeight = 200,
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(-10);
+
   const toggleDropdown = () => {
-    setOpen(prev => !prev);
+    setOpen(prev => {
+      const newOpen = !prev;
+      
+      if (newOpen) {
+        // Opening animation
+        scale.value = withSpring(1, Animations.bounce);
+        opacity.value = withTiming(1, { duration: 200 });
+        translateY.value = withSpring(0, Animations.spring);
+      } else {
+        // Closing animation
+        scale.value = withTiming(0.8, { duration: 150 });
+        opacity.value = withTiming(0, { duration: 150 });
+        translateY.value = withTiming(-10, { duration: 150 });
+      }
+      
+      return newOpen;
+    });
   };
+
+  const menuAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value },
+      { translateY: translateY.value },
+    ],
+    opacity: opacity.value,
+  }));
+
   return (
-    <View className={`relative`}>
+    <View style={{ position: 'relative' }}>
       {React.isValidElement(toggle)
         ? React.cloneElement(toggle as React.ReactElement<any>, {
             onPress: toggleDropdown,
@@ -55,25 +105,58 @@ export default function CustomDropdown({
         : toggle}
 
       {open && (
-        <View
-          className={`absolute right-0 top-full z-50 mt-2 ${menuClassName ?? ''}`}
-          style={{ elevation: 10, maxHeight: maxHeight }}>
-          <ScrollView className="rounded-xl" contentContainerStyle={{ gap: gap }}>{React.Children.map(children, (child, index) => (
-            <View key={index} className={``}>
-              {separator && index > 0 && (
-                <View className="my-2 h-px bg-secondary-500/50" />
-              )}
-              {React.isValidElement(child)
-                ? React.cloneElement(child, {
-                    onPress: () => {
-                      child.props.onPress?.();
-                      setOpen(false);
-                    },
-                  })
-                : child}
-            </View>
-          ))}</ScrollView>
-        </View>
+        <Animated.View
+          style={[
+            menuAnimatedStyle,
+            {
+              position: 'absolute',
+              right: 0,
+              top: '100%',
+              zIndex: 50,
+              marginTop: 8,
+              minWidth: 160,
+              maxHeight: maxHeight,
+              borderRadius: 16,
+              overflow: 'hidden',
+              ...Shadows.large,
+            },
+          ]}
+        >
+          <BlurView
+            intensity={95}
+            style={{
+              borderRadius: 16,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              padding: 8,
+            }}
+          >
+            <ScrollView 
+              style={{ borderRadius: 12 }} 
+              contentContainerStyle={{ gap }}
+              showsVerticalScrollIndicator={false}
+            >
+              {React.Children.map(children, (child, index) => (
+                <View key={index}>
+                  {separator && index > 0 && (
+                    <View style={{
+                      height: 1,
+                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                      marginVertical: 4,
+                    }} />
+                  )}
+                  {React.isValidElement(child)
+                    ? React.cloneElement(child, {
+                        onPress: () => {
+                          child.props.onPress?.();
+                          setOpen(false);
+                        },
+                      })
+                    : child}
+                </View>
+              ))}
+            </ScrollView>
+          </BlurView>
+        </Animated.View>
       )}
     </View>
   );
