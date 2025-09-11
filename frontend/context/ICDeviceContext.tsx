@@ -125,6 +125,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     const fetchPairedDevices = async () => {
       try {
         const devices = await retrieveDevices();
+        console.log('Retrieved paired devices:', devices);
         setPairedDevices(devices);
       } catch (error) {
         console.error('Error retrieving paired devices:', error);
@@ -133,7 +134,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     fetchPairedDevices().catch(err =>
       console.error('Unhandled fetch error:', err),
     );
-  }, [profile]);
+  }, [profile, connectedDevices]);
 
   // Get latest weight measurement for a specific device
   const getLatestWeightForDevice = (
@@ -184,6 +185,10 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Attempting to connect to device:', macAddress);
       await ICDeviceModule.connectDevice(macAddress);
+      setConnectedDevices(prev => {
+        if (prev.some(d => d.mac === macAddress)) return prev;
+        return [...prev, { mac: macAddress, name: `Device ${macAddress}` }];
+      });
     } catch (error) {
       console.error('Failed to connect to device:', error);
       throw error;
@@ -686,7 +691,16 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
    */
   const removeDeviceWhenConnected = async (macAddress: string) => {
     try {
+      console.log('Paired devices: ', pairedDevices.map(d => d.mac).join(','));
       const connected = await isDeviceConnected(macAddress);
+      console.log(
+        'Remove device when connected: ',
+        macAddress,
+        'connected: ',
+        connected,
+        'paired: ',
+        pairedDevices.map(d => d.mac).join(','),
+      );
       if (connected) {
         // 1. Check if the device is paired
         const isPaired = pairedDevices.some(

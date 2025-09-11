@@ -45,7 +45,7 @@ export default function DeviceInfo() {
     setAlert({
       visible: true,
       title: 'Remove device?',
-      message: `Do you want to add ${device.name}?`,
+      message: `Do you want to remove ${device.name}?`,
       confirmText: 'Yes',
       onConfirm: () => handleConfirmRemove(device),
       cancelText: 'No',

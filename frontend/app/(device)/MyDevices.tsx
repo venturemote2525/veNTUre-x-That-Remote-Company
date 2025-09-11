@@ -12,7 +12,12 @@ import LoadingScreen from '@/components/LoadingScreen';
 import BluetoothStatus from '@/components/devices/BluetoothStatus';
 
 export default function MyDevices() {
-  const { connectedDevices, weightData, isSDKInitialized } = useICDevice();
+  const {
+    connectedDevices,
+    weightData,
+    isSDKInitialized,
+    deviceBatteryLevels,
+  } = useICDevice();
 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -101,16 +106,26 @@ export default function MyDevices() {
                           <Text className="font-bodyBold text-body2 text-secondary-500">
                             {device.name || 'Weight Scale'}
                           </Text>
+
                           <View className="rounded-full bg-secondary-500 px-2 py-1">
                             <Text className="font-bodySemiBold text-[10px] text-background-0">
                               {isConnected ? 'Connected' : 'Disconnected'}
                             </Text>
                           </View>
                         </View>
-
-                        <Text className="text-sm font-bodySemiBold text-primary-300">
-                          {device.mac}
-                        </Text>
+                        <View className="flex-row justify-between">
+                          <Text className="text-sm font-bodySemiBold text-primary-300">
+                            {device.mac}
+                          </Text>
+                          {isConnected && (
+                            <View
+                              className={`justify-center rounded-full px-2 ${deviceBatteryLevels[device.mac] > 75 ? 'bg-green-500' : deviceBatteryLevels[device.mac] > 30 ? 'bg-orange-500' : 'bg-red-500'}`}>
+                              <Text className="font-bodySemiBold text-[10px] text-white">
+                                {deviceBatteryLevels[device.mac]} %
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                       </View>
 
                       <AntDesign name="caretright" size={20} color="#6B7280" />
