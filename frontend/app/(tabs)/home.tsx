@@ -22,10 +22,9 @@ export default function HomeScreen() {
 
   const {
     bleEnabled,
-    disconnectDevice,
-    refreshDevices,
-    setCurrentUserForAllDevices,
+    setUserInfo,
     updateUserInfo,
+    updateUserInfo_W,
     getUserList,
     setUserList,
   } = useICDevice();
@@ -127,23 +126,28 @@ export default function HomeScreen() {
           </View>
         </Pressable>
         {profile && (
-          <Pressable
-            className="button"
-            onPress={() => setCurrentUserForAllDevices(profile)}>
-            <Text>Set current user for all devices</Text>
+          <Pressable className="button" onPress={() => setUserInfo(profile)}>
+            <Text>setUserInfo</Text>
           </Pressable>
         )}
         {profile && (
           <Pressable className="button" onPress={() => updateUserInfo(profile)}>
-            <Text>Update user info</Text>
+            <Text>updateUserInfo</Text>
+          </Pressable>
+        )}
+        {profile && (
+          <Pressable
+            className="button"
+            onPress={() => updateUserInfo_W(profile)}>
+            <Text>updateUserInfo_W</Text>
           </Pressable>
         )}
         <Pressable className="button" onPress={() => getUserList()}>
-          <Text>Get user list</Text>
+          <Text>getUserList</Text>
         </Pressable>
         {profile && (
           <Pressable className="button" onPress={() => setUserList(profile)}>
-            <Text>Set user info</Text>
+            <Text>setUserList</Text>
           </Pressable>
         )}
       </View>

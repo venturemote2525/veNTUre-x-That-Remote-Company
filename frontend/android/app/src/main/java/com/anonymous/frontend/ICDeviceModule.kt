@@ -30,9 +30,6 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
     fun initializeSDK(promise: Promise) = scanManager.initSDK(promise)
 
     @ReactMethod
-    fun updateUserInfo(userInfoMap: ReadableMap) = scanManager.updateUserInfo(userInfoMap)
-
-    @ReactMethod
     fun isSDKInitialized(promise: Promise) {
         promise.resolve(scanManager.isSDKInitialized())
     }
@@ -131,6 +128,9 @@ class ICDeviceModule(private val reactContext: ReactApplicationContext) :
         Log.d(TAG, "Set current user info: $userInfo")
         settingManager.setUserInfo(mac, userInfo, promise)
     }
+
+    @ReactMethod
+    fun updateUserInfo(userInfoMap: ReadableMap) = scanManager.updateUserInfo(userInfoMap)
 
     @ReactMethod
     fun updateUserInfo_W(mac: String, userInfoMap: ReadableMap, promise: Promise) {
