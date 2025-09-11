@@ -6,13 +6,14 @@ import { Pressable, useColorScheme } from 'react-native';
 import { faUtensils, faChild } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useAuth } from '@/context/AuthContext';
 import { BlurView } from 'expo-blur';
 import BluetoothStatus from '@/components/devices/BluetoothStatus';
+import { getPhoneId } from '@/utils/helpers';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
 
   const { bleEnabled } = useICDevice();
+  const hasShownAlert = useRef(false);
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',
@@ -33,8 +35,10 @@ export default function HomeScreen() {
         title: 'Bluetooth not enabled',
         message: 'Please enable Bluetooth to use weight scales.',
       });
+      hasShownAlert.current = true;
     } else {
       setAlert(prev => ({ ...prev, visible: false }));
+      hasShownAlert.current = false;
     }
     console.log('bleEnabled', bleEnabled);
   }, [bleEnabled]);
