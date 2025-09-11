@@ -60,11 +60,10 @@ interface ICDeviceContextType {
   getBodyFatAlgorithmsManager: () => any;
 
   // Settings
-  setUserInfo: (macAddress: string, userInfo: ICUserInfo) => Promise<void>;
-
-  setCurrentUserForAllDevices(profile: UserProfile): Promise<void>;
+  setUserInfo: (profile: UserProfile) => Promise<void>;
   updateUserInfo(profile: UserProfile): Promise<void>;
-  getUserList(): Promise<void>;
+  updateUserInfo_W(profile: UserProfile): Promise<void>;
+  getUserList(): Record<string, any>;
   setUserList(profile: UserProfile): Promise<void>;
 }
 
@@ -97,9 +96,8 @@ const ICDeviceContext = createContext<ICDeviceContextType>({
   getBodyFatAlgorithmsManager: () => null,
 
   setUserInfo: async () => {},
-  setCurrentUserForAllDevices: async () => {},
   updateUserInfo: async () => {},
-
+  updateUserInfo_W: async () => {},
   getUserList: async () => {},
   setUserList: async () => {},
 });
@@ -130,6 +128,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     const fetchPairedDevices = async () => {
       try {
         const devices = await retrieveDevices();
+        console.log('Retrieved paired devices:', devices);
         setPairedDevices(devices);
       } catch (error) {
         console.error('Error retrieving paired devices:', error);
@@ -138,7 +137,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     fetchPairedDevices().catch(err =>
       console.error('Unhandled fetch error:', err),
     );
-  }, [profile]);
+  }, [profile, connectedDevices]);
 
   // Get latest weight measurement for a specific device
   const getLatestWeightForDevice = (
@@ -189,6 +188,10 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Attempting to connect to device:', macAddress);
       await ICDeviceModule.connectDevice(macAddress);
+      setConnectedDevices(prev => {
+        if (prev.some(d => d.mac === macAddress)) return prev; // Avoid duplicates
+        return [...prev, { mac: macAddress, name: `Device ${macAddress}` }];
+      });
     } catch (error) {
       console.error('Failed to connect to device:', error);
       throw error;
@@ -321,21 +324,6 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       return ICDeviceModule.getBodyFatAlgorithmsManager();
     }
     return null;
-  };
-
-  const setUserInfo = async (
-    macAddress: string,
-    userInfo: ICUserInfo,
-  ): Promise<void> => {
-    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
-
-    try {
-      await ICDeviceModule.updateUserInfo_W(macAddress, userInfo);
-      console.log(`setUserInfo success for device ${macAddress}`);
-    } catch (error) {
-      console.error(`setUserInfo failed for device ${macAddress}:`, error);
-      throw error;
-    }
   };
 
   useEffect(() => {
@@ -635,56 +623,6 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     bleState,
   ]);
 
-  const updateUserInfo = async (profile: UserProfile) => {
-    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
-    const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
-    const userInfo: ICUserInfo = {
-      name: profile.username,
-      age: calculateAge(profile.dob),
-      height: profile.height,
-      gender: gender,
-    };
-    console.log('user: ', userInfo);
-    try {
-      await ICDeviceModule.updateUserInfo(userInfo);
-      console.log(`updateUserInfo success`);
-    } catch (error) {
-      console.error(`updateUserInfo failed: `, error);
-      throw error;
-    }
-  };
-
-  const setCurrentUserForAllDevices = async (profile: UserProfile) => {
-    if (connectedDevices.length === 0) return;
-    console.log('Setting current user for all devices');
-
-    const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
-    const userInfo: ICUserInfo = {
-      name: profile.username,
-      age: calculateAge(profile.dob),
-      height: profile.height,
-      gender: gender,
-    };
-    console.log('user: ', userInfo);
-    console.log('connected: ', connectedDevices);
-    await Promise.all(
-      connectedDevices.map(async device => {
-        const connected = await isDeviceConnected(device.mac);
-        console.log('device is connected: ', connected);
-        setUserInfo(device.mac, userInfo).catch(err =>
-          console.error(`Failed to set user for device ${device.mac}:`, err),
-        );
-      }),
-    );
-
-    console.log('Current user set for all connected devices');
-  };
-  // useEffect(() => {
-  //   if (profile && connectedDevices.length > 0) {
-  //     setCurrentUserForAllDevices(profile);
-  //   }
-  // }, [profile, connectedDevices]);
-
   /**
    * Disconnect a device if it is not paired but still connected
    * @param macAddress MAC address of the device to disconnect
@@ -711,18 +649,73 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       console.log(`Device ${macAddress} is not yet connected: ${error}`);
       // Retry mechanism
       setTimeout(() => removeDeviceWhenConnected(macAddress), 1000);
+    }
+  };
 
+  // -------------------- TEST SET USER INFO --------------------
+
+  const formatUserInfo = (profile: UserProfile): ICUserInfo => {
+    const gender: ICUserInfo['gender'] =
+      profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
+    return {
+      name: profile.username,
+      age: calculateAge(profile.dob),
+      height: profile.height,
+      gender,
+    };
+  };
+
+  const setUserInfo = async (profile: UserProfile): Promise<void> => {
+    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
+    const userInfo = formatUserInfo(profile);
+    try {
+      await Promise.all(
+        connectedDevices.map(async device => {
+          console.log(`setUserInfo for device ${device.mac}`);
+          await ICDeviceModule.setUserInfo(device.mac, userInfo);
+        }),
+      );
+    } catch (error) {
+      console.error(`setUserInfo failed:`, error);
+      throw error;
+    }
+  };
+
+  const updateUserInfo = async (profile: UserProfile) => {
+    if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
+    const userInfo = formatUserInfo(profile);
+    try {
+      await ICDeviceModule.updateUserInfo(userInfo);
+      console.log(`updateUserInfo success`);
+    } catch (error) {
+      console.error(`updateUserInfo failed: `, error);
+      throw error;
+    }
+  };
+
+  const updateUserInfo_W = async (profile: UserProfile) => {
+    if (connectedDevices.length === 0) return;
+    const userInfo = formatUserInfo(profile);
+    try {
+      await Promise.all(
+        connectedDevices.map(async device => {
+          console.log(`updateUserInfo_W for device ${device.mac}`);
+          await ICDeviceModule.updateUserInfo_W(device.mac, userInfo);
+        }),
+      );
+    } catch (error) {
+      console.error(`updateUserInfo_W failed: `, error);
+    }
+  };
   const getUserList = async () => {
     if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
-
     if (connectedDevices.length === 0) {
       console.warn('No connected devices to get user list from');
       return;
     }
-
     try {
       // Fetch user list for each connected device
-      const allUserLists = await Promise.all(
+      return await Promise.all(
         connectedDevices.map(async device => {
           try {
             const users = await ICDeviceModule.getUserList_W(device.mac);
@@ -737,8 +730,6 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
           }
         }),
       );
-
-      return allUserLists;
     } catch (error) {
       console.error(`getUserList_W failed: `, error);
       throw error;
@@ -759,12 +750,6 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to set user list:', error);
       throw error;
-    }
-  };
-
-  useEffect(() => {
-    if (profile && connectedDevices.length > 0) {
-      setCurrentUserForAllDevices(profile);
     }
   };
 
@@ -799,9 +784,8 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         getBodyFatAlgorithmsManager,
 
         setUserInfo,
-        setCurrentUserForAllDevices,
         updateUserInfo,
-
+        updateUserInfo_W,
         getUserList,
         setUserList,
       }}>
