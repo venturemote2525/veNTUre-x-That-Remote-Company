@@ -15,7 +15,12 @@ export default function DeviceInfo() {
   const { deviceId } = useLocalSearchParams();
   const deviceIdStr = Array.isArray(deviceId) ? deviceId[0] : deviceId;
   const { profile } = useAuth();
-  const { disconnectDevice, refreshDevices } = useICDevice();
+  const {
+    disconnectDevice,
+    refreshDevices,
+    isDeviceConnected,
+    setPairedDevices,
+  } = useICDevice();
   const router = useRouter();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -51,8 +56,15 @@ export default function DeviceInfo() {
   const handleConfirmRemove = async (device: Device) => {
     if (!profile) return;
     try {
+      // 1. Remove device from database
       await unpairDevice(profile.user_id, device.mac);
-      await disconnectDevice(device.mac);
+      // 2. If the device is connected, disconnect it
+      if (await isDeviceConnected(device.mac)) {
+        await disconnectDevice(device.mac);
+      } else {
+        setPairedDevices(prev => prev.filter(d => d.mac !== device.mac));
+      }
+      // 3. Refresh devices
       await refreshDevices();
       setAlert({ ...alert, visible: false });
       router.back();
@@ -61,8 +73,7 @@ export default function DeviceInfo() {
       setAlert({
         visible: true,
         title: 'Disconnection Failed',
-        message:
-          `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`,
+        message: `Failed to disconnect from ${device.mac}\n\nError: ${errorMessage}`,
         confirmText: 'OK',
         onConfirm: () => setAlert({ ...alert, visible: false }),
       });

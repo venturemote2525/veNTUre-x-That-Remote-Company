@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 import {
   NativeModules,
   NativeEventEmitter,
@@ -13,9 +19,10 @@ import {
   ICDeviceInfo,
   ICUserInfo,
 } from '@/types/icdevice-types';
-import { UserProfile } from '@/types/database-types';
+import { DBDevice, UserProfile } from '@/types/database-types';
 import { useAuth } from '@/context/AuthContext';
 import { calculateAge } from '@/utils/helpers';
+import { retrieveDevices } from '@/utils/device/api';
 
 const { ICDeviceModule } = NativeModules;
 const emitter = ICDeviceModule ? new NativeEventEmitter(ICDeviceModule) : null;
@@ -31,12 +38,16 @@ interface ICDeviceContextType {
   deviceInfo: Record<string, ICDeviceInfo>;
   bleEnabled: boolean;
 
+  // Local state of paired devices
+  pairedDevices: DBDevice[];
+  setPairedDevices: React.Dispatch<React.SetStateAction<DBDevice[]>>;
+
   // Weight data methods
   getLatestWeightForDevice: (deviceMac: string) => ICWeightMeasurement | null;
   clearWeightData: () => void;
 
   // Device management methods
-  initializeSDK: (profile: UserProfile) => Promise<void>;
+  initializeSDK: () => Promise<void>;
   connectDevice: (macAddress: string) => Promise<void>;
   disconnectDevice: (macAddress: string) => Promise<void>;
   startScan: () => Promise<void>;
@@ -67,6 +78,9 @@ const ICDeviceContext = createContext<ICDeviceContextType>({
   deviceBatteryLevels: {},
   deviceInfo: {},
   bleEnabled: false,
+
+  pairedDevices: [],
+  setPairedDevices: () => {},
 
   getLatestWeightForDevice: () => null,
   clearWeightData: () => {},
@@ -110,6 +124,22 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
   const initializationRef = useRef<boolean>(false);
   const scanTimeoutRef = useRef<number | null>(null);
 
+  // Local state of paired devices
+  const [pairedDevices, setPairedDevices] = useState<DBDevice[]>([]);
+  useEffect(() => {
+    const fetchPairedDevices = async () => {
+      try {
+        const devices = await retrieveDevices();
+        setPairedDevices(devices);
+      } catch (error) {
+        console.error('Error retrieving paired devices:', error);
+      }
+    };
+    fetchPairedDevices().catch(err =>
+      console.error('Unhandled fetch error:', err),
+    );
+  }, [profile]);
+
   // Get latest weight measurement for a specific device
   const getLatestWeightForDevice = (
     deviceMac: string,
@@ -127,7 +157,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Initialize SDK
-  const initializeSDK = async (profile: UserProfile): Promise<void> => {
+  const initializeSDK = async (): Promise<void> => {
     if (!ICDeviceModule) {
       throw new Error('ICDeviceModule not available');
     }
@@ -136,19 +166,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       console.log('SDK initialization already in progress or completed');
       return;
     }
-
-    console.log('Initializing SDK...');
     try {
-      const gender = profile.gender === 'FEMALE' ? 'FEMALE' : 'MALE';
-      const userInfo: ICUserInfo = {
-        name: profile.username,
-        age: calculateAge(profile.dob),
-        height: profile.height,
-        gender: gender,
-      };
-      initializationRef.current = true;
       console.log('Initializing ICDevice SDK...');
-      await ICDeviceModule.initializeSDK(userInfo);
+      await ICDeviceModule.initializeSDK();
     } catch (error) {
       initializationRef.current = false;
       console.error('Failed to initialize SDK:', error);
@@ -184,6 +204,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Attempting to disconnect from device:', macAddress);
       await ICDeviceModule.disconnectDevice(macAddress);
+      // Remove device from connected devices and paired devices
+      setConnectedDevices(prev => prev.filter(d => d.mac !== macAddress));
+      setPairedDevices(prev => prev.filter(d => d.mac !== macAddress));
     } catch (error) {
       console.error('Failed to disconnect from device:', error);
       throw error;
@@ -335,12 +358,13 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     requestPermissions();
 
     // Auto-initialize SDK on mount
-    const autoInitialize = async (profile: UserProfile) => {
+    const autoInitialize = async () => {
       if (!initializationRef.current && !isSDKInitialized) {
         try {
           console.log('Auto initialise');
-          await initializeSDK(profile);
+          await initializeSDK();
           setIsSDKInitialized(true);
+          // Set initial BLE state
           if (ICDeviceModule.getBleState) {
             const { state, enabled } = await ICDeviceModule.getBleState();
             console.log('Initial BLE state:', state, enabled);
@@ -354,7 +378,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    if (profile) autoInitialize(profile);
+    autoInitialize().catch(err => {
+      console.error('Failed to auto-initialize SDK:', err);
+    });
 
     // SDK initialization callback
     const sdkInitSub = emitter.addListener(
@@ -414,6 +440,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
               d.mac === mac ? { ...d, isConnected: true } : d,
             );
           });
+          void removeDeviceWhenConnected(mac);
         } else {
           setConnectedDevices(prev =>
             prev.map(d => (d.mac === mac ? { ...d, isConnected: false } : d)),
@@ -652,6 +679,38 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Current user set for all connected devices');
   };
+  // useEffect(() => {
+  //   if (profile && connectedDevices.length > 0) {
+  //     setCurrentUserForAllDevices(profile);
+  //   }
+  // }, [profile, connectedDevices]);
+
+  /**
+   * Disconnect a device if it is not paired but still connected
+   * @param macAddress MAC address of the device to disconnect
+   */
+  const removeDeviceWhenConnected = async (macAddress: string) => {
+    try {
+      const connected = await isDeviceConnected(macAddress);
+      if (connected) {
+        // 1. Check if the device is paired
+        const isPaired = pairedDevices.some(
+          device => device.mac === macAddress,
+        );
+        // 2. If the device is no longer paired, disconnect it
+        if (isPaired) {
+          console.log(
+            `Device ${macAddress} is in paired devices. Skipping removal.`,
+          );
+          return;
+        }
+        await disconnectDevice(macAddress);
+        console.log(`Device ${macAddress} disconnected`);
+      }
+    } catch (error) {
+      console.log(`Device ${macAddress} is not yet connected: ${error}`);
+      // Retry mechanism
+      setTimeout(() => removeDeviceWhenConnected(macAddress), 1000);
 
   const getUserList = async () => {
     if (!ICDeviceModule) throw new Error('ICDeviceModule not available');
@@ -707,7 +766,7 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
     if (profile && connectedDevices.length > 0) {
       setCurrentUserForAllDevices(profile);
     }
-  }, [profile, connectedDevices]);
+  };
 
   return (
     <ICDeviceContext.Provider
@@ -721,6 +780,9 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         deviceBatteryLevels,
         deviceInfo,
         bleEnabled,
+
+        pairedDevices,
+        setPairedDevices,
 
         getLatestWeightForDevice,
         clearWeightData,
