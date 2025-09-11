@@ -11,6 +11,8 @@ import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useAuth } from '@/context/AuthContext';
+import { BlurView } from 'expo-blur';
+import BluetoothStatus from '@/components/devices/BluetoothStatus';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -40,9 +42,11 @@ export default function HomeScreen() {
         title: 'Bluetooth not enabled',
         message: 'Please enable Bluetooth to use weight scales.',
       });
+    } else {
+      setAlert(prev => ({ ...prev, visible: false }));
     }
     console.log('bleEnabled', bleEnabled);
-  }, []);
+  }, [bleEnabled]);
 
   return (
     <ThemedSafeAreaView>
@@ -73,6 +77,8 @@ export default function HomeScreen() {
       </View>
       {/* Main */}
       <View className="flex-1 gap-4 px-4">
+        {/* Bluetooth Status */}
+        <BluetoothStatus />
         {/* Food */}
         <Pressable
           onPress={() => router.push('/(tabs)/food')}
