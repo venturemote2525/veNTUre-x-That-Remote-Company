@@ -13,7 +13,7 @@ module.exports = {
   ],
   theme: {
     fontSize: {
-      title: ['3.75rem', { lineHeight: '3.75rem' }], // 48px
+      title: ['3.75rem', { lineHeight: '4.25rem' }], // 48px
       head1: ['2.25rem', { lineHeight: '2.75rem' }], // 36px
       head2: ['1.875rem', { lineHeight: '2.25rem' }], // 30px
       body1: ['1.5rem', { lineHeight: '2rem' }], // 24px

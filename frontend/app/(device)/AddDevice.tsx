@@ -14,6 +14,7 @@ import { CustomAlert } from '@/components/CustomAlert';
 import { pairDevice } from '@/utils/device/api';
 import { useAuth } from '@/context/AuthContext';
 import LoadingScreen from '@/components/LoadingScreen';
+import { useRouter } from 'expo-router';
 
 interface Device {
   mac: string;
@@ -39,12 +40,21 @@ export default function AddDevice() {
 
   const [connecting, setConnecting] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
 
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',
     message: '',
   });
+
+  const isDeviceConnected = (mac: string): boolean => {
+    return connectedDevices.some(device => device.mac === mac);
+  };
+
+  const availableDevices = scannedDevices.filter(
+    d => !isDeviceConnected(d.mac),
+  );
 
   // Start scan on mount and stop when unmount
   useEffect(() => {
@@ -109,7 +119,10 @@ export default function AddDevice() {
         title: 'Success',
         message: `Connected to ${device.mac}`,
         confirmText: 'OK',
-        onConfirm: () => setAlert({ ...alert, visible: false }),
+        onConfirm: () => {
+          setAlert({ ...alert, visible: false });
+          router.back();
+        },
         cancelText: null,
       });
     } catch (error: any) {
@@ -174,10 +187,6 @@ export default function AddDevice() {
     } finally {
       setRefreshing(false);
     }
-  };
-
-  const isDeviceConnected = (mac: string): boolean => {
-    return connectedDevices.some(device => device.mac === mac);
   };
 
   const getRSSIIcon = (rssi?: number): string => {
@@ -277,7 +286,7 @@ export default function AddDevice() {
             {/* Scanned Devices */}
             <View className="flex-1">
               <Text className="mb-3 font-bodyBold text-secondary-500">
-                Scanned Devices ({scannedDevices.length})
+                Scanned Devices ({availableDevices.length})
               </Text>
               {!bleEnabled ? (
                 <View className="flex-1 items-center justify-center rounded-2xl bg-background-0 p-4">
@@ -285,12 +294,12 @@ export default function AddDevice() {
                     Please enable Bluetooth to scan devices
                   </Text>
                 </View>
-              ) : scannedDevices.length === 0 ? (
+              ) : availableDevices.length === 0 ? (
                 <View className="flex-1 items-center justify-center rounded-2xl bg-background-0 p-4">
                   <LoadingScreen text="Scanning for devices..." />
                 </View>
               ) : (
-                scannedDevices.map((device, index) => {
+                availableDevices.map((device, index) => {
                   const isConnected = isDeviceConnected(device.mac);
                   const isConnectingThis = connecting === device.mac;
 

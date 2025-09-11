@@ -73,34 +73,52 @@ function RootLayoutNav() {
   const [lastRoutedWeightTs, setLastRoutedWeightTs] = useState<number | null>(
     null,
   );
+  const [standingStartTs, setStandingStartTs] = useState<number | null>(null);
+  const STAND_THRESHOLD = 3 * 1000; // 3 seconds
+
   useEffect(() => {
-    console.log('connected', connectedDevices);
-    if (connectedDevices.length === 0) return;
+    if (connectedDevices.length === 0) {
+      setStandingStartTs(null);
+      return;
+    }
 
     const deviceWithNewWeight = connectedDevices.find(device => {
       const latestWeight = getLatestWeightForDevice(device.mac);
-      if (!latestWeight) return false;
-      const ts = new Date(latestWeight.data.timestamp).getTime();
-      // Only route if no previous timestamp OR 30s have passed
-      return !lastRoutedWeightTs || ts - lastRoutedWeightTs > 10 * 1000;
+      return !!latestWeight;
     });
 
-    if (deviceWithNewWeight) {
-      const latestWeight = getLatestWeightForDevice(deviceWithNewWeight.mac)!;
-      const ts = new Date(latestWeight.data.timestamp).getTime();
-
-      // Update last routed timestamp
-      setLastRoutedWeightTs(ts);
-
-      // Only allow routing in device or tab screens (exclude logging)
-      const inTabScreens = segments[0] === '(tabs)';
-      const inDeviceScreens = segments[0] === '(device)';
-      const inLogging = segments[1] === 'logging';
-      if ((inTabScreens || inDeviceScreens) && !(inTabScreens && inLogging)) {
-        router.push('/(body)/weight-taking');
-      }
+    if (!deviceWithNewWeight) {
+      setStandingStartTs(null);
+      return;
     }
-  }, [connectedDevices, weightData]);
+
+    const latestWeight = getLatestWeightForDevice(deviceWithNewWeight.mac)!;
+    const ts = new Date(latestWeight.data.timestamp).getTime();
+
+    if (!standingStartTs) {
+      setStandingStartTs(ts); // Start the stand timer
+      return;
+    }
+
+    const hasStoodLongEnough = ts - standingStartTs >= STAND_THRESHOLD;
+    const canRouteAgain =
+      !lastRoutedWeightTs || ts - lastRoutedWeightTs > 10 * 1000;
+
+    // Only allow routing in specific screens
+    const inTabScreens = segments[0] === '(tabs)';
+    const inDeviceScreens = segments[0] === '(device)';
+    const inLogging = segments[1] === 'logging';
+    const inAddDevice = segments[1] === 'AddDevice';
+    const inAllowedScreen =
+      (inTabScreens || inDeviceScreens) &&
+      !(inTabScreens && inLogging) &&
+      !(inDeviceScreens && inAddDevice);
+
+    if (hasStoodLongEnough && canRouteAgain && inAllowedScreen) {
+      setLastRoutedWeightTs(ts);
+      router.push('/(body)/weight-taking');
+    }
+  }, [connectedDevices, weightData, segments]);
 
   return (
     <GluestackUIProvider mode={mode}>
