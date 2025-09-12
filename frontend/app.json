@@ -48,9 +48,12 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Fredoka-Regular.ttf"]
+          "fonts": [
+            "./assets/fonts/Fredoka-Regular.ttf"
+          ]
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
