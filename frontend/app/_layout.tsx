@@ -74,7 +74,7 @@ function RootLayoutNav() {
     null,
   );
   const [standingStartTs, setStandingStartTs] = useState<number | null>(null);
-  const STAND_THRESHOLD = 3 * 1000; // 3 seconds
+  const STAND_THRESHOLD = 2 * 1000; // 2 seconds
 
   useEffect(() => {
     if (connectedDevices.length === 0) {
@@ -102,7 +102,7 @@ function RootLayoutNav() {
 
     const hasStoodLongEnough = ts - standingStartTs >= STAND_THRESHOLD;
     const canRouteAgain =
-      !lastRoutedWeightTs || ts - lastRoutedWeightTs > 10 * 1000;
+      !lastRoutedWeightTs || ts - lastRoutedWeightTs > 3 * 1000; // Set a 3-second delay to avoid multiple routing
 
     // Only allow routing in specific screens
     const inTabScreens = segments[0] === '(tabs)';

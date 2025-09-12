@@ -46,6 +46,14 @@ export interface ManualLogEntry {
   logged_at: string;
 }
 
+// -------------------- scale_logs --------------------
+
+export interface ScaleLogEntry {
+  user_id: string;
+  weight: number;
+  // TODO: Add other scale log fields
+}
+
 // -------------------- CustomAlert --------------------
 
 export interface AlertState {
