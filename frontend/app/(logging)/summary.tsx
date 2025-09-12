@@ -1,10 +1,15 @@
-
 import Header from '@/components/Header';
 import { Text, TextInput, ThemedSafeAreaView, View } from '@/components/Themed';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { Image, Pressable, useColorScheme, BackHandler, Modal } from 'react-native';
+import {
+  Image,
+  Pressable,
+  useColorScheme,
+  BackHandler,
+  Modal,
+} from 'react-native';
 import dayjs from 'dayjs';
-import { useState, memo, useEffect } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { toUpperCase } from '@/utils/formatString';
 import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
@@ -15,7 +20,6 @@ import { deleteMeal, retrieveMeal, updateMeal } from '@/utils/food/api';
 import { AlertState, Meal } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useFocusEffect } from '@react-navigation/native';
-import React from 'react';
 
 const mealColoursClasses: Record<string, string> = {
   breakfast: 'bg-[#8ecae6]',
@@ -31,7 +35,11 @@ export default function SummaryScreen() {
   const navigation = useNavigation();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { mealId, meal: paramMeal, type } = useLocalSearchParams<{
+  const {
+    mealId,
+    meal: paramMeal,
+    type,
+  } = useLocalSearchParams<{
     mealId: string;
     meal: string;
     type: string;
@@ -48,7 +56,11 @@ export default function SummaryScreen() {
     { key: 'Protein', value: 0, color: '#1982C4' },
     { key: 'Fat', value: 0, color: '#FF595E' },
   ]);
-  const [alert, setAlert] = useState<AlertState>({ visible: false, title: '', message: '' });
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
   const [showCapybaraModal, setShowCapybaraModal] = useState(false);
 
   useEffect(() => {
@@ -74,7 +86,11 @@ export default function SummaryScreen() {
   const handleDateChange = (_event: any, date?: Date) => {
     if (date) {
       const updatedDate = new Date(data.date);
-      updatedDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      updatedDate.setFullYear(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+      );
       setData(prev => ({ ...prev, date: updatedDate }));
       setShowDatePicker(false);
       setShowTimePicker(true);
@@ -84,7 +100,11 @@ export default function SummaryScreen() {
   const handleTimeChange = (_event: any, time?: Date) => {
     if (time) {
       const updatedDate = new Date(data.date);
-      updatedDate.setHours(time.getHours(), time.getMinutes(), time.getSeconds());
+      updatedDate.setHours(
+        time.getHours(),
+        time.getMinutes(),
+        time.getSeconds(),
+      );
       setData(prev => ({ ...prev, date: updatedDate }));
     }
     setShowTimePicker(false);
@@ -94,7 +114,10 @@ export default function SummaryScreen() {
     setAlert({
       visible: true,
       title: type === 'log' ? 'Discard meal log?' : 'Discard changes?',
-      message: type === 'log' ? `Are you sure you want to discard ${name}?` : 'Are you sure you want to discard changes?',
+      message:
+        type === 'log'
+          ? `Are you sure you want to discard ${name}?`
+          : 'Are you sure you want to discard changes?',
       confirmText: 'Yes',
       onConfirm: handleConfirmCancel,
       cancelText: 'No',
@@ -128,8 +151,12 @@ export default function SummaryScreen() {
     }
     setLoading(true);
     try {
-      await updateMeal(mealId, { name, date: data.date.toISOString(), meal: data.meal.toUpperCase() });
-      setShowCapybaraModal(true); 
+      await updateMeal(mealId, {
+        name,
+        date: data.date.toISOString(),
+        meal: data.meal.toUpperCase(),
+      });
+      setShowCapybaraModal(true);
     } catch (error) {
       console.log(error);
     } finally {
@@ -138,54 +165,92 @@ export default function SummaryScreen() {
   };
 
   useEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { handleCancel(); return true; });
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleCancel();
+        return true;
+      },
+    );
     return () => subscription.remove();
   }, []);
 
-  if (loading) return (
-    <ThemedSafeAreaView>
-      <Header title="Food Summary" />
-      <View className="flex-1"><LoadingScreen text="Loading" /></View>
-    </ThemedSafeAreaView>
-  );
+  if (loading)
+    return (
+      <ThemedSafeAreaView>
+        <Header title="Food Summary" />
+        <View className="flex-1">
+          <LoadingScreen text="Loading" />
+        </View>
+      </ThemedSafeAreaView>
+    );
 
   return (
     <ThemedSafeAreaView>
       <Header title="Food Summary" onBackPress={handleCancel} />
       <View className="flex-1 items-center gap-4 px-8 text-body1">
         <Pressable onPress={() => setShowDatePicker(true)}>
-          <Text className="font-bodySemiBold text-primary-500">{dayjs(data.date).format('DD MMM YYYY HH:mm')}</Text>
+          <Text className="font-bodySemiBold text-primary-500">
+            {dayjs(data.date).format('DD MMM YYYY HH:mm')}
+          </Text>
         </Pressable>
 
         {mealData?.image_url ? (
-          <Image source={{ uri: mealData?.image_url }} className="h-80 w-80 rounded-3xl" />
+          <Image
+            source={{ uri: mealData?.image_url }}
+            className="h-80 w-80 rounded-3xl"
+          />
         ) : (
           <View className="h-80 w-80 items-center justify-center rounded-3xl border-2 border-secondary-500 bg-background-0">
-            <Text className="font-bodyBold text-secondary-500">No photo found</Text>
+            <Text className="font-bodyBold text-secondary-500">
+              No photo found
+            </Text>
           </View>
         )}
 
         <View className="w-full flex-row items-center justify-between">
           <FoodNameInput value={name} onChange={setName} />
-          <MemoizedMealDropdown meal={data.meal} setMeal={meal => setData(prev => ({ ...prev, meal }))} />
+          <MemoizedMealDropdown
+            meal={data.meal}
+            setMeal={meal => setData(prev => ({ ...prev, meal }))}
+          />
         </View>
 
         <View className="w-full flex-row items-center justify-start gap-8">
           {nutrients.reduce((sum, n) => sum + n.value, 0) > 0 ? (
             <PieChart
-              data={nutrients.map(n => ({ value: n.value, text: n.key, color: n.color }))}
-              showText radius={90} labelsPosition="mid" font="Poppins-Medium" textColor="#1e1e1e"
-              onPress={(item: pieDataItem) => setSelectedSlice(item.text ?? null)}
+              data={nutrients.map(n => ({
+                value: n.value,
+                text: n.key,
+                color: n.color,
+              }))}
+              showText
+              radius={90}
+              labelsPosition="mid"
+              font="Poppins-Medium"
+              textColor="#1e1e1e"
+              onPress={(item: pieDataItem) =>
+                setSelectedSlice(item.text ?? null)
+              }
             />
           ) : (
             <Text className="text-secondary-500">No nutrients data</Text>
           )}
           <View className="gap-4">
-            <Text className="font-bodyBold text-head2 text-secondary-500">{mealData?.calories ?? 0} kcal</Text>
+            <Text className="font-bodyBold text-head2 text-secondary-500">
+              {mealData?.calories ?? 0} kcal
+            </Text>
             <View className="gap-1">
               {nutrients.map(n => (
-                <Text key={n.key} className={`text-body2 ${selectedSlice === n.key ? 'font-bodyBold text-secondary-500' : 'font-bodySemiBold text-primary-500'}`}
-                  style={{ color: selectedSlice === n.key ? n.color : Colors[scheme].primary }}>
+                <Text
+                  key={n.key}
+                  className={`text-body2 ${selectedSlice === n.key ? 'font-bodyBold text-secondary-500' : 'font-bodySemiBold text-primary-500'}`}
+                  style={{
+                    color:
+                      selectedSlice === n.key
+                        ? n.color
+                        : Colors[scheme].primary,
+                  }}>
                   {n.value}g {n.key}
                 </Text>
               ))}
@@ -195,7 +260,9 @@ export default function SummaryScreen() {
       </View>
 
       <View className="flex-row gap-4 p-4">
-        <Pressable onPress={handleCancel} className="button-rounded-tertiary flex-1">
+        <Pressable
+          onPress={handleCancel}
+          className="button-rounded-tertiary flex-1">
           <Text className="font-bodyBold text-background-0">Cancel</Text>
         </Pressable>
         <Pressable onPress={handleSave} className="button-rounded flex-1">
@@ -203,28 +270,49 @@ export default function SummaryScreen() {
         </Pressable>
       </View>
 
-      {showDatePicker && <DateTimePicker value={data.date} mode="date" display="spinner" maximumDate={new Date()} onChange={handleDateChange} />}
-      {showTimePicker && <DateTimePicker value={data.date} mode="time" display="spinner" onChange={handleTimeChange} />}
+      {showDatePicker && (
+        <DateTimePicker
+          value={data.date}
+          mode="date"
+          display="spinner"
+          maximumDate={new Date()}
+          onChange={handleDateChange}
+        />
+      )}
+      {showTimePicker && (
+        <DateTimePicker
+          value={data.date}
+          mode="time"
+          display="spinner"
+          onChange={handleTimeChange}
+        />
+      )}
 
-      <CustomAlert visible={alert.visible} title={alert.title} message={alert.message} confirmText={alert.confirmText} onConfirm={alert.onConfirm ?? (() => {})} cancelText={alert.cancelText} onCancel={alert.onCancel} />
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        confirmText={alert.confirmText}
+        onConfirm={alert.onConfirm ?? (() => {})}
+        cancelText={alert.cancelText}
+        onCancel={alert.onCancel}
+      />
 
       {/*Capybara Popup */}
       <Modal
         visible={showCapybaraModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowCapybaraModal(false)}
-      >
+        onRequestClose={() => setShowCapybaraModal(false)}>
         <View className="flex-1 items-center justify-center bg-black/50">
-          <View className="bg-white p-6 rounded-2xl w-72 items-center">
-            <Text className="text-lg font-bold mb-2">Meal Saved!</Text>
+          <View className="w-72 items-center rounded-2xl bg-white p-6">
+            <Text className="text-lg mb-2 font-bold">Meal Saved!</Text>
             <Text className="mb-4">Do you want to see your Capybara?</Text>
 
             <View className="flex-row space-x-4">
               <Pressable
                 onPress={() => setShowCapybaraModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-xl"
-              >
+                className="rounded-xl bg-gray-300 px-4 py-2">
                 <Text>Later</Text>
               </Pressable>
 
@@ -233,8 +321,7 @@ export default function SummaryScreen() {
                   setShowCapybaraModal(false);
                   router.push('/(tabs)/capybara');
                 }}
-                className="px-4 py-2 bg-green-500 rounded-xl"
-              >
+                className="rounded-xl bg-green-500 px-4 py-2">
                 <Text className="text-white">Yes</Text>
               </Pressable>
             </View>
@@ -249,16 +336,42 @@ type FoodNameInputProps = { value: string; onChange: (text: string) => void };
 const FoodNameInput = memo(({ value, onChange }: FoodNameInputProps) => {
   const [localValue, setLocalValue] = useState(value);
   useEffect(() => setLocalValue(value), [value]);
-  return <TextInput value={localValue} onChangeText={setLocalValue} onBlur={() => onChange(localValue)} placeholder="Food Name" multiline maxLength={40} className="m-0 p-0 font-heading text-body2 text-primary-500" style={{ width: '50%', paddingTop: 0, paddingBottom: 0 }} submitBehavior={'blurAndSubmit'} />;
+  return (
+    <TextInput
+      value={localValue}
+      onChangeText={setLocalValue}
+      onBlur={() => onChange(localValue)}
+      placeholder="Food Name"
+      multiline
+      maxLength={40}
+      className="m-0 p-0 font-heading text-body2 text-primary-500"
+      style={{ width: '50%', paddingTop: 0, paddingBottom: 0 }}
+      submitBehavior={'blurAndSubmit'}
+    />
+  );
 });
 
 type MealDropdownProps = { meal: string; setMeal: (meal: string) => void };
 const MealDropdown = ({ meal, setMeal }: MealDropdownProps) => (
-  <CustomDropdown toggle={<Pressable className={`w-full rounded-full px-4 py-2 ${mealColoursClasses[meal.toLowerCase()] || 'bg-secondary-500'}`}>
-    <Text className="font-bodySemiBold text-background-0">{meal ? toUpperCase(meal) : 'Select Meal'}</Text>
-  </Pressable>} gap={8} menuClassName="gap-2 min-w-40 bg-background-0 p-2 rounded-2xl">
+  <CustomDropdown
+    toggle={
+      <Pressable
+        className={`w-full rounded-full px-4 py-2 ${mealColoursClasses[meal.toLowerCase()] || 'bg-secondary-500'}`}>
+        <Text className="font-bodySemiBold text-background-0">
+          {meal ? toUpperCase(meal) : 'Select Meal'}
+        </Text>
+      </Pressable>
+    }
+    gap={8}
+    menuClassName="gap-2 min-w-40 bg-background-0 p-2 rounded-2xl">
     {Object.keys(mealColoursClasses).map(m => (
-      <DropdownItem key={m} label={toUpperCase(m)} onPress={() => setMeal(m)} itemClassName={`${mealColoursClasses[m]} rounded-xl px-2 py-1`} itemTextClassName="text-background-0" />
+      <DropdownItem
+        key={m}
+        label={toUpperCase(m)}
+        onPress={() => setMeal(m)}
+        itemClassName={`${mealColoursClasses[m]} rounded-xl px-2 py-1`}
+        itemTextClassName="text-background-0"
+      />
     ))}
   </CustomDropdown>
 );

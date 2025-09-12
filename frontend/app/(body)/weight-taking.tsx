@@ -1,7 +1,13 @@
 import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '@/components/Header';
+import { Pressable } from 'react-native';
+import { AlertState, ScaleLogEntry } from '@/types/database-types';
+import { useAuth } from '@/context/AuthContext';
+import { logScaleData } from '@/utils/body/api';
+import { CustomAlert } from '@/components/CustomAlert';
+import { useRouter } from 'expo-router';
 
 export default function WeightTaking() {
   const {
@@ -10,66 +16,120 @@ export default function WeightTaking() {
     weightData,
     pairedDevices,
   } = useICDevice();
+  const { profile } = useAuth();
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+  const router = useRouter();
+  const [progress, setProgress] = useState(0);
 
   const formatWeight = (weight: number): string => weight.toFixed(2);
-  const formatTime = (timestamp: number): string =>
-    new Date(timestamp).toLocaleTimeString();
+
+  const device = connectedDevices[0];
+  const latestWeight = device ? getLatestWeightForDevice(device.mac) : null;
+  const dbDevice = device
+    ? pairedDevices.find(d => d.mac === device.mac)
+    : null;
+
+  // Progress Bar Timer
+  useEffect(() => {
+    let start: number | null = null;
+    let frame: number;
+    const animate = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      // TODO: Edit timer value for body fat algorithm
+      const progressValue = Math.min(elapsed / 5000, 1); // 5 seconds
+      setProgress(progressValue);
+
+      if (progressValue < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const logWeight = async () => {
+    if (!profile || !latestWeight) return;
+    try {
+      const log: ScaleLogEntry = {
+        user_id: profile.user_id,
+        weight: latestWeight.data.weight || 0,
+        // TODO: Add other scale log fields
+      };
+      console.log('logWeight', log);
+      await logScaleData(log);
+      setAlert({
+        visible: true,
+        title: 'Weight logged!',
+        message: '',
+        onConfirm: () => {
+          setAlert({ ...alert, visible: false });
+          router.back();
+        },
+      });
+    } catch (error: any) {
+      console.error('Error logging weight:', error);
+      setAlert({
+        title: 'Error logging weight',
+        message: error.message || 'Unknown error occurred',
+        visible: true,
+      });
+    }
+  };
+
+  const isReady = progress >= 1 && latestWeight?.data.isStabilized;
 
   return (
     <ThemedSafeAreaView>
       <Header title="Weight Taking" />
+      <View className="flex-1 items-center p-4">
+        {device ? (
+          <View className="flex-1 items-center">
+            <Text className="font-bodySemiBold text-body2 text-primary-300">
+              Device: {dbDevice ? dbDevice.name : device.mac}
+            </Text>
 
-      <View className="flex-1 items-center px-4">
-        {connectedDevices.length > 0 &&
-          connectedDevices.map(device => {
-            const latestWeight = getLatestWeightForDevice(device.mac);
-            const deviceWeights = weightData
-              .filter(m => m.device.mac === device.mac)
-              .slice(-3); // Show last 3 measurements
-            const dbDevice = pairedDevices.find(d => d.mac === device.mac);
-            return (
-              <View key={device.mac} className="gap-4">
-                <Text className="font-bodySemiBold text-body2 text-primary-500">
-                  Device: {dbDevice ? dbDevice.name : device.mac}
+            {latestWeight ? (
+              <View className="flex-1 justify-center">
+                <Text className="font-bodyBold text-title text-secondary-500">
+                  {formatWeight(latestWeight.data.weight)} kg
                 </Text>
-
-                {latestWeight ? (
-                  <View>
-                    <Text className="mb-1 font-bodyBold text-title text-secondary-500">
-                      {formatWeight(latestWeight.data.weight)} kg
-                    </Text>
-                    <Text className="text-xs mb-2 text-gray-500">
-                      Last measurement:{' '}
-                      {formatTime(latestWeight.data.timestamp)}
-                      {latestWeight.data.isStabilized && ' (Stabilized)'}
-                    </Text>
-
-                    {deviceWeights.length > 1 && (
-                      <View>
-                        <Text className="text-sm mb-1 font-medium">
-                          Recent measurements:
-                        </Text>
-                        {deviceWeights
-                          .slice()
-                          .reverse()
-                          .map((measurement, idx) => (
-                            <Text key={idx} className="text-xs text-gray-600">
-                              {formatWeight(measurement.data.weight)}kg at{' '}
-                              {formatTime(measurement.data.timestamp)}
-                            </Text>
-                          ))}
-                      </View>
-                    )}
-                  </View>
-                ) : (
-                  <Text className="italic text-gray-500">
-                    No weight data yet - step on the scale to start measuring
-                  </Text>
-                )}
               </View>
-            );
-          })}
+            ) : (
+              <Text className="italic text-primary-300">
+                No weight data yet - step on the scale to start measuring
+              </Text>
+            )}
+          </View>
+        ) : (
+          <Text className="italic text-primary-300">No device connected</Text>
+        )}
+        {/* Progress Bar */}
+        <View className="mx-1 my-4 h-3 w-full rounded-full bg-background-300">
+          <View
+            className="h-3 rounded-full bg-secondary-500"
+            style={{ width: `${progress * 100}%` }}
+          />
+        </View>
+        <Pressable
+          disabled={!isReady}
+          className={`w-full items-center rounded-full py-3 ${
+            isReady ? 'bg-secondary-500' : 'bg-background-400'
+          }`}
+          onPress={logWeight}>
+          <Text className="button-rounded-text">Log</Text>
+        </Pressable>
       </View>
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={alert.onConfirm ?? (() => {})}
+      />
     </ThemedSafeAreaView>
   );
 }
