@@ -50,8 +50,7 @@
         {
           "fonts": ["./assets/fonts/Fredoka-Regular.ttf"]
         }
-      ],
-      "react-native-reanimated/plugin"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
