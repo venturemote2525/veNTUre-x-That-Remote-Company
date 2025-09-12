@@ -1,7 +1,4 @@
 package com.anonymous.frontend
-
-import com.anonymous.frontend.BuildConfig
-
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
