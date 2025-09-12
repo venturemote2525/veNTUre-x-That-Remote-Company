@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { ManualLogEntry } from '@/types/database-types';
+import { ManualLogEntry, ScaleLogEntry } from '@/types/database-types';
 
 export async function retrieveRecentWeight(): Promise<number> {
   const { data, error } = await supabase
@@ -27,6 +27,12 @@ export async function retrieveRecentHeight(): Promise<number> {
 
 export async function logDataManually(log: ManualLogEntry) {
   const { data, error } = await supabase.from('manual_logs').insert(log);
+  if (error) throw error;
+  return data;
+}
+
+export async function logScaleData(log: ScaleLogEntry) {
+  const { data, error } = await supabase.from('scale_logs').insert(log);
   if (error) throw error;
   return data;
 }
