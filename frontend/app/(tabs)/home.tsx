@@ -39,7 +39,7 @@ export default function HomeScreen() {
         >
           <DropdownItem
             label={'Add Device'}
-            onPress={() => router.push('/(user)/MyDevices')}
+            onPress={() => router.push('/(device)/MyDevices')}
             icon={faPlus}
             itemTextClassName="text-primary-500"
           />
