@@ -1,12 +1,11 @@
 import { ThemedSafeAreaView, Text, TextInput, View } from '@/components/Themed';
 import PasswordInput from '@/components/Auth/PasswordInput';
-import Header from '@/components/Header';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable } from 'react-native';
 import { checkPasswordStrength, checkValidEmail } from '@/utils/auth/auth';
 import { checkUserExists, userSignup } from '@/utils/auth/api';
 import { CustomAlert } from '@/components/CustomAlert';
+import { AnimatedPressable, useFadeIn } from '@/components/AnimatedComponents';
 
 export default function SignUp() {
   const router = useRouter();
@@ -27,6 +26,8 @@ export default function SignUp() {
     reenter: '',
     login: '',
   });
+
+  const fadeIn = useFadeIn(100);
 
   const handleSignup = async () => {
     setError({ email: '', password: '', reenter: '', login: '' });
@@ -97,19 +98,20 @@ export default function SignUp() {
   };
 
   return (
-    <ThemedSafeAreaView>
-      <Header />
-      <View className="flex-1 justify-center px-4">
+    <ThemedSafeAreaView className="flex-1">
+      <View className="flex-1 justify-center px-4" style={fadeIn}>
         <View className="mb-8 items-center gap-1">
-          <Text className="font-heading text-head1 text-primary-500">
+          <Text className="font-heading text-[50px] text-secondary-500">
+            HealthSync
+          </Text>
+          <Text className="font-heading text-head2 text-primary-500">
             Sign Up
           </Text>
           <Text className="text-primary-200">Create a new account</Text>
         </View>
-        {/* Email Login */}
+        
         <View className="gap-4">
           <View className="gap-3">
-            {/* Email Input */}
             <View className="gap-1">
               <TextInput
                 placeholder="Enter your email"
@@ -120,7 +122,6 @@ export default function SignUp() {
                 <Text className="text-error-500">{error.email}</Text>
               )}
             </View>
-            {/* Password Input */}
             <View className="gap-1">
               <PasswordInput
                 onChangeText={text => setFields({ ...fields, password: text })}
@@ -129,7 +130,6 @@ export default function SignUp() {
                 <Text className="text-error-500">{error.password}</Text>
               )}
             </View>
-            {/* Re-Enter Password Input */}
             <View className="gap-1">
               <PasswordInput
                 onChangeText={text => setFields({ ...fields, reenter: text })}
@@ -140,17 +140,36 @@ export default function SignUp() {
               )}
             </View>
           </View>
-          <Pressable onPress={handleSignup} className="button">
+          <AnimatedPressable onPress={handleSignup} className="button">
             <Text className="text-xl font-bodyBold text-background-500">
               {loading ? 'Creating new account...' : 'Sign Up'}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
+
+        <View className="my-6 flex-row items-center">
+          <View className="h-[1px] flex-1 bg-primary-300" />
+          <Text className="mx-3 text-primary-300">
+            Sign up with social media
+          </Text>
+          <View className="h-[1px] flex-1 bg-primary-300" />
+        </View>
+
+        <View>
+          <AnimatedPressable
+            onPress={() => console.log('Google signup')}
+            className="button-white">
+            <Text className="text-xl font-bodyBold text-primary-500">
+              Sign up with Google
+            </Text>
+          </AnimatedPressable>
+        </View>
+        
         <View className="mt-4 flex-row justify-center">
           <Text className="text-primary-500">Have an account? </Text>
-          <Pressable onPress={() => router.replace('/(auth)/login')}>
+          <AnimatedPressable onPress={() => router.replace('/(auth)/login')}>
             <Text className="font-bodyBold text-secondary-500">Log In</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
 
