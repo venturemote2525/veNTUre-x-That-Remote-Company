@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { ICDeviceProvider, useICDevice } from '@/context/ICDeviceContext';
 import { ThemeProvider, useThemeMode } from '@/context/ThemeContext';
+import { UserInfoProvider } from '@/context/UserInfoContext';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -24,11 +25,13 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ICDeviceProvider>
-        <ThemeProvider>
-          <RootLayoutNav />
+      <UserInfoProvider>
+        <ICDeviceProvider>
+            <ThemeProvider>
+                <RootLayoutNav />
         </ThemeProvider>
       </ICDeviceProvider>
+     </UserInfoProvider>
     </AuthProvider>
   );
 }

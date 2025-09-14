@@ -2,7 +2,7 @@ import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { AddIcon, Icon } from '@/components/ui/icon';
 import { useRouter } from 'expo-router';
-import { Pressable, useColorScheme } from 'react-native';
+import { Pressable, useColorScheme, Alert, Linking } from 'react-native';
 import { faUtensils, faChild } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
@@ -10,42 +10,95 @@ import { useEffect, useState } from 'react';
 import { useICDevice } from '@/context/ICDeviceContext';
 import { AlertState } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
-import { useAuth } from '@/context/AuthContext';
-import { BlurView } from 'expo-blur';
-import BluetoothStatus from '@/components/devices/BluetoothStatus';
+import * as Location from 'expo-location';
 
 export default function HomeScreen() {
   const router = useRouter();
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const { profile } = useAuth();
 
-  const {
-    bleEnabled,
-    setUserInfo,
-    updateUserInfo,
-    updateUserInfo_W,
-    getUserList,
-    setUserList,
-  } = useICDevice();
+  const { bleEnabled, disconnectDevice, refreshDevices } = useICDevice();
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
     title: '',
     message: '',
   });
+  const [locationEnabled, setLocationEnabled] = useState<boolean>(true);
+
+  const checkLocationPermissions = async () => {
+    try {
+      // Check if location services are enabled on the device
+      const locationServicesEnabled = await Location.hasServicesEnabledAsync();
+
+      if (!locationServicesEnabled) {
+        setLocationEnabled(false);
+        return;
+      }
+
+      // Check app permissions
+      const { status } = await Location.getForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        setLocationEnabled(false);
+        return;
+      }
+
+      setLocationEnabled(true);
+    } catch (error) {
+      console.error('Error checking location permissions:', error);
+      setLocationEnabled(false);
+    }
+  };
+
+  const handleLocationAlert = () => {
+    Alert.alert(
+      'Location Services Required',
+      'This app requires location services to function properly. Please enable location services in your device settings.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Open Settings',
+          onPress: () => Linking.openSettings(),
+        },
+      ],
+    );
+  };
 
   useEffect(() => {
+    // Check Bluetooth status
     if (!bleEnabled) {
       setAlert({
         visible: true,
         title: 'Bluetooth not enabled',
         message: 'Please enable Bluetooth to use weight scales.',
       });
-    } else {
-      setAlert(prev => ({ ...prev, visible: false }));
     }
     console.log('bleEnabled', bleEnabled);
-  }, [bleEnabled]);
+
+    // Check location permissions
+    checkLocationPermissions();
+  }, []);
+
+  useEffect(() => {
+    // Show location alert if location is not enabled
+    if (!locationEnabled) {
+      setAlert({
+        visible: true,
+        title: 'Location Services Required',
+        message: 'Please enable location services to use all features of this app.',
+      });
+    }
+  }, [locationEnabled]);
+
+  const handleAlertConfirm = () => {
+    if (!locationEnabled) {
+      handleLocationAlert();
+    }
+    setAlert({ ...alert, visible: false });
+  };
 
   return (
     <ThemedSafeAreaView>
@@ -76,8 +129,6 @@ export default function HomeScreen() {
       </View>
       {/* Main */}
       <View className="flex-1 gap-4 px-4">
-        {/* Bluetooth Status */}
-        <BluetoothStatus />
         {/* Food */}
         <Pressable
           onPress={() => router.push('/(tabs)/food')}
@@ -121,44 +172,17 @@ export default function HomeScreen() {
           </View>
           {/* Details */}
           <View>
-            <Text className="text">Body Fat:</Text>
-            <Text className="text">Weight:</Text>
+            <Text>Body Fat:</Text>
+            <Text>Weight:</Text>
           </View>
         </Pressable>
-        {profile && (
-          <Pressable className="button" onPress={() => setUserInfo(profile)}>
-            <Text>setUserInfo</Text>
-          </Pressable>
-        )}
-        {profile && (
-          <Pressable className="button" onPress={() => updateUserInfo(profile)}>
-            <Text>updateUserInfo</Text>
-          </Pressable>
-        )}
-        {profile && (
-          <Pressable
-            className="button"
-            onPress={() => updateUserInfo_W(profile)}>
-            <Text>updateUserInfo_W</Text>
-          </Pressable>
-        )}
-        <Pressable className="button" onPress={() => getUserList()}>
-          <Text>getUserList</Text>
-        </Pressable>
-        {profile && (
-          <Pressable className="button" onPress={() => setUserList(profile)}>
-            <Text>setUserList</Text>
-          </Pressable>
-        )}
       </View>
 
       <CustomAlert
         visible={alert.visible}
         title={alert.title}
         message={alert.message}
-        onConfirm={() => {
-          setAlert({ ...alert, visible: false });
-        }}
+        onConfirm={handleAlertConfirm}
       />
     </ThemedSafeAreaView>
   );
