@@ -451,6 +451,8 @@ export function ICDeviceProvider({ children }: { children: React.ReactNode }) {
         console.log('Weight data received:', {
           device: device?.mac,
           weight: data?.weight,
+          bmi: data?.bmi,
+          bodyFat: data?.bodyFat,
           timestamp: new Date(data?.timestamp || Date.now()).toISOString(),
         });
 

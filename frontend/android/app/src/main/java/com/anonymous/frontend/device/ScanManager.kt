@@ -375,26 +375,6 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
                     }
                     emitToJS("onMeasureStep", params)
                 }
-                ICConstant.ICMeasureStep.ICMeasureStepHrStart -> {
-                    Log.d(TAG, "${device.macAddr}: start heart rate measurement")
-                    val params = Arguments.createMap().apply {
-                        putString("mac", device.macAddr)
-                        putString("step", "heartRateStart")
-                    }
-                    emitToJS("onMeasureStep", params)
-                }
-                ICConstant.ICMeasureStep.ICMeasureStepHrResult -> {
-                    val hrData = data as? ICWeightData
-                    if (hrData != null) {
-                        Log.d(TAG, "${device.macAddr}: heart rate measurement complete: ${hrData.hr}")
-                        val params = Arguments.createMap().apply {
-                            putString("mac", device.macAddr)
-                            putString("step", "heartRateComplete")
-                            putInt("heartRate", hrData.hr)
-                        }
-                        emitToJS("onMeasureStep", params)
-                    }
-                }
                 ICConstant.ICMeasureStep.ICMeasureStepMeasureOver -> {
                     val weightData = data as? ICWeightData
                     if (weightData != null) {
@@ -474,10 +454,14 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
     private fun handleWeightData(device: ICDevice, data: ICWeightData) {
         Log.d(TAG, "Handling weight data from ${device.macAddr}: ${data.weight_kg}kg")
 
+        var bodyFatPercent = data.bodyFatPercent.toDouble()
+
         val weightMap = Arguments.createMap().apply {
             putDouble("weight", data.weight_kg.toDouble())
             putLong("timestamp", System.currentTimeMillis())
             putBoolean("isStabilized", data.isStabilized)
+            putDouble("BMI", data.bmi.toDouble())
+            putDouble("bodyFat", data.bodyFatPercent)
             putInt("heartRate", data.hr)
         }
 

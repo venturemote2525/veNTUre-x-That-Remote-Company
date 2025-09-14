@@ -45,6 +45,46 @@ export default function ProfileScreen() {
     loadPhoto();
   }, [profile]);
 
+  // Store user info for weight taking app
+  useEffect(() => {
+    const storeUserInfo = async () => {
+      console.log('Profile data:', profile); // Debug log
+      if (profile && !profileLoading) {
+        const userInfo = {
+          age: calculateAge(profile.dob),
+          height: profile.height || 170, // default height if not set
+          sex: getSexCode(profile.gender),
+          peopleType: 0, // default to normal person type
+          status: 'success',
+          persistent: true
+        };
+        console.log('Storing user info:', userInfo); // Debug log
+        await AsyncStorage.setItem('user_info', JSON.stringify(userInfo));
+        console.log('User info stored successfully'); // Debug log
+      } else {
+        console.log('Profile not ready or loading:', { profile, profileLoading }); // Debug log
+      }
+    };
+    storeUserInfo();
+  }, [profile, profileLoading]);
+
+  const calculateAge = (dobString: string | null | undefined): number => {
+    if (!dobString) return 25; // default age
+    const dob = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age > 0 ? age : 25;
+  };
+
+  const getSexCode = (gender: string | null | undefined): number => {
+    if (!gender) return 1; // default to male
+    return gender.toLowerCase() === 'female' ? 2 : 1;
+  };
+
   // Pick image from gallery
   const pickImage = async () => {
     try {
@@ -73,7 +113,6 @@ export default function ProfileScreen() {
       ) {
         const base64Image = `data:image/png;base64,${result.assets[0].base64}`;
         setPhoto(base64Image); // show immediately
-        await AsyncStorage.setItem('profile_photo', base64Image); // persist locally
         await uploadPhoto(result.assets[0].base64); // upload to Supabase
       }
     } catch (err) {
@@ -204,6 +243,12 @@ export default function ProfileScreen() {
             <Text className="font-body text-gray-500">Gender</Text>
             <Text className="font-bodyBold text-black">
               {profile?.gender ?? 'N/A'}
+            </Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="font-body text-gray-500">Height</Text>
+            <Text className="font-bodyBold text-black">
+              {profile?.height ? `${profile.height} cm` : 'N/A'}
             </Text>
           </View>
 
