@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { uploadImage } from '@/utils/food/api';
 import LoadingScreen from '@/components/LoadingScreen';
 import uuid from 'react-native-uuid';
-import { AnimatedPressable, useFadeIn, useSlideIn } from '@/components/AnimatedComponents';
+import { AnimatedPressable } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCamera, faImages, faUtensils, faArrowRight } from '@fortawesome/free-solid-svg-icons';
@@ -16,7 +16,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// Helper function to safely extract string from potential string array
 const getStringParam = (param: string | string[] | undefined): string => {
   if (Array.isArray(param)) {
     return param[0] || '';
@@ -35,7 +34,6 @@ export default function LoggingScreen() {
   const [aiLoading, setAiLoading] = useState(false);
   const id = uuid.v4();
 
-  const fadeIn = useFadeIn(200);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,7 +44,6 @@ export default function LoggingScreen() {
       setMeal(mealValue);
     }
     
-    // Start pulsing animation for the food icon
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -78,7 +75,6 @@ export default function LoggingScreen() {
       const base64Data = result.assets[0].base64!;
       setImage(base64Data);
       
-      // Animate the confirmation button slide-in
       Animated.spring(slideAnim, {
         toValue: 1,
         friction: 8,
@@ -109,7 +105,6 @@ export default function LoggingScreen() {
       const base64Data = result.assets[0].base64!;
       setImage(base64Data);
       
-      // Animate the confirmation button slide-in
       Animated.spring(slideAnim, {
         toValue: 1,
         friction: 8,
@@ -125,17 +120,14 @@ export default function LoggingScreen() {
     if (!image || !profile) return;
     try {
       setLoading(true);
-      // Upload to database
       setUploadLoading(true);
       const path = await uploadImage(id, profile.user_id, image);
       setUploadLoading(false);
 
-      // TODO: Send to AI
       setAiLoading(true);
       setAiLoading(false);
 
       setLoading(false);
-      // Go to summary screen
       router.push({
         pathname: '/(logging)/summary',
         params: { mealId: id, meal: meal, type: 'log' },
@@ -171,7 +163,6 @@ export default function LoggingScreen() {
     outputRange: [0, 1],
   });
 
-  // Format meal name for display
   const formattedMeal = meal ? 
     `${meal.charAt(0).toUpperCase() + meal.slice(1).toLowerCase()} Meal` : 
     '';
@@ -183,13 +174,11 @@ export default function LoggingScreen() {
           flexGrow: 1, 
           paddingHorizontal: 20, 
           paddingVertical: 20,
-          paddingBottom: 100 // Add padding at bottom to prevent overlap
+          paddingBottom: 100
         }}
         showsVerticalScrollIndicator={false}
-        style={fadeIn}
       >
         <View className="flex-1 items-center justify-between">
-          {/* Header */}
           <View className="items-center w-full mb-6">
             <Text className="font-heading text-head2 text-secondary-500 mb-2">
               Log Your Meal
@@ -199,7 +188,6 @@ export default function LoggingScreen() {
             </Text>
           </View>
 
-          {/* Image Preview Area */}
           <View className="items-center justify-center mb-8">
             {image ? (
               <View className="relative">
@@ -237,49 +225,46 @@ export default function LoggingScreen() {
               </View>
             )}
           </View>
+        </View>
 
-          {/* Action Buttons - Smaller and cuter */}
-          <View className="w-full gap-3 mb-6">
-            <AnimatedPressable 
-              className="flex-row items-center justify-center gap-2 rounded-xl bg-secondary-500 py-3 px-4"
-              onPress={takePhoto}
-              scaleAmount={0.95}
-            >
-              <View className="flex-row items-center justify-center">
-                <FontAwesomeIcon icon={faCamera} size={16} color="white" />
-                <Text className="font-bodySemiBold text-body2 text-background-0 ml-2">
-                  Take Photo
-                </Text>
-              </View>
-            </AnimatedPressable>
-
-            <AnimatedPressable 
-              className="flex-row items-center justify-center gap-2 rounded-xl bg-background-0 border border-secondary-200 py-3 px-4"
-              onPress={pickImage}
-              scaleAmount={0.95}
-            >
-              <View className="flex-row items-center justify-center">
-                <FontAwesomeIcon icon={faImages} size={16} color={Colors.light.colors.secondary[500]} />
-                <Text className="font-bodySemiBold text-body2 text-secondary-500 ml-2">
-                  Choose from Gallery
-                </Text>
-              </View>
-            </AnimatedPressable>
-          </View>
-
-          {/* Meal Type Indicator */}
-          {meal && (
-            <View className="flex-row items-center justify-center gap-2 mb-8 bg-secondary-100 rounded-full px-4 py-2">
-              <FontAwesomeIcon icon={faUtensils} size={14} color={Colors.light.colors.secondary[500]} />
-              <Text className="font-bodySemiBold text-body3 text-secondary-500">
-                {formattedMeal}
+        <View className="w-full gap-3 mb-6">
+          <AnimatedPressable 
+            className="flex-row items-center justify-center gap-2 rounded-xl bg-secondary-500 py-3 px-4"
+            onPress={takePhoto}
+            scaleAmount={0.95}
+          >
+            <View className="flex-row items-center justify-center">
+              <FontAwesomeIcon icon={faCamera} size={16} color="white" />
+              <Text className="font-bodySemiBold text-body2 text-background-0 ml-2">
+                Take Photo
               </Text>
             </View>
-          )}
+          </AnimatedPressable>
+
+          <AnimatedPressable 
+            className="flex-row items-center justify-center gap-2 rounded-xl bg-background-0 border border-secondary-200 py-3 px-4"
+            onPress={pickImage}
+            scaleAmount={0.95}
+          >
+            <View className="flex-row items-center justify-center">
+              <FontAwesomeIcon icon={faImages} size={16} color={Colors.light.colors.secondary[500]} />
+              <Text className="font-bodySemiBold text-body2 text-secondary-500 ml-2">
+                Choose from Gallery
+              </Text>
+            </View>
+          </AnimatedPressable>
         </View>
+
+        {meal && (
+          <View className="flex-row items-center justify-center gap-2 mb-8 bg-secondary-100 rounded-full px-4 py-2">
+            <FontAwesomeIcon icon={faUtensils} size={14} color={Colors.light.colors.secondary[500]} />
+            <Text className="font-bodySemiBold text-body3 text-secondary-500">
+              {formattedMeal}
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Floating Confirm Button - Fixed positioning */}
       <Animated.View 
         style={{
           transform: [{ translateY: buttonSlide }],
@@ -288,26 +273,26 @@ export default function LoggingScreen() {
           bottom: 30,
           left: 20,
           right: 20,
-          zIndex: 10, // Ensure it's above other elements
+          zIndex: 10,
         }}
       >
         <AnimatedPressable 
-  onPress={confirmPhoto} 
-  className="flex-row items-center justify-center gap-2 rounded-full bg-success-500 py-4 px-6 shadow-lg"
-  scaleAmount={0.95}
->
-  <View className="flex-row items-center justify-center">
-    <Text className="font-bodyBold text-body1 text-background-0">
-      Analyze Meal
-    </Text>
-    <FontAwesomeIcon 
-      icon={faArrowRight} 
-      size={16} 
-      color="white" 
-      style={{ marginLeft: 8 }} 
-    />
-  </View>
-</AnimatedPressable>
+          onPress={confirmPhoto} 
+          className="flex-row items-center justify-center gap-2 rounded-full bg-success-500 py-4 px-6 shadow-lg"
+          scaleAmount={0.95}
+        >
+          <View className="flex-row items-center justify-center">
+            <Text className="font-bodyBold text-body1 text-background-0">
+              Analyze Meal
+            </Text>
+            <FontAwesomeIcon 
+              icon={faArrowRight} 
+              size={16} 
+              color="white" 
+              style={{ marginLeft: 8 }} 
+            />
+          </View>
+        </AnimatedPressable>
       </Animated.View>
     </ThemedSafeAreaView>
   );
