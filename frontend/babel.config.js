@@ -5,19 +5,19 @@ module.exports = function (api) {
       ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
       'nativewind/babel',
     ],
-
     plugins: [
       [
         'module-resolver',
         {
           root: ['./'],
-
           alias: {
             '@': './',
             'tailwind.config': './tailwind.config.js',
           },
         },
       ],
+      //'react-native-worklets/plugin'
+      'react-native-worklets-core/plugin'  
     ],
   };
 };
