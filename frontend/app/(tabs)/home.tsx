@@ -1,23 +1,17 @@
-
 import CustomDropdown, { DropdownItem } from '@/components/CustomDropdown';
 import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { AddIcon, Icon } from '@/components/ui/icon';
 import { useRouter } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { faUtensils, faChild, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
-import { AnimatedPressable, useFadeIn, GradientCard } from '@/components/AnimatedComponents';
+import { AnimatedPressable } from '@/components/AnimatedComponents';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const rawScheme = useColorScheme();
-  const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
-  const fadeIn = useFadeIn(200);
 
   return (
     <ThemedSafeAreaView className="flex-1 bg-background-1">
-      {/* Enhanced Header */}
       <View className="flex-row justify-between p-6 pb-4">
         <View>
           <Text className="font-heading text-head2 text-secondary-500">
@@ -30,7 +24,6 @@ export default function HomeScreen() {
         <CustomDropdown
           toggle={
             <AnimatedPressable>
-              {/* Use the same style as old code - simple icon without gradient circle */}
               <Icon as={AddIcon} size={'xl'} className="text-secondary-500" />
             </AnimatedPressable>
           }
@@ -51,9 +44,7 @@ export default function HomeScreen() {
         </CustomDropdown>
       </View>
       
-      {/* Main Content with Animations */}
-      <View className="flex-1 gap-6 px-6" style={fadeIn}>
-        {/* Food Card with Enhanced Animation */}
+      <View className="flex-1 gap-6 px-6">
         <AnimatedPressable 
           onPress={() => router.push('/(tabs)/food')}
           scaleAmount={0.95}
@@ -87,7 +78,6 @@ export default function HomeScreen() {
           </View>
         </AnimatedPressable>
         
-        {/* Body Composition Card */}
         <AnimatedPressable 
           onPress={() => router.push('/(tabs)/body')}
           scaleAmount={0.95}
@@ -113,7 +103,6 @@ export default function HomeScreen() {
               </View>
             </View>
             
-            {/* Stats Grid */}
             <View className="flex-row justify-between mt-4">
               <View className="items-center">
                 <Text className="font-heading text-head3 text-success-600">18.5%</Text>
