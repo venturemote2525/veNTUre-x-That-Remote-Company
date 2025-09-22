@@ -1,60 +1,42 @@
 // components/CustomDropdown.tsx
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { View, Text } from '@/components/Themed';
-import { Colors, Shadows, Animations } from '@/constants/Colors';
-import { AnimatedPressable } from '@/components/AnimatedComponents';
+import { Colors, Shadows } from '@/constants/Colors';
+import { AnimatedPressable, useFadeIn, useSlideIn } from '@/components/AnimatedComponents';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 type DropdownItemProps = {
   label: string;
   onPress?: () => void;
-  icon?: IconDefinition; // Add this line
-  itemClassName?: string;
-  itemTextClassName?: string;
+  icon?: IconDefinition;
+  itemClassName?: any; // now accepts TextStyle
+  itemTextClassName?: any; // now accepts TextStyle
 };
 
 export function DropdownItem({
   label,
   onPress,
-  icon, // Add this
+  icon,
   itemClassName,
   itemTextClassName,
 }: DropdownItemProps) {
   return (
-    <AnimatedPressable onPress={onPress} scaleAmount={0.95}>
-      <View style={{
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        flexDirection: 'row', // Add this
-        alignItems: 'center', // Add this
-        gap: 12, // Add this for spacing between icon and text
-      }}>
-        {icon && ( // Add this to render the icon if provided
-          <FontAwesomeIcon
-            icon={icon}
-            size={16}
-            color={Colors.light.colors.primary[600]}
-          />
-        )}
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: Colors.light.colors.primary[600],
-        }}>
-          {label}
-        </Text>
-      </View>
+    <AnimatedPressable
+      onPress={onPress}
+      scaleAmount={0.95}
+      style={[styles.item, itemClassName]}
+    >
+      {icon && (
+        <FontAwesomeIcon
+          icon={icon}
+          size={16}
+          color={Colors.light.colors.primary[600]}
+        />
+      )}
+      <Text style={[styles.itemText, itemTextClassName]}>{label}</Text>
     </AnimatedPressable>
   );
 }
@@ -62,8 +44,8 @@ export function DropdownItem({
 type CustomDropdownProps = {
   toggle: React.ReactNode;
   children: React.ReactElement<DropdownItemProps>[];
-  menuClassName?: string;
-  toggleClassName?: string;
+  menuClassName?: any;
+  toggleClassName?: any;
   separator?: boolean;
   gap?: number;
   maxHeight?: number;
@@ -72,43 +54,17 @@ type CustomDropdownProps = {
 export default function CustomDropdown({
   toggle,
   children,
-  menuClassName,
   separator,
   gap = 8,
   maxHeight = 200,
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
-  const scale = useSharedValue(0.8);
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(-10);
 
-  const toggleDropdown = () => {
-    setOpen(prev => {
-      const newOpen = !prev;
-      
-      if (newOpen) {
-        // Opening animation
-        scale.value = withSpring(1, Animations.bounce);
-        opacity.value = withTiming(1, { duration: 200 });
-        translateY.value = withSpring(0, Animations.spring);
-      } else {
-        // Closing animation
-        scale.value = withTiming(0.8, { duration: 150 });
-        opacity.value = withTiming(0, { duration: 150 });
-        translateY.value = withTiming(-10, { duration: 150 });
-      }
-      
-      return newOpen;
-    });
-  };
+  const toggleDropdown = () => setOpen(prev => !prev);
 
-  const menuAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateY: translateY.value },
-    ],
-    opacity: opacity.value,
-  }));
+  // Animations
+  const fadeStyle = useFadeIn(200);
+  const slideStyle = useSlideIn(200, 'top');
 
   return (
     <View style={{ position: 'relative' }}>
@@ -119,50 +75,23 @@ export default function CustomDropdown({
         : toggle}
 
       {open && (
-        <Animated.View
-          style={[
-            menuAnimatedStyle,
-            {
-              position: 'absolute',
-              right: 0,
-              top: '100%',
-              zIndex: 50,
-              marginTop: 8,
-              minWidth: 160,
-              maxHeight: maxHeight,
-              borderRadius: 16,
-              overflow: 'hidden',
-              ...Shadows.large,
-            },
-          ]}
+        <AnimatedPressable
+          style={[styles.menuContainer, slideStyle, fadeStyle]}
         >
-          <BlurView
-            intensity={95}
-            style={{
-              borderRadius: 16,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              padding: 8,
-            }}
-          >
-            <ScrollView 
-              style={{ borderRadius: 12 }} 
+          <BlurView intensity={95} style={styles.blurContainer}>
+            <ScrollView
+              style={{ borderRadius: 12 }}
               contentContainerStyle={{ gap }}
               showsVerticalScrollIndicator={false}
             >
               {React.Children.map(children, (child, index) => (
                 <View key={index}>
-                  {separator && index > 0 && (
-                    <View style={{
-                      height: 1,
-                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                      marginVertical: 4,
-                    }} />
-                  )}
+                  {separator && index > 0 && <View style={styles.separator} />}
                   {React.isValidElement(child)
                     ? React.cloneElement(child, {
                         onPress: () => {
                           child.props.onPress?.();
-                          setOpen(false);
+                          setOpen(false); // keep logic intact
                         },
                       })
                     : child}
@@ -170,8 +99,47 @@ export default function CustomDropdown({
               ))}
             </ScrollView>
           </BlurView>
-        </Animated.View>
+        </AnimatedPressable>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  item: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  itemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.light.colors.primary[600],
+  },
+  menuContainer: {
+    position: 'absolute',
+    right: 0,
+    top: '100%',
+    zIndex: 50,
+    marginTop: 8,
+    minWidth: 160,
+    maxHeight: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Shadows.large,
+  },
+  blurContainer: {
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 8,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    marginVertical: 4,
+  },
+});

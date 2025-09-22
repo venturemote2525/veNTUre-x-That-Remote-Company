@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
-import 'react-native-reanimated';
 import { ICDeviceProvider, useICDevice } from '@/context/ICDeviceContext';
 import { ThemeProvider, useThemeMode } from '@/context/ThemeContext';
 

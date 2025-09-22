@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { checkPasswordStrength, checkValidEmail } from '@/utils/auth/auth';
 import { checkUserExists, userSignup } from '@/utils/auth/api';
 import { CustomAlert } from '@/components/CustomAlert';
-import { AnimatedPressable, useFadeIn } from '@/components/AnimatedComponents';
+import { AnimatedPressable } from '@/components/AnimatedComponents';
 
 export default function SignUp() {
   const router = useRouter();
@@ -26,8 +26,6 @@ export default function SignUp() {
     reenter: '',
     login: '',
   });
-
-  const fadeIn = useFadeIn(100);
 
   const handleSignup = async () => {
     setError({ email: '', password: '', reenter: '', login: '' });
@@ -99,7 +97,7 @@ export default function SignUp() {
 
   return (
     <ThemedSafeAreaView className="flex-1">
-      <View className="flex-1 justify-center px-4" style={fadeIn}>
+      <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
           <Text className="font-heading text-[50px] text-secondary-500">
             HealthSync
