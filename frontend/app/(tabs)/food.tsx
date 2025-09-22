@@ -8,7 +8,11 @@ import { Meal } from '@/types/database-types';
 import { retrieveMeals } from '@/utils/food/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faUtensils, faFire, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import {
+  faUtensils,
+  faFire,
+  faCalendar,
+} from '@fortawesome/free-solid-svg-icons';
 import { useFadeIn } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
@@ -19,7 +23,7 @@ const mealIcons = {
   DINNER: '🌙',
   MORNING_SNACK: '🥐',
   AFTERNOON_SNACK: '🍎',
-  NIGHT_SNACK: '🌰'
+  NIGHT_SNACK: '🌰',
 };
 
 const mealColors = {
@@ -28,7 +32,7 @@ const mealColors = {
   DINNER: '#4A6572',
   MORNING_SNACK: '#FFB74D',
   AFTERNOON_SNACK: '#FF8A65',
-  NIGHT_SNACK: '#7986CB'
+  NIGHT_SNACK: '#7986CB',
 };
 
 export default function FoodScreen() {
@@ -42,11 +46,12 @@ export default function FoodScreen() {
     const fetchMeals = async () => {
       const result = await retrieveMeals(selectedDate);
       setMeals(result);
-      
+
       // Animate progress bar
-      const totalCalories = result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
+      const totalCalories =
+        result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
       const progress = Math.min(totalCalories / 2000, 1); // Assuming 2000 as max calories
-      
+
       Animated.timing(progressAnim, {
         toValue: progress,
         duration: 800,
@@ -57,111 +62,154 @@ export default function FoodScreen() {
     fetchMeals();
   }, [selectedDate]);
 
-  const totalCalories = meals?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
+  const totalCalories =
+    meals?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%']
+    outputRange: ['0%', '100%'],
   });
 
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1">
-      <View className="flex-1 px-4" style={fadeIn}>
+      <View className="flex-1" style={fadeIn}>
         {/* Header */}
-        <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center justify-between px-6 py-2">
           <View className="flex-row items-center">
-            <FontAwesomeIcon icon={faUtensils} size={24} color={Colors.light.colors.secondary[500]} />
-            <Text className="font-heading text-head2 text-secondary-500 ml-2">
+            <FontAwesomeIcon
+              icon={faUtensils}
+              size={24}
+              color={Colors.light.colors.secondary[500]}
+            />
+            <Text className="ml-2 font-heading text-head2 text-secondary-500">
               Food Diary
             </Text>
           </View>
-          <View className="flex-row items-center bg-secondary-100 rounded-full px-3 py-1">
-            <FontAwesomeIcon icon={faCalendar} size={14} color={Colors.light.colors.secondary[500]} />
-            <Text className="font-bodySemiBold text-body3 text-secondary-500 ml-1">
+          <View className="flex-row items-center rounded-full bg-secondary-100 px-3 py-1">
+            <FontAwesomeIcon
+              icon={faCalendar}
+              size={14}
+              color={Colors.light.colors.secondary[500]}
+            />
+            <Text className="text-body3 ml-1 font-bodySemiBold text-secondary-500">
               {selectedDate.format('MMM D')}
             </Text>
           </View>
         </View>
 
-        <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        <View className="flex-1 px-4">
+          <DateSelector
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
 
-        {/* Calories Summary Card */}
-        <View className="bg-background-0 rounded-2xl p-5 mb-4 shadow-sm border border-primary-100">
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-row items-center">
-              <FontAwesomeIcon icon={faFire} size={20} color={Colors.light.colors.secondary[500]} />
-              <Text className="font-bodyBold text-body1 text-secondary-500 ml-2">
-                Total Calories
+          {/* Calories Summary Card */}
+          <View className="mb-4 rounded-2xl border-2 border-secondary-500 bg-background-0 px-4 py-3 shadow-sm">
+            <View className="mb-3 flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <FontAwesomeIcon
+                  icon={faFire}
+                  size={20}
+                  color={Colors.light.colors.secondary[500]}
+                />
+                <Text className="ml-2 font-bodyBold text-body1 text-secondary-500">
+                  Total Calories
+                </Text>
+              </View>
+              <Text className="font-heading text-body2 text-secondary-500">
+                {totalCalories}
+                <Text className="text-body text-primary-200"> kcal</Text>
               </Text>
             </View>
-            <Text className="font-heading text-head2 text-secondary-500">
-              {totalCalories}
-              <Text className="font-body text-body3 text-primary-300"> kcal</Text>
-            </Text>
-          </View>
-          
-          {/* Progress Bar */}
-          <View className="h-2 bg-secondary-100 rounded-full overflow-hidden">
-            <Animated.View 
-              className="h-full rounded-full"
-              style={{ 
-                width: progressWidth,
-                backgroundColor: totalCalories > 2000 ? '#FF6B6B' : Colors.light.colors.secondary[500]
-              }}
-            />
-          </View>
-          <View className="flex-row justify-between mt-1">
-            <Text className="font-body text-body3 text-primary-300">0</Text>
-            <Text className="font-body text-body3 text-primary-300">2000</Text>
-          </View>
-        </View>
 
-        {/* Meal Cards Section */}
-        <View className="flex-1 rounded-2xl">
-          <ScrollView
-            className="flex-1"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          >
-            <View className="gap-4">
-  {(['BREAKFAST', 'LUNCH', 'DINNER', 'MORNING_SNACK', 'AFTERNOON_SNACK', 'NIGHT_SNACK'] as const).map((mealType) => (
-    <View key={mealType} className="relative">
-      {/* Meal Header */}
-      <View className="flex-row items-center mb-2">
-        <Text className="text-2xl mr-2">{mealIcons[mealType]}</Text>
-        <Text className="font-bodyBold text-body1 text-secondary-500">
-          {mealType.split('_').map(word => 
-            word.charAt(0) + word.slice(1).toLowerCase()
-          ).join(' ')}
-        </Text>
-        <View className="ml-auto bg-secondary-100 rounded-full px-2 py-1">
-          <Text className="font-bodySemiBold text-body3 text-secondary-500">
-            {meals?.filter(m => m.meal === mealType).reduce((sum, meal) => sum + meal.calories, 0) || 0} kcal
-          </Text>
-        </View>
-      </View>
-                  
-                  {/* Meal Card */}
-                  <MealCard 
-                    title={mealType.split('_').map(word => 
-                      word.charAt(0) + word.slice(1).toLowerCase()
-                    ).join(' ')} 
-                    meals={meals ? meals.filter(m => m.meal === mealType) : null} 
-                  />
-                </View>
-              ))}
+            {/* Progress Bar */}
+            <View className="h-2 overflow-hidden rounded-full bg-secondary-500/20">
+              <Animated.View
+                className="h-full rounded-full"
+                style={{
+                  width: progressWidth,
+                  backgroundColor:
+                    totalCalories > 2000
+                      ? '#FF6B6B'
+                      : Colors.light.colors.secondary[500],
+                }}
+              />
             </View>
-          </ScrollView>
-        </View>
+            <View className="mt-1 flex-row justify-between">
+              <Text className="text-body3 text-primary-200">0</Text>
+              <Text className="text-body3 text-primary-200">2000</Text>
+            </View>
+          </View>
 
-        {/* Floating Add Button */}
-        <View className="absolute bottom-6 right-6">
-      <Pressable 
-        onPress={() => router.push('/(tabs)/logging')}
-        className="w-14 h-14 rounded-full items-center justify-center shadow-lg bg-secondary-500"
-      >
-        <Text className="text-white text-2xl font-bold">+</Text>
-      </Pressable>
-    </View>
+          {/* Meal Cards Section */}
+          <View className="flex-1 rounded-2xl">
+            <ScrollView
+              className="flex-1"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}>
+              <View className="gap-4">
+                {(
+                  [
+                    'BREAKFAST',
+                    'LUNCH',
+                    'DINNER',
+                    'MORNING_SNACK',
+                    'AFTERNOON_SNACK',
+                    'NIGHT_SNACK',
+                  ] as const
+                ).map(mealType => (
+                  <View key={mealType} className="relative">
+                    {/* Meal Header */}
+                    <View className="mb-2 flex-row items-center">
+                      <Text className="text-2xl mr-2">
+                        {mealIcons[mealType]}
+                      </Text>
+                      <Text className="font-bodyBold text-body1 text-secondary-500">
+                        {mealType
+                          .split('_')
+                          .map(
+                            word =>
+                              word.charAt(0) + word.slice(1).toLowerCase(),
+                          )
+                          .join(' ')}
+                      </Text>
+                      <View className="ml-auto rounded-full bg-secondary-100 px-2 py-1">
+                        <Text className="text-body3 font-bodySemiBold text-secondary-500">
+                          {meals
+                            ?.filter(m => m.meal === mealType)
+                            .reduce((sum, meal) => sum + meal.calories, 0) ||
+                            0}{' '}
+                          kcal
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Meal Card */}
+                    <MealCard
+                      title={mealType
+                        .split('_')
+                        .map(
+                          word => word.charAt(0) + word.slice(1).toLowerCase(),
+                        )
+                        .join(' ')}
+                      meals={
+                        meals ? meals.filter(m => m.meal === mealType) : null
+                      }
+                    />
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Floating Add Button */}
+          <View className="absolute bottom-6 right-6">
+            <Pressable
+              onPress={() => router.push('/(tabs)/logging')}
+              className="h-14 w-14 items-center justify-center rounded-full bg-secondary-500 shadow-lg">
+              <Text className="text-2xl font-bold text-white">+</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
     </ThemedSafeAreaView>
   );
