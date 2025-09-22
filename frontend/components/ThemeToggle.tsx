@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -25,7 +24,10 @@ export default function ThemeToggle() {
   const sliderStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: withSpring((containerWidth / 2 - 8) * position.value, Animations.spring),
+        translateX: withSpring(
+          (containerWidth / 2 - 8) * position.value,
+          Animations.spring,
+        ),
       },
       { scale: scale.value },
     ],
@@ -38,7 +40,7 @@ export default function ThemeToggle() {
       stiffness: Animations.spring.stiffness,
       mass: Animations.spring.mass,
     };
-    
+
     scale.value = withSpring(0.9, springConfig, () => {
       scale.value = withSpring(1, springConfig);
     });
@@ -55,8 +57,7 @@ export default function ThemeToggle() {
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         ...Shadows.small,
       }}
-      onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}
-    >
+      onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}>
       {/* Sliding pill with gradient */}
       {containerWidth > 0 && (
         <Animated.View
@@ -71,12 +72,12 @@ export default function ThemeToggle() {
               borderRadius: 12,
               overflow: 'hidden',
             },
-          ]}
-        >
+          ]}>
           <LinearGradient
-            colors={mode === 'light' 
-              ? Colors.light.gradients.sunset 
-              : Colors.light.gradients.ocean
+            colors={
+              mode === 'light'
+                ? Colors.light.gradients.sunset
+                : Colors.light.gradients.ocean
             }
             style={{ flex: 1, borderRadius: 12 }}
           />
@@ -90,18 +91,18 @@ export default function ThemeToggle() {
           alignItems: 'center',
           justifyContent: 'center',
           paddingVertical: 12,
-        }}
-      >
+        }}>
         <Text
           style={{
             fontWeight: mode === 'light' ? '700' : '500',
-            color: mode === 'light' ? 'white' : Colors.light.colors.secondary[400],
+            color:
+              mode === 'light' ? 'white' : Colors.light.colors.secondary[400],
             fontSize: 14,
-            textShadowColor: mode === 'light' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
+            textShadowColor:
+              mode === 'light' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
             textShadowOffset: { width: 1, height: 1 },
             textShadowRadius: 2,
-          }}
-        >
+          }}>
           ☀️ Light
         </Text>
       </AnimatedPressable>
@@ -113,18 +114,18 @@ export default function ThemeToggle() {
           alignItems: 'center',
           justifyContent: 'center',
           paddingVertical: 12,
-        }}
-      >
+        }}>
         <Text
           style={{
             fontWeight: mode === 'dark' ? '700' : '500',
-            color: mode === 'dark' ? 'white' : Colors.light.colors.secondary[400],
+            color:
+              mode === 'dark' ? 'white' : Colors.light.colors.secondary[400],
             fontSize: 14,
-            textShadowColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
+            textShadowColor:
+              mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
             textShadowOffset: { width: 1, height: 1 },
             textShadowRadius: 2,
-          }}
-        >
+          }}>
           🌙 Dark
         </Text>
       </AnimatedPressable>

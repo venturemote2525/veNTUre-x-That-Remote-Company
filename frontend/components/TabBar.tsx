@@ -24,11 +24,10 @@ export default function TabBar({
   useEffect(() => {
     state.routes.forEach((_, index: number) => {
       const isFocused = state.index === index;
-
       Animated.spring(scaleValues[index], {
         toValue: isFocused ? 1.2 : 1,
-        speed: 20,
-        bounciness: 12,
+        friction: 4,
+        tension: 150,
         useNativeDriver: true,
       }).start();
     });
@@ -63,10 +62,14 @@ export default function TabBar({
         return (
           <Pressable
             key={index}
-            accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={{ flex: 1, alignItems: 'center', padding: 16 }}>
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              paddingVertical: 16,
+              overflow: 'visible', // allow scaling to show
+            }}>
             <Animated.View style={{ transform: [{ scale }] }}>
               {options.tabBarIcon?.({
                 focused: isFocused,
