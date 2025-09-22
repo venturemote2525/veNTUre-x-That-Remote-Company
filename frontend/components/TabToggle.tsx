@@ -1,6 +1,7 @@
 import { Pressable, Animated, Dimensions } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import { useEffect, useRef } from 'react';
+import {toUpperCase} from "@/utils/formatString";
 
 interface TabToggleProps {
   tabs: string[];
@@ -41,7 +42,7 @@ export default function TabToggle({
             className={`text-center font-bodyBold text-body2 ${
               selectedTab === tab ? 'text-secondary-500' : 'text-primary-300'
             }`}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {toUpperCase(tab)}
           </Text>
         </Pressable>
       ))}
