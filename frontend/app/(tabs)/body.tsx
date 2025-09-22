@@ -8,6 +8,9 @@ import { LineChart, BarChart } from 'react-native-chart-kit';
 import { AnimatedPressable, useFadeIn, GradientCard, AnimatedCounter } from '@/components/AnimatedComponents';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
+import TabToggle from "@/components/TabToggle";
+
+const TABS = ['weight', 'BMI', 'Body Fat'];
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -26,6 +29,7 @@ const graphData = {
 
 export default function BodyScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
+    const [screen, setScreen] = useState<(typeof TABS)[number]>('weight');
   const [graphView, setGraphView] = useState<'weekly' | 'monthly'>('weekly');
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bmi' | 'bodyFat'>('weight');
   const fadeIn = useFadeIn(100);
@@ -38,6 +42,8 @@ export default function BodyScreen() {
 
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0">
+
+        <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}

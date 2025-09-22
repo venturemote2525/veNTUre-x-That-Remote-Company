@@ -31,15 +31,16 @@ export function DropdownItem({
 }: DropdownItemProps) {
   return (
     <AnimatedPressable onPress={onPress} scaleAmount={0.95}>
-      <View style={{
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        flexDirection: 'row', // Add this
-        alignItems: 'center', // Add this
-        gap: 12, // Add this for spacing between icon and text
-      }}>
+      <View
+        style={{
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 12,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          flexDirection: 'row', // Add this
+          alignItems: 'center', // Add this
+          gap: 12, // Add this for spacing between icon and text
+        }}>
         {icon && ( // Add this to render the icon if provided
           <FontAwesomeIcon
             icon={icon}
@@ -47,11 +48,12 @@ export function DropdownItem({
             color={Colors.light.colors.primary[600]}
           />
         )}
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: Colors.light.colors.primary[600],
-        }}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '500',
+            color: Colors.light.colors.primary[600],
+          }}>
           {label}
         </Text>
       </View>
@@ -62,7 +64,7 @@ export function DropdownItem({
 type CustomDropdownProps = {
   toggle: React.ReactNode;
   children: React.ReactElement<DropdownItemProps>[];
-  menuClassName?: string;
+  minWidth?: number;
   toggleClassName?: string;
   separator?: boolean;
   gap?: number;
@@ -72,7 +74,7 @@ type CustomDropdownProps = {
 export default function CustomDropdown({
   toggle,
   children,
-  menuClassName,
+  minWidth = 160,
   separator,
   gap = 8,
   maxHeight = 200,
@@ -85,7 +87,7 @@ export default function CustomDropdown({
   const toggleDropdown = () => {
     setOpen(prev => {
       const newOpen = !prev;
-      
+
       if (newOpen) {
         // Opening animation
         scale.value = withSpring(1, Animations.bounce);
@@ -97,16 +99,13 @@ export default function CustomDropdown({
         opacity.value = withTiming(0, { duration: 150 });
         translateY.value = withTiming(-10, { duration: 150 });
       }
-      
+
       return newOpen;
     });
   };
 
   const menuAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateY: translateY.value },
-    ],
+    transform: [{ scale: scale.value }, { translateY: translateY.value }],
     opacity: opacity.value,
   }));
 
@@ -128,35 +127,34 @@ export default function CustomDropdown({
               top: '100%',
               zIndex: 50,
               marginTop: 8,
-              minWidth: 160,
+              minWidth: minWidth,
               maxHeight: maxHeight,
               borderRadius: 16,
               overflow: 'hidden',
               ...Shadows.large,
             },
-          ]}
-        >
+          ]}>
           <BlurView
             intensity={95}
             style={{
               borderRadius: 16,
               backgroundColor: 'rgba(255, 255, 255, 0.9)',
               padding: 8,
-            }}
-          >
-            <ScrollView 
-              style={{ borderRadius: 12 }} 
+            }}>
+            <ScrollView
+              style={{ borderRadius: 12 }}
               contentContainerStyle={{ gap }}
-              showsVerticalScrollIndicator={false}
-            >
+              showsVerticalScrollIndicator={false}>
               {React.Children.map(children, (child, index) => (
                 <View key={index}>
                   {separator && index > 0 && (
-                    <View style={{
-                      height: 1,
-                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                      marginVertical: 4,
-                    }} />
+                    <View
+                      style={{
+                        height: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        marginVertical: 4,
+                      }}
+                    />
                   )}
                   {React.isValidElement(child)
                     ? React.cloneElement(child, {
