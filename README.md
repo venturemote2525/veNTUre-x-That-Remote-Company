@@ -21,6 +21,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=
 ```
 **`local.properties`**
 - Add your Android SDK location inside `android/local.properties`
+
 macOS / Linux:
 ```properties
 sdk.dir=/Users/your-username/Library/Android/sdk
