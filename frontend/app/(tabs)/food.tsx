@@ -9,7 +9,6 @@ import { retrieveMeals } from '@/utils/food/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUtensils, faFire, faCalendar } from '@fortawesome/free-solid-svg-icons';
-import { useFadeIn } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
@@ -35,7 +34,6 @@ export default function FoodScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [meals, setMeals] = useState<Meal[] | null>(null);
   const [progressAnim] = useState(new Animated.Value(0));
-  const fadeIn = useFadeIn(300);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,9 +41,8 @@ export default function FoodScreen() {
       const result = await retrieveMeals(selectedDate);
       setMeals(result);
       
-      // Animate progress bar
       const totalCalories = result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
-      const progress = Math.min(totalCalories / 2000, 1); // Assuming 2000 as max calories
+      const progress = Math.min(totalCalories / 2000, 1);
       
       Animated.timing(progressAnim, {
         toValue: progress,
@@ -65,8 +62,7 @@ export default function FoodScreen() {
 
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1">
-      <View className="flex-1 px-4" style={fadeIn}>
-        {/* Header */}
+      <View className="flex-1 px-4">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
             <FontAwesomeIcon icon={faUtensils} size={24} color={Colors.light.colors.secondary[500]} />
@@ -84,7 +80,6 @@ export default function FoodScreen() {
 
         <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-        {/* Calories Summary Card */}
         <View className="bg-background-0 rounded-2xl p-5 mb-4 shadow-sm border border-primary-100">
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center">
@@ -99,7 +94,6 @@ export default function FoodScreen() {
             </Text>
           </View>
           
-          {/* Progress Bar */}
           <View className="h-2 bg-secondary-100 rounded-full overflow-hidden">
             <Animated.View 
               className="h-full rounded-full"
@@ -115,7 +109,6 @@ export default function FoodScreen() {
           </View>
         </View>
 
-        {/* Meal Cards Section */}
         <View className="flex-1 rounded-2xl">
           <ScrollView
             className="flex-1"
@@ -123,24 +116,22 @@ export default function FoodScreen() {
             contentContainerStyle={{ paddingBottom: 20 }}
           >
             <View className="gap-4">
-  {(['BREAKFAST', 'LUNCH', 'DINNER', 'MORNING_SNACK', 'AFTERNOON_SNACK', 'NIGHT_SNACK'] as const).map((mealType) => (
-    <View key={mealType} className="relative">
-      {/* Meal Header */}
-      <View className="flex-row items-center mb-2">
-        <Text className="text-2xl mr-2">{mealIcons[mealType]}</Text>
-        <Text className="font-bodyBold text-body1 text-secondary-500">
-          {mealType.split('_').map(word => 
-            word.charAt(0) + word.slice(1).toLowerCase()
-          ).join(' ')}
-        </Text>
-        <View className="ml-auto bg-secondary-100 rounded-full px-2 py-1">
-          <Text className="font-bodySemiBold text-body3 text-secondary-500">
-            {meals?.filter(m => m.meal === mealType).reduce((sum, meal) => sum + meal.calories, 0) || 0} kcal
-          </Text>
-        </View>
-      </View>
+              {(['BREAKFAST', 'LUNCH', 'DINNER', 'MORNING_SNACK', 'AFTERNOON_SNACK', 'NIGHT_SNACK'] as const).map((mealType) => (
+                <View key={mealType} className="relative">
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-2xl mr-2">{mealIcons[mealType]}</Text>
+                    <Text className="font-bodyBold text-body1 text-secondary-500">
+                      {mealType.split('_').map(word => 
+                        word.charAt(0) + word.slice(1).toLowerCase()
+                      ).join(' ')}
+                    </Text>
+                    <View className="ml-auto bg-secondary-100 rounded-full px-2 py-1">
+                      <Text className="font-bodySemiBold text-body3 text-secondary-500">
+                        {meals?.filter(m => m.meal === mealType).reduce((sum, meal) => sum + meal.calories, 0) || 0} kcal
+                      </Text>
+                    </View>
+                  </View>
                   
-                  {/* Meal Card */}
                   <MealCard 
                     title={mealType.split('_').map(word => 
                       word.charAt(0) + word.slice(1).toLowerCase()
@@ -153,15 +144,14 @@ export default function FoodScreen() {
           </ScrollView>
         </View>
 
-        {/* Floating Add Button */}
         <View className="absolute bottom-6 right-6">
-      <Pressable 
-        onPress={() => router.push('/(tabs)/logging')}
-        className="w-14 h-14 rounded-full items-center justify-center shadow-lg bg-secondary-500"
-      >
-        <Text className="text-white text-2xl font-bold">+</Text>
-      </Pressable>
-    </View>
+          <Pressable 
+            onPress={() => router.push('/(tabs)/logging')}
+            className="w-14 h-14 rounded-full items-center justify-center shadow-lg bg-secondary-500"
+          >
+            <Text className="text-white text-2xl font-bold">+</Text>
+          </Pressable>
+        </View>
       </View>
     </ThemedSafeAreaView>
   );
