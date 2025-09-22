@@ -1,13 +1,11 @@
 import { ThemedSafeAreaView, View, Text } from '@/components/Themed';
-import { AnimatedPressable, useFadeIn, BouncingIcon } from '@/components/AnimatedComponents';
+import { AnimatedPressable, BouncingIcon } from '@/components/AnimatedComponents';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faOtter } from '@fortawesome/free-solid-svg-icons';
 
 export default function CapybaraScreen() {
-  const fadeIn = useFadeIn(200);
-
   return (
-    <ThemedSafeAreaView className="items-center justify-center" style={fadeIn}>
+    <ThemedSafeAreaView className="items-center justify-center">
       <BouncingIcon>
         <FontAwesomeIcon
           icon={faOtter}
