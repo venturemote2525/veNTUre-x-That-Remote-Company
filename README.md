@@ -12,15 +12,26 @@ git clone https://github.com/venturemote2525/veNTUre-x-That-Remote-Company.git
 git checkout dev
 ```
 
-### 3. Create .env.local file
-Add environment variables to `.env.local` file.
+### 3. Create environment files
+**`.env.local`**
+- Add environment variables to `.env.local` at the project root
 ```env
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
 ```
+**`local.properties`**
+- Add your Android SDK location inside `android/local.properties`
+macOS / Linux:
+```properties
+sdk.dir=/Users/your-username/Library/Android/sdk
+```
+Windows:
+```properties
+sdk.dir=C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk
+```
 
 ### 4. Add `.aar` file
-Place the `.aar` file in `android/app/libs` folder.`
+Place the `.aar` file in `android/app/libs` (Create the `libs` folder if it doesn't exist).
 
 ### 5. Ensure Java JDK 17 installed
 Add the JDK path in `android/gradle.properties`
@@ -28,7 +39,12 @@ Add the JDK path in `android/gradle.properties`
 org.gradle.java.home=/path/to/your/jdk-17
 ```
 
-### 6. Run the project
-- Run `npm install` to install dependencies
-- Run `npx expo start` to start the project with expo go app
+### 6. Install dependencies
+```bash
+cd frontend
+npm install
+```
+
+### 7. Run the project
+- Run `npx expo start` to start the project with Expo Go app
 - Run `npx expo run:android` to run the project on android device
