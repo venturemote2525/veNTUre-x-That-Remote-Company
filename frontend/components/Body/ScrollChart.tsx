@@ -2,6 +2,7 @@ import { View, ScrollView, Dimensions } from 'react-native';
 import { Text } from '@/components/Themed';
 import { useEffect, useRef } from 'react';
 import { LineChart } from 'react-native-gifted-charts';
+import { Colors } from '@/constants/Colors';
 
 type ScrollChartProps = {
   graphData: { value: number; label?: string }[];
@@ -17,7 +18,7 @@ export default function ScrollChart({
   height = 180,
   spacing = 50,
   sections = 5,
-  chartColour = '#4b70f5',
+  chartColour = Colors.light.colors.secondary[500] as string,
   label,
 }: ScrollChartProps) {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -89,7 +90,7 @@ export default function ScrollChart({
           rulesColor="#5d5d5d"
           xAxisLabelTextStyle={{
             color: '#b0aeae',
-            fontFamily: 'Montserrat-Medium',
+            fontFamily: 'Fredoka-Medium',
           }}
           spacing={spacing}
           maxValue={maxValue}
@@ -99,10 +100,10 @@ export default function ScrollChart({
             pointerStripColor: '#5d5d5d',
             pointerStripWidth: 2,
             strokeDashArray: [2, 5],
-            pointerColor: 'white',
+            pointerColor: '#5d5d5d',
             radius: 4,
-            pointerLabelWidth: 80,
-            shiftPointerLabelY: -30,
+            pointerLabelWidth: 90,
+            shiftPointerLabelY: -20,
             shiftPointerLabelX: -10,
             pointerLabelComponent: (
               items: { value: number; label?: string }[],
@@ -112,12 +113,10 @@ export default function ScrollChart({
                 <View
                   style={{ backgroundColor: chartColour }}
                   className="rounded-2xl p-3">
-                  <Text
-                    style={{ fontSize: 12 }}
-                    className="text-greyBackground">
+                  <Text style={{ fontSize: 12 }} className="text-primary-50">
                     {item.label ?? 'Value'}
                   </Text>
-                  <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                  <Text className="text-background-0" >
                     {item.value} {label}
                   </Text>
                 </View>

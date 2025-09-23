@@ -88,24 +88,22 @@ export default function BodyScreen() {
         <OverviewCard screen={screen} range={range} current={2} previous={4} />
         {/* Duration Selector*/}
         <View className="mb-6 flex-row justify-center gap-4">
-          <AnimatedPressable
+          <Pressable
             onPress={() => setRange('weekly')}
-            className={`rounded-full px-8 py-3 ${range === 'weekly' ? 'bg-secondary-500' : 'bg-background-0'}`}
-            scaleAmount={0.95}>
+            className={`flex-1 items-center rounded-full px-8 py-3 ${range === 'weekly' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
               className={`font-bodySemiBold ${range === 'weekly' ? 'text-background-0' : 'text-primary-100'}`}>
               Weekly
             </Text>
-          </AnimatedPressable>
-          <AnimatedPressable
+          </Pressable>
+          <Pressable
             onPress={() => setRange('monthly')}
-            className={`rounded-full px-8 py-3 ${range === 'monthly' ? 'bg-secondary-500' : 'bg-background-0'}`}
-            scaleAmount={0.95}>
+            className={`flex-1 items-center rounded-full px-8 py-3 ${range === 'monthly' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
               className={`font-bodySemiBold ${range === 'monthly' ? 'text-background-0' : 'text-primary-100'}`}>
               Monthly
             </Text>
-          </AnimatedPressable>
+          </Pressable>
         </View>
         <ScrollChart graphData={tempData} />
         {renderScreen()}

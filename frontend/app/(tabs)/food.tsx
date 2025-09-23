@@ -157,37 +157,18 @@ export default function FoodScreen() {
                   ] as const
                 ).map(mealType => (
                   <View key={mealType} className="relative">
-                    <View className="mb-2 flex-row items-center">
-                      <Text className="text-2xl mr-2">
-                        {mealIcons[mealType]}
-                      </Text>
-                      <Text className="font-bodyBold text-body1 text-secondary-500">
-                        {mealType
+                    <MealCard
+                      title={
+                        mealIcons[mealType] +
+                        ' ' +
+                        mealType
                           .split('_')
                           .map(
                             word =>
                               word.charAt(0) + word.slice(1).toLowerCase(),
                           )
-                          .join(' ')}
-                      </Text>
-                      <View className="ml-auto rounded-full bg-secondary-100 px-2 py-1">
-                        <Text className="text-body3 font-bodySemiBold text-secondary-500">
-                          {meals
-                            ?.filter(m => m.meal === mealType)
-                            .reduce((sum, meal) => sum + meal.calories, 0) ||
-                            0}{' '}
-                          kcal
-                        </Text>
-                      </View>
-                    </View>
-
-                    <MealCard
-                      title={mealType
-                        .split('_')
-                        .map(
-                          word => word.charAt(0) + word.slice(1).toLowerCase(),
-                        )
-                        .join(' ')}
+                          .join(' ')
+                      }
                       meals={
                         meals ? meals.filter(m => m.meal === mealType) : null
                       }
