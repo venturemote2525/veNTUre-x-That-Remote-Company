@@ -187,29 +187,29 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View className="mb-10 space-y-4 rounded-2xl bg-white p-6 shadow-md">
+        <View className="mb-10 space-y-4 rounded-2xl bg-background-0 p-6 shadow-md">
           <View className="flex-row justify-between">
-            <Text className="font-body text-gray-500">Member since</Text>
-            <Text className="font-bodyBold text-black">
+            <Text className="font-body text-primary-200">Member since</Text>
+            <Text className="font-bodyBold text-primary-500">
               {isBusy ? 'Loading...' : (memberSince ?? 'N/A')}
             </Text>
           </View>
           <View className="flex-row justify-between">
-            <Text className="font-body text-gray-500">DOB</Text>
-            <Text className="font-bodyBold text-black">
+            <Text className="font-body text-primary-200">DOB</Text>
+            <Text className="font-bodyBold text-primary-500">
               {profile?.dob ?? 'N/A'}
             </Text>
           </View>
           <View className="flex-row justify-between">
-            <Text className="font-body text-gray-500">Gender</Text>
-            <Text className="font-bodyBold text-black">
+            <Text className="font-body text-primary-200">Gender</Text>
+            <Text className="font-bodyBold text-primary-500">
               {profile?.gender ?? 'N/A'}
             </Text>
           </View>
 
-          <View className="h-[1px] bg-gray-200" />
+          <View className="h-[1px] bg-primary-200" />
           <View className="flex-row justify-between">
-            <Text className="font-body text-gray-500">Status</Text>
+            <Text className="font-body text-primary-200">Status</Text>
             <Text className="font-bodyBold text-green-600">Active</Text>
           </View>
         </View>

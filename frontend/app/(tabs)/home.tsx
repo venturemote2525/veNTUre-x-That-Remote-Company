@@ -37,14 +37,15 @@ export default function HomeScreen() {
           />
           <DropdownItem
             label={'Manual Input'}
+            onPress={() => router.push('/(body)/manual-logging')}
             icon={faPlus}
             itemTextClassName="text-primary-500"
           />
         </CustomDropdown>
       </View>
-      
+
       <View className="flex-1 gap-6 px-6">
-        <AnimatedPressable 
+        <AnimatedPressable
           onPress={() => router.push('/(tabs)/food')}
           scaleAmount={0.95}>
           <View className="rounded-2xl bg-background-0 p-4">
@@ -75,7 +76,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </AnimatedPressable>
-        
+
         <AnimatedPressable
           onPress={() => router.push('/(tabs)/body')}
           scaleAmount={0.95}>
@@ -97,8 +98,8 @@ export default function HomeScreen() {
                 </View>
               </View>
             </View>
-            
-            <View className="flex-row justify-between mt-4">
+
+            <View className="mt-4 flex-row justify-between">
               <View className="items-center">
                 <Text className="text-head3 font-heading text-success-600">
                   18.5%

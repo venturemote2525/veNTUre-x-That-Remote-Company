@@ -1,134 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text } from '@/components/Themed';
+import { Pressable } from 'react-native';
+import { useThemeMode } from '@/context/ThemeContext';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
 } from 'react-native-reanimated';
-import { View, Text } from '@/components/Themed';
-import { useThemeMode } from '@/context/ThemeContext';
-import { Colors, Shadows, Animations } from '@/constants/Colors';
-import { AnimatedPressable } from '@/components/AnimatedComponents';
+import { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
   const { mode, setMode } = useThemeMode();
   const [containerWidth, setContainerWidth] = useState(0);
   const position = useSharedValue(0); // 0 = light, 1 = dark
-  const scale = useSharedValue(1);
 
   useEffect(() => {
-    position.value = withSpring(mode === 'light' ? 0 : 1, Animations.spring);
+    position.value = withTiming(mode === 'light' ? 0 : 1, { duration: 100 });
   }, [mode]);
 
   const sliderStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: withSpring(
-          (containerWidth / 2 - 8) * position.value,
-          Animations.spring,
-        ),
+        translateX: withTiming((containerWidth / 2) * position.value, {
+          duration: 200,
+        }),
       },
-      { scale: scale.value },
     ],
   }));
 
-  const handlePress = (newMode: 'light' | 'dark') => {
-    // Create a proper spring config without duration (spring animations don't use duration)
-    const springConfig = {
-      damping: Animations.spring.damping,
-      stiffness: Animations.spring.stiffness,
-      mass: Animations.spring.mass,
-    };
-
-    scale.value = withSpring(0.9, springConfig, () => {
-      scale.value = withSpring(1, springConfig);
-    });
-    setMode(newMode);
-  };
-
   return (
     <View
-      style={{
-        position: 'relative',
-        flexDirection: 'row',
-        borderRadius: 16,
-        padding: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        ...Shadows.small,
-      }}
+      className="relative flex-row rounded-xl bg-background-300 p-1"
       onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}>
-      {/* Sliding pill with gradient */}
+      {/* Sliding pill */}
       {containerWidth > 0 && (
         <Animated.View
           style={[
             sliderStyle,
             {
-              position: 'absolute',
               top: 4,
               bottom: 4,
               left: 4,
-              width: containerWidth / 2 - 8,
-              borderRadius: 12,
-              overflow: 'hidden',
+              width: containerWidth / 2 - 8, // half width minus padding
             },
-          ]}>
-          <LinearGradient
-            colors={
-              mode === 'light'
-                ? Colors.light.gradients.sunset
-                : Colors.light.gradients.ocean
-            }
-            style={{ flex: 1, borderRadius: 12 }}
-          />
-        </Animated.View>
+          ]}
+          className="absolute rounded-lg bg-background-0"
+        />
       )}
 
-      <AnimatedPressable
-        onPress={() => handlePress('light')}
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: 12,
-        }}>
+      <Pressable
+        onPress={() => setMode('light')}
+        className="flex-1 items-center justify-center p-3">
         <Text
-          style={{
-            fontWeight: mode === 'light' ? '700' : '500',
-            color:
-              mode === 'light' ? 'white' : Colors.light.colors.secondary[400],
-            fontSize: 14,
-            textShadowColor:
-              mode === 'light' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
-            textShadowOffset: { width: 1, height: 1 },
-            textShadowRadius: 2,
-          }}>
-          ☀️ Light
+          className={
+            mode === 'light'
+              ? 'font-bodyBold text-primary-500'
+              : 'text-primary-300'
+          }>
+          Light
         </Text>
-      </AnimatedPressable>
+      </Pressable>
 
-      <AnimatedPressable
-        onPress={() => handlePress('dark')}
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: 12,
-        }}>
+      <Pressable
+        onPress={() => setMode('dark')}
+        className="flex-1 items-center justify-center p-2">
         <Text
-          style={{
-            fontWeight: mode === 'dark' ? '700' : '500',
-            color:
-              mode === 'dark' ? 'white' : Colors.light.colors.secondary[400],
-            fontSize: 14,
-            textShadowColor:
-              mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
-            textShadowOffset: { width: 1, height: 1 },
-            textShadowRadius: 2,
-          }}>
-          🌙 Dark
+          className={
+            mode === 'dark'
+              ? 'font-bodyBold text-primary-500'
+              : 'text-primary-300'
+          }>
+          Dark
         </Text>
-      </AnimatedPressable>
+      </Pressable>
     </View>
   );
 }

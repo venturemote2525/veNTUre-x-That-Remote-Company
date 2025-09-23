@@ -1,7 +1,7 @@
 import { Pressable, Animated, Dimensions } from 'react-native';
 import { View, Text } from '@/components/Themed';
 import { useEffect, useRef } from 'react';
-import {toUpperCase} from "@/utils/formatString";
+import { toUpperCase } from '@/utils/formatString';
 
 interface TabToggleProps {
   tabs: string[];
@@ -48,12 +48,14 @@ export default function TabToggle({
       ))}
 
       <Animated.View
-        className="absolute bottom-0 left-0 h-1.5 rounded-full bg-secondary-500"
+        className="absolute bottom-0 left-0 z-10 h-1.5 rounded-full bg-secondary-500"
         style={{
           width: tabWidth,
           transform: [{ translateX: underlineAnim }],
         }}
       />
+
+      <View className="absolute bottom-0 left-0 h-1.5 w-full rounded-full bg-background-50" />
     </View>
   );
 }
