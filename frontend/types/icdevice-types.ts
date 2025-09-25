@@ -15,6 +15,8 @@ export interface ICWeightData {
   weight: number;
   timestamp: number;
   impedance?: number;
+  BMI?: number;
+  bodyFat?: number;
   isStabilized?: boolean;
   unit?: string;
 
