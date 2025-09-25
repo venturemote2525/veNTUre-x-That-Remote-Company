@@ -48,10 +48,19 @@ export interface ManualLogEntry {
 
 // -------------------- scale_logs --------------------
 
-export interface ScaleLogEntry {
+export interface ScaleLog {
   user_id: string;
   weight: number;
+  created_at: string;
   // TODO: Add other scale log fields
+}
+
+export type ScaleLogEntry = Omit<ScaleLog, 'created_at'>;
+
+export interface ScaleLogSummary {
+  start: string;
+  average_weight: number;
+  entry_count: number;
 }
 
 // -------------------- CustomAlert --------------------
@@ -65,3 +74,9 @@ export interface AlertState {
   confirmText?: string;
   onConfirm?: () => void;
 }
+
+// -------------------- MISC --------------------
+
+export type DateGroup = 'WEEK' | 'MONTH' | 'YEAR';
+
+export type GraphPoint = { value: number; label: string };

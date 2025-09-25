@@ -99,15 +99,15 @@ export default function FoodScreen() {
             onDateChange={setSelectedDate}
           />
 
-          <View className="mb-4 rounded-2xl border border-primary-100 bg-background-0 p-5 shadow-sm">
+          <View className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-sm">
             <View className="mb-3 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <FontAwesomeIcon
                   icon={faFire}
                   size={20}
-                  color={Colors.light.colors.secondary[500]}
+                  color={Colors.light.background}
                 />
-                <Text className="ml-2 font-bodyBold text-body1 text-secondary-500">
+                <Text className="ml-2 font-bodyBold text-body1 text-background-0">
                   Total Calories
                 </Text>
               </View>
@@ -133,8 +133,8 @@ export default function FoodScreen() {
               />
             </View>
             <View className="mt-1 flex-row justify-between">
-              <Text className="text-body3 font-body text-primary-300">0</Text>
-              <Text className="text-body3 font-body text-primary-300">
+              <Text className="text-body3 font-body text-primary-500">0</Text>
+              <Text className="text-body3 font-body text-primary-500">
                 2000
               </Text>
             </View>

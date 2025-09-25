@@ -3,9 +3,10 @@ import { Text } from '@/components/Themed';
 import { useEffect, useRef } from 'react';
 import { LineChart } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
+import {GraphPoint} from "@/types/database-types";
 
 type ScrollChartProps = {
-  graphData: { value: number; label?: string }[];
+  graphData: GraphPoint[];
   height?: number;
   spacing?: number;
   sections?: number;
