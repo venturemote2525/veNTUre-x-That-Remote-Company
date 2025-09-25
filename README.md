@@ -30,5 +30,6 @@ org.gradle.java.home=/path/to/your/jdk-17
 
 ### 6. Run the project
 - Run `npm install` to install dependencies
+- Run 'npm install expo-location' to setup location settings
 - Run `npx expo start` to start the project with expo go app
 - Run `npx expo run:android` to run the project on android device
