@@ -125,6 +125,21 @@ export default function LoggingScreen() {
       setUploadLoading(false);
 
       setAiLoading(true);
+      console.log("calling inference api");
+      const response = await fetch("http://0.0.0.0:8080/food/all", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({
+        //   image_base64: image
+        // }),
+      });
+
+      if (response.ok) {
+        const aiResults = await response.json();
+        console.log("AI analysis results:", aiResults);
+      } else {
+        console.error("AI analysis failed:", response.statusText);
+      }
       setAiLoading(false);
 
       setLoading(false);
