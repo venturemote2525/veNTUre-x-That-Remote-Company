@@ -474,6 +474,8 @@ class ScanManager(private val reactContext: ReactApplicationContext) {
 
         val weightMap = Arguments.createMap().apply {
             putDouble("weight", data.weight_kg.toDouble())
+            putDouble("BMI", data.bmi.toDouble())
+            putDouble("bodyFat", data.bodyFatPercent)
             putLong("timestamp", System.currentTimeMillis())
             putBoolean("isStabilized", data.isStabilized)
             putInt("heartRate", data.hr)

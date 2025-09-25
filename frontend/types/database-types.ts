@@ -51,6 +51,8 @@ export interface ManualLogEntry {
 export interface ScaleLogEntry {
   user_id: string;
   weight: number;
+  bmi: number,
+  bodyfat: number,
   // TODO: Add other scale log fields
 }
 
