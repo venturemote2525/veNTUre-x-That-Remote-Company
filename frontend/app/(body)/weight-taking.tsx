@@ -9,13 +9,19 @@ import { logScaleData } from '@/utils/body/api';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useRouter } from 'expo-router';
 import { useUserInfo } from '@/context/UserInfoContext';
+import { calculateAge } from '@/utils/helpers';
 
 const { ICDeviceModule } = NativeModules;
 
 export default function WeightTaking() {
-  const { connectedDevices, getLatestWeightForDevice, pairedDevices } = useICDevice();
+  const { connectedDevices, getLatestWeightForDevice, pairedDevices } =
+    useICDevice();
   const { profile } = useAuth();
-  const [alert, setAlert] = useState<AlertState>({ visible: false, title: '', message: '' });
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
   const router = useRouter();
   const [progress, setProgress] = useState(0);
 
@@ -26,7 +32,9 @@ export default function WeightTaking() {
 
   const device = connectedDevices[0];
   const latestWeight = device ? getLatestWeightForDevice(device.mac) : null;
-  const dbDevice = device ? pairedDevices.find(d => d.mac === device.mac) : null;
+  const dbDevice = device
+    ? pairedDevices.find(d => d.mac === device.mac)
+    : null;
 
   // Send user info to device when profile or device changes
   useEffect(() => {
@@ -35,10 +43,11 @@ export default function WeightTaking() {
         try {
           console.log(`Sending user info to device ${device.mac}`, profile);
           await ICDeviceModule.setUserInfo(device.mac, {
-            name: profile.name || 'User',
-            age: profile.age || 25,
+            name: profile.username || 'User',
+            age: calculateAge(profile.dob) || 25,
             height: profile.height || 170,
-            gender: profile.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'MALE',
+            gender:
+              profile.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'MALE',
           });
           console.log(`User info sent successfully`);
         } catch (error) {
@@ -74,7 +83,7 @@ export default function WeightTaking() {
         user_id: profile.user_id,
         weight: latestWeight.data.weight || 0,
         bmi: latestWeight.data.bmi,
-        bodyfat: latestWeight.data.bodyFat,
+        body_fat: latestWeight.data.bodyFat || 0,
       };
       console.log('logWeight', log);
       await logScaleData(log);
@@ -110,14 +119,14 @@ export default function WeightTaking() {
             </Text>
 
             {latestWeight ? (
-              <View className="flex-1 justify-center items-center">
+              <View className="flex-1 items-center justify-center">
                 <Text className="font-bodyBold text-title text-secondary-500">
                   {formatWeight(latestWeight.data.weight)} kg
                 </Text>
 
                 {/* BMI Display */}
                 {latestWeight.data.BMI != null && (
-                  <Text className="text-sm text-gray-500 mt-1">
+                  <Text className="text-sm mt-1 text-gray-500">
                     BMI: {formatWeight(latestWeight.data.BMI)} kg/m²
                   </Text>
                 )}
@@ -141,7 +150,10 @@ export default function WeightTaking() {
 
         {/* Progress Bar */}
         <View className="mx-1 my-4 h-3 w-full rounded-full bg-background-300">
-          <View className="h-3 rounded-full bg-secondary-500" style={{ width: `${progress * 100}%` }} />
+          <View
+            className="h-3 rounded-full bg-secondary-500"
+            style={{ width: `${progress * 100}%` }}
+          />
         </View>
 
         <Pressable
@@ -149,8 +161,7 @@ export default function WeightTaking() {
           className={`w-full items-center rounded-full py-3 ${
             isReady ? 'bg-secondary-500' : 'bg-background-400'
           }`}
-          onPress={logWeight}
-        >
+          onPress={logWeight}>
           <Text className="button-rounded-text">Log</Text>
         </Pressable>
       </View>
