@@ -10,6 +10,7 @@ import { useCallback, useState } from 'react';
 import { DBDevice } from '@/types/database-types';
 import LoadingScreen from '@/components/LoadingScreen';
 import BluetoothStatus from '@/components/devices/BluetoothStatus';
+import LocationStatus from '@/components/devices/LocationStatus';
 
 export default function MyDevices() {
   const {
@@ -58,6 +59,7 @@ export default function MyDevices() {
       <Header title="My Devices" />
       <View className="flex-1 gap-4 px-4">
         <BluetoothStatus />
+        <LocationStatus />
         {/* SDK Status */}
         {!isSDKInitialized && (
           <View className="mb-4 rounded-lg bg-yellow-50 p-3">
@@ -153,7 +155,7 @@ export default function MyDevices() {
                     <View className="flex-row items-center justify-between">
                       <View>
                         <Text className="font-bodyBold text-secondary-500">
-                          {measurement.data.weight}kg
+                          {measurement.data.weight.toFixed(2)}kg
                         </Text>
                         <Text className="text-xs text-gray-400">
                           {measurement.device?.mac}

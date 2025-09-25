@@ -98,7 +98,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .order('created_at',{ascending: false})
+      .limit(1);
     if (error) {
       console.log('Error fetching profile: ', error);
       setProfile(null);
@@ -120,7 +121,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .order('created_at', {ascending: false})
+      .limit(1);
+
     if (error) {
       console.log('Error refreshing profile: ', error);
       setProfile(null);

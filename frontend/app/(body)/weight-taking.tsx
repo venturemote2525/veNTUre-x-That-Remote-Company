@@ -2,36 +2,53 @@ import { ThemedSafeAreaView, Text, View } from '@/components/Themed';
 import { useICDevice } from '@/context/ICDeviceContext';
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { Pressable } from 'react-native';
+import { Pressable, NativeModules } from 'react-native';
 import { AlertState, ScaleLogEntry } from '@/types/database-types';
 import { useAuth } from '@/context/AuthContext';
 import { logScaleData } from '@/utils/body/api';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useRouter } from 'expo-router';
+import { useUserInfo } from '@/context/UserInfoContext';
+
+const { ICDeviceModule } = NativeModules;
 
 export default function WeightTaking() {
-  const {
-    connectedDevices,
-    getLatestWeightForDevice,
-    weightData,
-    pairedDevices,
-  } = useICDevice();
+  const { connectedDevices, getLatestWeightForDevice, pairedDevices } = useICDevice();
   const { profile } = useAuth();
-  const [alert, setAlert] = useState<AlertState>({
-    visible: false,
-    title: '',
-    message: '',
-  });
+  const [alert, setAlert] = useState<AlertState>({ visible: false, title: '', message: '' });
   const router = useRouter();
   const [progress, setProgress] = useState(0);
 
-  const formatWeight = (weight: number): string => weight.toFixed(2);
+  const formatWeight = (weight: number | undefined | null): string => {
+    if (weight == null) return 'N/A';
+    return weight.toFixed(2);
+  };
 
   const device = connectedDevices[0];
   const latestWeight = device ? getLatestWeightForDevice(device.mac) : null;
-  const dbDevice = device
-    ? pairedDevices.find(d => d.mac === device.mac)
-    : null;
+  const dbDevice = device ? pairedDevices.find(d => d.mac === device.mac) : null;
+
+  // Send user info to device when profile or device changes
+  useEffect(() => {
+    const updateDeviceUserInfo = async () => {
+      if (profile && ICDeviceModule && device) {
+        try {
+          console.log(`Sending user info to device ${device.mac}`, profile);
+          await ICDeviceModule.setUserInfo(device.mac, {
+            name: profile.name || 'User',
+            age: profile.age || 25,
+            height: profile.height || 170,
+            gender: profile.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'MALE',
+          });
+          console.log(`User info sent successfully`);
+        } catch (error) {
+          console.error(`Failed to send user info:`, error);
+        }
+      }
+    };
+
+    updateDeviceUserInfo();
+  }, [profile, device]);
 
   // Progress Bar Timer
   useEffect(() => {
@@ -40,10 +57,8 @@ export default function WeightTaking() {
     const animate = (timestamp: number) => {
       if (!start) start = timestamp;
       const elapsed = timestamp - start;
-      // TODO: Edit timer value for body fat algorithm
-      const progressValue = Math.min(elapsed / 5000, 1); // 5 seconds
+      const progressValue = Math.min(elapsed / 5000, 1);
       setProgress(progressValue);
-
       if (progressValue < 1) {
         frame = requestAnimationFrame(animate);
       }
@@ -58,7 +73,8 @@ export default function WeightTaking() {
       const log: ScaleLogEntry = {
         user_id: profile.user_id,
         weight: latestWeight.data.weight || 0,
-        // TODO: Add other scale log fields
+        bmi: latestWeight.data.bmi,
+        bodyfat: latestWeight.data.bodyFat,
       };
       console.log('logWeight', log);
       await logScaleData(log);
@@ -94,10 +110,24 @@ export default function WeightTaking() {
             </Text>
 
             {latestWeight ? (
-              <View className="flex-1 justify-center">
+              <View className="flex-1 justify-center items-center">
                 <Text className="font-bodyBold text-title text-secondary-500">
                   {formatWeight(latestWeight.data.weight)} kg
                 </Text>
+
+                {/* BMI Display */}
+                {latestWeight.data.BMI != null && (
+                  <Text className="text-sm text-gray-500 mt-1">
+                    BMI: {formatWeight(latestWeight.data.BMI)} kg/m²
+                  </Text>
+                )}
+
+                {/* Body Fat Display */}
+                {latestWeight.data.bodyFat != null && (
+                  <Text className="text-sm text-gray-500">
+                    Body Fat: {formatWeight(latestWeight.data.bodyFat)}%
+                  </Text>
+                )}
               </View>
             ) : (
               <Text className="italic text-primary-300">
@@ -108,22 +138,23 @@ export default function WeightTaking() {
         ) : (
           <Text className="italic text-primary-300">No device connected</Text>
         )}
+
         {/* Progress Bar */}
         <View className="mx-1 my-4 h-3 w-full rounded-full bg-background-300">
-          <View
-            className="h-3 rounded-full bg-secondary-500"
-            style={{ width: `${progress * 100}%` }}
-          />
+          <View className="h-3 rounded-full bg-secondary-500" style={{ width: `${progress * 100}%` }} />
         </View>
+
         <Pressable
           disabled={!isReady}
           className={`w-full items-center rounded-full py-3 ${
             isReady ? 'bg-secondary-500' : 'bg-background-400'
           }`}
-          onPress={logWeight}>
+          onPress={logWeight}
+        >
           <Text className="button-rounded-text">Log</Text>
         </Pressable>
       </View>
+
       <CustomAlert
         visible={alert.visible}
         title={alert.title}
