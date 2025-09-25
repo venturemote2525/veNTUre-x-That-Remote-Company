@@ -1,5 +1,10 @@
 import { supabase } from '@/lib/supabase';
-import { ManualLogEntry, ScaleLogEntry } from '@/types/database-types';
+import {
+  DateGroup,
+  ManualLogEntry,
+  ScaleLogEntry,
+  ScaleLogSummary,
+} from '@/types/database-types';
 
 export async function retrieveRecentWeight(): Promise<number> {
   const { data, error } = await supabase
@@ -33,6 +38,31 @@ export async function logDataManually(log: ManualLogEntry) {
 
 export async function logScaleData(log: ScaleLogEntry) {
   const { data, error } = await supabase.from('scale_logs').insert(log);
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetch weight/height data in groups
+ */
+export async function fetchWeightLogs(
+  group: DateGroup,
+): Promise<ScaleLogSummary[]> {
+  let data;
+  let error;
+  switch (group) {
+    case 'WEEK':
+      ({ data, error } = await supabase.rpc('group_by_week'));
+      break;
+    case 'MONTH':
+      ({ data, error } = await supabase.rpc('group_by_month'));
+      break;
+    case 'YEAR':
+      ({ data, error } = await supabase.rpc('group_by_year'));
+      break;
+    default:
+      throw new Error(`Unknown group: ${group}`);
+  }
   if (error) throw error;
   return data;
 }

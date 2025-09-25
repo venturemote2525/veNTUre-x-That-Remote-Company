@@ -1,5 +1,5 @@
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, Dimensions, Pressable, Animated } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
@@ -9,19 +9,62 @@ import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import ScrollChart from '@/components/Body/ScrollChart';
+import { fetchWeightLogs } from '@/utils/body/api';
+import { DateGroup, ScaleLogSummary } from '@/types/database-types';
+import { useFocusEffect } from '@react-navigation/native';
+import { transformScaleLogs } from '@/utils/body/body';
 
 const TABS = ['weight', 'BMI', 'body_fat'];
-type RANGE = 'weekly' | 'monthly';
-
-const screenWidth = Dimensions.get('window').width;
 
 export default function BodyScreen() {
   const [screen, setScreen] = useState<(typeof TABS)[number]>('weight');
-  const [range, setRange] = useState<RANGE>('weekly');
+  const [dateGroup, setDateGroup] = useState<DateGroup>('WEEK');
   const [selectedMetric, setSelectedMetric] = useState<
     'weight' | 'bmi' | 'bodyFat'
   >('weight');
   const router = useRouter();
+  const [cache, setCache] = useState<Record<DateGroup, ScaleLogSummary[]>>(
+    {} as Record<DateGroup, ScaleLogSummary[]>,
+  );
+  const [data, setData] = useState<ScaleLogSummary[] | null>(null);
+  const overview = (() => {
+    if (!data || data.length === 0) return { current: '-', previous: '-' };
+
+    // Sort descending by date
+    const sorted = [...data].sort(
+      (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime(),
+    );
+
+    const current = Number(sorted[0].average_weight ?? 0);
+    const previous =
+      sorted.length > 1 ? Number(sorted[1].average_weight ?? 0) : '-';
+
+    return { current, previous };
+  })();
+
+  const retrieveScaleLogs = useCallback(
+    async (dateGroup: DateGroup) => {
+      if (cache[dateGroup]) {
+        setData(cache[dateGroup]);
+      }
+      try {
+        const result = await fetchWeightLogs(dateGroup);
+        setData(result);
+        setCache(prev => ({ ...prev, [dateGroup]: result }));
+      } catch (error) {
+        console.error('Error fetching scale logs:', error);
+      }
+    },
+    [cache],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        await retrieveScaleLogs(dateGroup);
+      })();
+    }, [dateGroup, retrieveScaleLogs]),
+  );
 
   const metrics = [
     {
@@ -41,19 +84,6 @@ export default function BodyScreen() {
       trend: '↘️',
       change: '-0.3',
     }, // camelCase fixed
-  ];
-
-  const graphData = {
-    weight: [67.5, 67.8, 68.0, 68.2, 68.1, 68.0, 68.0],
-    bmi: [21.9, 22.0, 22.0, 22.1, 22.2, 22.1, 22.0],
-    bodyFat: [18.0, 18.2, 18.1, 18.3, 18.5, 18.4, 18.0],
-  };
-
-  // TODO: Retrieve data from database
-  const tempData = [
-    { value: 68, label: '24-09-2025' },
-    { value: 67.8, label: '21-09-2025' },
-    { value: 68.2, label: '20-09-2025' },
   ];
 
   function renderScreen() {
@@ -85,27 +115,42 @@ export default function BodyScreen() {
       <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
 
       <View className="flex-1 gap-4 p-4">
-        <OverviewCard screen={screen} range={range} current={2} previous={4} />
+        <OverviewCard
+          screen={screen}
+          dateGroup={dateGroup}
+          current={overview.current}
+          previous={overview.previous}
+        />
         {/* Duration Selector*/}
         <View className="mb-6 flex-row justify-center gap-4">
           <Pressable
-            onPress={() => setRange('weekly')}
-            className={`flex-1 items-center rounded-full px-8 py-3 ${range === 'weekly' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+            onPress={() => setDateGroup('WEEK')}
+            className={`flex-1 items-center rounded-full px-8 py-3 ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
-              className={`font-bodySemiBold ${range === 'weekly' ? 'text-background-0' : 'text-primary-100'}`}>
+              className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
               Weekly
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setRange('monthly')}
-            className={`flex-1 items-center rounded-full px-8 py-3 ${range === 'monthly' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+            onPress={() => setDateGroup('MONTH')}
+            className={`flex-1 items-center rounded-full px-8 py-3 ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
-              className={`font-bodySemiBold ${range === 'monthly' ? 'text-background-0' : 'text-primary-100'}`}>
+              className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
               Monthly
             </Text>
           </Pressable>
         </View>
-        <ScrollChart graphData={tempData} />
+        {data ? (
+          <ScrollChart
+            graphData={transformScaleLogs(data, dateGroup)}
+            label={'kg'}
+          />
+        ) : (
+          <View>
+            <Text>No Data</Text>
+          </View>
+        )}
+
         {renderScreen()}
       </View>
       {/*<ScrollView*/}
@@ -263,19 +308,22 @@ export default function BodyScreen() {
 
 export function OverviewCard({
   screen,
-  range,
+  dateGroup,
   current,
   previous,
 }: {
   screen: (typeof TABS)[number];
-  range: RANGE;
-  current: number;
-  previous: number;
+  dateGroup: DateGroup;
+  current: number | string;
+  previous: number | string;
 }) {
   // Trend Calculation
-  const difference = current - previous;
+  let difference: number | null = null;
+  if (typeof current === 'number' && typeof previous === 'number') {
+    difference = current - previous;
+  }
   const trendIcon =
-    difference > 0 ? (
+    difference === null ? null : difference > 0 ? (
       <FontAwesome6
         name="arrow-trend-up"
         size={28}
@@ -294,17 +342,16 @@ export function OverviewCard({
         color={Colors.light.colors.secondary[500]}
       />
     );
-  const trendText = difference !== 0 ? Math.abs(difference).toFixed(1) : '-';
-
+  const trendText = difference === null ? '-' : Math.abs(difference).toFixed(1);
   // Animate flex values
   const flexAnim = useRef(new Animated.Value(1)).current; // start at flex-1
   useEffect(() => {
     Animated.timing(flexAnim, {
-      toValue: range === 'weekly' ? 1 : 2, // Animate flex value
+      toValue: dateGroup === 'WEEK' ? 1 : 2, // Animate flex value
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [range, flexAnim]);
+  }, [dateGroup, flexAnim]);
 
   return (
     <View className="w-full flex-row gap-4">
@@ -314,7 +361,7 @@ export function OverviewCard({
         className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4">
         <Text className="text-primary-300">Current</Text>
         <Text className="font-bodySemiBold text-body1 text-secondary-500">
-          50kg
+          {current} kg
         </Text>
       </Animated.View>
 
@@ -323,7 +370,7 @@ export function OverviewCard({
         style={{ flex: Animated.multiply(flexAnim, 2) }}
         className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4">
         <Text className="text-primary-300">
-          Trend from last {range === 'weekly' ? 'week' : 'month'}
+          Trend from last {dateGroup === 'WEEK' ? 'week' : 'month'}
         </Text>
         <View className="flex-row items-center gap-2">
           {trendIcon}
