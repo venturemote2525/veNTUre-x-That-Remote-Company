@@ -82,7 +82,7 @@ export default function WeightTaking() {
       const log: ScaleLogEntry = {
         user_id: profile.user_id,
         weight: latestWeight.data.weight || 0,
-        bmi: latestWeight.data.bmi,
+        bmi: latestWeight.data.BMI || 0,
         body_fat: latestWeight.data.bodyFat || 0,
       };
       console.log('logWeight', log);
