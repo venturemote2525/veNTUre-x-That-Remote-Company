@@ -24,6 +24,7 @@ export default function WeightTaking() {
   });
   const router = useRouter();
   const [progress, setProgress] = useState(0);
+  const [userInfoSent, setUserInfoSent] = useState(false);
 
   const formatWeight = (weight: number | undefined | null): string => {
     if (weight == null) return 'N/A';
@@ -36,28 +37,38 @@ export default function WeightTaking() {
     ? pairedDevices.find(d => d.mac === device.mac)
     : null;
 
-  // Send user info to device when profile or device changes
-  useEffect(() => {
-    const updateDeviceUserInfo = async () => {
-      if (profile && ICDeviceModule && device) {
-        try {
-          console.log(`Sending user info to device ${device.mac}`, profile);
-          await ICDeviceModule.setUserInfo(device.mac, {
-            name: profile.username || 'User',
-            age: calculateAge(profile.dob) || 25,
-            height: profile.height || 170,
-            gender:
-              profile.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'MALE',
-          });
-          console.log(`User info sent successfully`);
-        } catch (error) {
-          console.error(`Failed to send user info:`, error);
-        }
+  // Extract the updateDeviceUserInfo function
+  const updateDeviceUserInfo = async () => {
+    if (profile && ICDeviceModule && device) {
+      try {
+        const userProfile = Array.isArray(profile) ? profile[0] : profile;
+        console.log(`Sending user info to device ${device.mac}`, userProfile);
+        await ICDeviceModule.setUserInfo(device.mac, {
+          name: userProfile.username || 'User',
+          age: calculateAge(userProfile.dob) || 25,
+          height: userProfile.height || 170,
+          gender:
+            userProfile.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'MALE',
+        });
+        console.log(`User info sent successfully`);
+        setUserInfoSent(true);
+      } catch (error) {
+        console.error(`Failed to send user info:`, error);
       }
-    };
+    }
+  };
 
-    updateDeviceUserInfo();
-  }, [profile, device]);
+  // Send user info when weight is stabilized
+  useEffect(() => {
+    if (latestWeight?.data.isStabilized && !userInfoSent) {
+      updateDeviceUserInfo();
+    }
+  }, [latestWeight?.data.isStabilized, userInfoSent]);
+
+  // Reset userInfoSent when device changes or when no weight data
+  useEffect(() => {
+    setUserInfoSent(false);
+  }, [device?.mac, latestWeight?.data.weight]);
 
   // Progress Bar Timer
   useEffect(() => {
@@ -79,14 +90,17 @@ export default function WeightTaking() {
   const logWeight = async () => {
     if (!profile || !latestWeight) return;
     try {
+      const userProfile = Array.isArray(profile) ? profile[0] : profile;
       const log: ScaleLogEntry = {
-        user_id: profile.user_id,
+        user_id: userProfile.user_id,
         weight: latestWeight.data.weight || 0,
         bmi: latestWeight.data.BMI || 0,
         body_fat: latestWeight.data.bodyFat || 0,
       };
+
       console.log('logWeight', log);
       await logScaleData(log);
+
       setAlert({
         visible: true,
         title: 'Weight logged!',
@@ -135,6 +149,13 @@ export default function WeightTaking() {
                 {latestWeight.data.bodyFat != null && (
                   <Text className="text-sm text-gray-500">
                     Body Fat: {formatWeight(latestWeight.data.bodyFat)}%
+                  </Text>
+                )}
+
+                {/* User Info Status */}
+                {latestWeight.data.isStabilized && userInfoSent && (
+                  <Text className="text-xs mt-2 text-green-500">
+                    User info sent to device ✓
                   </Text>
                 )}
               </View>
