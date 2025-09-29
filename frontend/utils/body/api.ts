@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import {
-  DateGroup,
-  ManualLogEntry,
-  ScaleLog,
-  ScaleLogEntry,
-  ScaleLogSummary,
+    DateGroup, ManualLog,
+    ManualLogEntry,
+    ManualLogSummary,
+    ScaleLog,
+    ScaleLogEntry,
+    ScaleLogSummary,
 } from '@/types/database-types';
 
 export async function retrieveRecentWeight(): Promise<number> {
@@ -44,22 +45,22 @@ export async function logScaleData(log: ScaleLogEntry) {
 }
 
 /**
- * Fetch weight/height data in groups
+ * Fetch weight, body fat, bmi data in groups for scale logs
  */
-export async function fetchWeightLogs(
+export async function fetchGroupedScaleLogs(
   group: DateGroup,
 ): Promise<ScaleLogSummary[]> {
   let data;
   let error;
   switch (group) {
     case 'WEEK':
-      ({ data, error } = await supabase.rpc('group_by_week'));
+      ({ data, error } = await supabase.rpc('group_by_week_scale'));
       break;
     case 'MONTH':
-      ({ data, error } = await supabase.rpc('group_by_month'));
+      ({ data, error } = await supabase.rpc('group_by_month_scale'));
       break;
     case 'YEAR':
-      ({ data, error } = await supabase.rpc('group_by_year'));
+      ({ data, error } = await supabase.rpc('group_by_year_scale'));
       break;
     default:
       throw new Error(`Unknown group: ${group}`);
@@ -68,8 +69,39 @@ export async function fetchWeightLogs(
   return data;
 }
 
-export async function fetchAllWeightLogs(): Promise<ScaleLog[]> {
+/**
+ * Fetch weight, height data in groups for manual logs
+ */
+export async function fetchGroupedManualLogs(
+  group: DateGroup,
+): Promise<ManualLogSummary[]> {
+  let data;
+  let error;
+  switch (group) {
+    case 'WEEK':
+      ({ data, error } = await supabase.rpc('group_by_week_manual'));
+      break;
+    case 'MONTH':
+      ({ data, error } = await supabase.rpc('group_by_month_manual'));
+      break;
+    case 'YEAR':
+      ({ data, error } = await supabase.rpc('group_by_year_manual'));
+      break;
+    default:
+      throw new Error(`Unknown group: ${group}`);
+  }
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchAllManualLogs(): Promise<ManualLog[]> {
   const { data, error } = await supabase.from('manual_logs').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchAllScaleLogs(): Promise<ScaleLog[]> {
+  const { data, error } = await supabase.from('scale_logs').select('*');
   if (error) throw error;
   return data;
 }

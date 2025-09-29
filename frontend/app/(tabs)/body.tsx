@@ -9,21 +9,29 @@ import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import ScrollChart from '@/components/Body/ScrollChart';
-import { fetchWeightLogs } from '@/utils/body/api';
-import { DateGroup, MetricType, ScaleLogSummary } from '@/types/database-types';
+import {
+  fetchGroupedManualLogs,
+  fetchGroupedScaleLogs,
+} from '@/utils/body/api';
+import {
+  DateGroup,
+  MergedLogSummary,
+  MetricType,
+  ScaleLogSummary,
+} from '@/types/database-types';
 import { useFocusEffect } from '@react-navigation/native';
-import { transformScaleLogs } from '@/utils/body/body';
+import { mergeGroupedLogs, transformScaleLogs } from '@/utils/body/body';
 
-const TABS = ['weight', 'BMI', 'body_fat'];
+const TABS = ['weight', 'BMI', 'body_fat', 'height'];
 
 export default function BodyScreen() {
   const [screen, setScreen] = useState<(typeof TABS)[number]>('weight');
   const [dateGroup, setDateGroup] = useState<DateGroup>('WEEK');
   const router = useRouter();
-  const [cache, setCache] = useState<Record<DateGroup, ScaleLogSummary[]>>(
-    {} as Record<DateGroup, ScaleLogSummary[]>,
+  const [cache, setCache] = useState<Record<DateGroup, MergedLogSummary[]>>(
+    {} as Record<DateGroup, MergedLogSummary[]>,
   );
-  const [data, setData] = useState<ScaleLogSummary[] | null>(null);
+  const [data, setData] = useState<MergedLogSummary[] | null>(null);
 
   const overview = useMemo(() => {
     if (!data || data.length === 0) return { current: '-', previous: '-' };
@@ -32,7 +40,7 @@ export default function BodyScreen() {
       (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime(),
     );
 
-    const getValidValue = (entry: ScaleLogSummary, type: typeof screen) => {
+    const getValidValue = (entry: MergedLogSummary, type: typeof screen) => {
       switch (type) {
         case 'weight':
           return entry.average_weight && entry.average_weight !== 0
@@ -45,6 +53,10 @@ export default function BodyScreen() {
         case 'body_fat':
           return entry.average_bodyfat && entry.average_bodyfat !== 0
             ? entry.average_bodyfat
+            : null;
+        case 'height':
+          return entry.average_height && entry.average_height !== 0
+            ? entry.average_height
             : null;
       }
     };
@@ -75,6 +87,8 @@ export default function BodyScreen() {
         return '';
       case 'body_fat':
         return '%';
+      case 'height':
+        return 'cm';
       default:
         return '';
     }
@@ -86,10 +100,14 @@ export default function BodyScreen() {
 
       (async () => {
         try {
-          const result = await fetchWeightLogs(dateGroup);
-          setData(result);
-          setCache(prev => ({ ...prev, [dateGroup]: result }));
-          console.log('Fetched data for', dateGroup, result);
+          const [scaleResult, manualResult] = await Promise.all([
+            fetchGroupedScaleLogs(dateGroup),
+            fetchGroupedManualLogs(dateGroup),
+          ]);
+          const merged = mergeGroupedLogs(scaleResult, manualResult);
+          setData(merged);
+          setCache(prev => ({ ...prev, [dateGroup]: merged }));
+          console.log('Fetched data for', dateGroup, merged);
         } catch (error) {
           console.error('Error fetching scale logs:', error);
         }
@@ -107,7 +125,7 @@ export default function BodyScreen() {
       {/* Tab Selector */}
       <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
 
-      <View className="flex-1 gap-4 p-4">
+      <View className="flex-1 items-center justify-center gap-4 p-4">
         <OverviewCard
           dateGroup={dateGroup}
           current={overview.current}
@@ -118,7 +136,7 @@ export default function BodyScreen() {
         <View className="flex-row justify-center gap-4">
           <Pressable
             onPress={() => setDateGroup('WEEK')}
-            className={`flex-1 items-center rounded-full px-8 py-3 ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
               className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
               Weekly
@@ -126,27 +144,44 @@ export default function BodyScreen() {
           </Pressable>
           <Pressable
             onPress={() => setDateGroup('MONTH')}
-            className={`flex-1 items-center rounded-full px-8 py-3 ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
             <Text
               className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
               Monthly
             </Text>
           </Pressable>
+          <Pressable
+            onPress={() => setDateGroup('YEAR')}
+            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'YEAR' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+            <Text
+              className={`font-bodySemiBold ${dateGroup === 'YEAR' ? 'text-background-0' : 'text-primary-100'}`}>
+              Yearly
+            </Text>
+          </Pressable>
         </View>
-        <View className="rounded-2xl bg-background-0 p-4">
-          {graphData ? (
+
+        {graphData ? (
+          <View className="rounded-2xl bg-background-0 p-4">
             <ScrollChart
               graphData={graphData}
               label={graphLabel}
               width={dateGroup === 'MONTH' ? 120 : 70}
               spacing={dateGroup === 'MONTH' ? 80 : 60}
+              height={250}
             />
-          ) : (
-            <View>
-              <Text>No Data</Text>
-            </View>
-          )}
-        </View>
+          </View>
+        ) : (
+          <View
+            style={{ height: 250 }}
+            className="w-full items-center justify-center rounded-2xl bg-background-0 p-6">
+            <Text className="font-bodySemiBold text-body1 text-primary-500">
+              No Data Yet
+            </Text>
+            <Text className="text-center text-primary-200">
+              Log your first entry to start tracking your progress!
+            </Text>
+          </View>
+        )}
       </View>
       {/*  /!* Progress Message *!/*/}
       {/*  <View className="rounded-xl border border-secondary-200 bg-secondary-50 p-4">*/}
@@ -202,15 +237,6 @@ const OverviewCardBase = ({
       />
     );
   const trendText = difference === null ? '-' : Math.abs(difference).toFixed(1);
-  // Animate flex values
-  const flexAnim = useRef(new Animated.Value(1)).current; // start at flex-1
-  useEffect(() => {
-    Animated.timing(flexAnim, {
-      toValue: dateGroup === 'WEEK' ? 1 : 2, // Animate flex value
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [dateGroup, flexAnim]);
 
   return (
     <View className="w-full flex-row gap-4">
@@ -226,7 +252,7 @@ const OverviewCardBase = ({
 
       {/* Trend */}
       <View
-        style={{ flex: 2 }}
+        style={{ flex: 1 }}
         className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4">
         <Text className="text-primary-300">Trend</Text>
         <View className="flex-row items-center gap-2">
