@@ -1,6 +1,6 @@
 import { View, ScrollView, Dimensions } from 'react-native';
 import { Text } from '@/components/Themed';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LineChart } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
 import { GraphPoint } from '@/types/database-types';
@@ -113,17 +113,31 @@ export default function ScrollChart({
             pointerColor: '#5d5d5d',
             radius: 4,
             pointerLabelWidth: 90,
-            shiftPointerLabelY: -20,
-            shiftPointerLabelX: -10,
             pointerLabelComponent: (
               items: { value: number; label?: string }[],
             ) => {
-              const item = items[0]; // current data point
+              const item = items[0];
+
+              // Dynamic vertical shift:
+              const isNearTop = item.value > maxValue * 0.8; // 80% of chart
+              const shiftY = isNearTop ? 80 : -50;
+
+              // X shift: adjust if near edges
+              let shiftX = 0;
+              if (
+                item.label === graphData[graphData.length - 1]?.label &&
+                graphData.length !== 1
+              )
+                shiftX = -40;
+
               return (
                 <View
-                  style={{ backgroundColor: chartColour }}
+                  style={{
+                    backgroundColor: chartColour,
+                    transform: [{ translateY: shiftY }, { translateX: shiftX }],
+                  }}
                   className="rounded-2xl p-3">
-                  <Text style={{ fontSize: 12 }} className="text-background-0 font-bodyBold">
+                  <Text className="font-bodyBold text-background-0 text-[10px]">
                     {item.label ?? 'Value'}
                   </Text>
                   <Text className="text-background-0">

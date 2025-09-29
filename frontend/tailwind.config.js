@@ -18,6 +18,7 @@ module.exports = {
       head2: ['1.875rem', { lineHeight: '2.25rem' }], // 30px
       body1: ['1.5rem', { lineHeight: '2rem' }], // 24px
       body2: ['1.25rem', { lineHeight: '1.75rem' }], // 20px
+      body3: ['1rem', { lineHeight: '1.5rem' }], // 16px
     },
     extend: {
       colors: {

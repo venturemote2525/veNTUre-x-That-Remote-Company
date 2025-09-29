@@ -123,7 +123,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(1);
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
       console.log('Error refreshing profile: ', error);
