@@ -70,30 +70,18 @@ export default function FoodScreen() {
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1">
       <View className="flex-1 px-4">
-        <View className="mb-4 flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <FontAwesomeIcon
-              icon={faUtensils}
-              size={24}
-              color={Colors.light.colors.secondary[500]}
-            />
-            <Text className="ml-2 font-heading text-head2 text-secondary-500">
-              Food Diary
-            </Text>
-          </View>
-          <View className="flex-row items-center rounded-full bg-secondary-100 px-3 py-1">
-            <FontAwesomeIcon
-              icon={faCalendar}
-              size={14}
-              color={Colors.light.colors.secondary[500]}
-            />
-            <Text className="text-body3 ml-1 font-bodySemiBold text-secondary-500">
-              {selectedDate.format('MMM D')}
-            </Text>
-          </View>
+        <View className="flex-row items-center">
+          <FontAwesomeIcon
+            icon={faUtensils}
+            size={24}
+            color={Colors.light.colors.secondary[500]}
+          />
+          <Text className="ml-2 font-heading text-head2 text-secondary-500">
+            Food Diary
+          </Text>
         </View>
 
-        <View className="flex-1 px-4">
+        <View className="flex-1">
           <DateSelector
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
@@ -111,9 +99,9 @@ export default function FoodScreen() {
                   Total Calories
                 </Text>
               </View>
-              <Text className="font-heading text-head2 text-secondary-500">
+              <Text className="font-heading text-head2 text-background-0">
                 {totalCalories}
-                <Text className="text-body3 font-body text-primary-300">
+                <Text className="text-body3 font-body text-background-0">
                   {' '}
                   kcal
                 </Text>

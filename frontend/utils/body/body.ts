@@ -1,39 +1,59 @@
-import { DateGroup, GraphPoint, ScaleLogSummary } from '@/types/database-types';
+import {
+  DateGroup,
+  GraphPoint,
+  ScaleLogSummary,
+  MetricType,
+} from '@/types/database-types';
 
 export function transformScaleLogs(
   rows: ScaleLogSummary[],
   group: DateGroup,
+  metric: MetricType = 'weight', // default to weight
 ): GraphPoint[] {
-  return rows.map(row => {
-    const date = new Date(row.start);
-    let label = '';
+  return (
+    rows
+      .map(row => {
+        const date = new Date(row.start);
+        let label = '';
 
-    switch (group) {
-      case 'WEEK':
-        // e.g. "Jan 5"
-        label = date.toLocaleDateString('en-UK', {
-          month: 'short',
-          day: 'numeric',
-        });
-        break;
+        // Format label based on date group
+        switch (group) {
+          case 'WEEK':
+            label = date.toLocaleDateString('en-UK', {
+              month: 'short',
+              day: 'numeric',
+            });
+            break;
+          case 'MONTH':
+            label = date.toLocaleDateString('en-UK', {
+              month: 'short',
+              year: 'numeric',
+            });
+            break;
+          case 'YEAR':
+            label = date.getFullYear().toString();
+            break;
+        }
 
-      case 'MONTH':
-        // e.g. "Jan 2025"
-        label = date.toLocaleDateString('en-UK', {
-          month: 'short',
-          year: 'numeric',
-        });
-        break;
+        // Pick value based on metric
+        let value: number;
+        switch (metric) {
+          case 'weight':
+            value = row.average_weight ?? 0;
+            break;
+          case 'BMI':
+            value = row.average_bmi ?? 0;
+            break;
+          case 'body_fat':
+            value = row.average_bodyfat ?? 0;
+            break;
+        }
+        // Set 0 as null to be filtered
+        if (value === 0) return null;
 
-      case 'YEAR':
-        // e.g. "2025"
-        label = date.getFullYear().toString();
-        break;
-    }
-
-    return {
-      value: Number(row.average_weight),
-      label,
-    };
-  });
+        return { value, label };
+      })
+      // Filter out null (0 value) points
+      .filter((point): point is GraphPoint => point !== null)
+  );
 }
