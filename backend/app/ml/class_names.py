@@ -1,0 +1,298 @@
+#!/usr/bin/env python3
+"""
+Food Classification Class Names
+
+Contains the mapping for specific food classes from the trained classification model.
+This file is updated to reflect the correct class labels in index order from classes.txt.
+"""
+
+# Specific Classification Classes - Ordered by index from classes.txt (233 classes)
+FOOD_CLASS_NAMES = [
+    "Alcoholic Beverage",
+    "Apple",
+    "Apricot",
+    "Avocados",
+    "Ban Mian",
+    "Barley",
+    "Bee hoon, goreng",
+    "Bee hoon, soto",
+    "Bibimbap",
+    "Blackberry",
+    "Bubble Milk Tea",
+    "Burger",
+    "CNY love letter",
+    "Chap chye, Nonya",
+    "Chinese fritters",
+    "Chocolate",
+    "Claypot Rice",
+    "Cucumber",
+    "Don, chicken teriyaki",
+    "Don, unagi",
+    "Duck Rice",
+    "Dumpling noodle soup",
+    "Fish Ball Noodles",
+    "Fish and chips",
+    "Fried Noodles",
+    "Fruit juice",
+    "Grape",
+    "Grapefruit",
+    "Hor Fun",
+    "Indian Pancake",
+    "Indian Prata",
+    "Instant Cereal Drink",
+    "Katsudon",
+    "Kopi Teh Milo",
+    "Kueh Salat",
+    "Kway Teow",
+    "Laksa",
+    "Lontong with sayur lodeh",
+    "Lor mee",
+    "Macaroni",
+    "Mee bandung",
+    "Mee goreng",
+    "Mee kuah",
+    "Mee rebus",
+    "Mee siam",
+    "Mee siam, fried",
+    "Mee soto",
+    "Miso ramen, with fishcake",
+    "Nasi Ambeng",
+    "Nasi pattaya",
+    "Nuts",
+    "Papaya",
+    "Peanut Pancake",
+    "Persimmon",
+    "Pilaf, pea",
+    "Pomelo",
+    "Porridge",
+    "Prawn Noodle",
+    "Pung Kueh",
+    "Rice, chicken katsu with Japanese curry",
+    "Rice, korean bulgogi beef",
+    "Rice, with dakgalbi",
+    "Seafood Noodles Soup",
+    "Snacks and Chips",
+    "Soft boiled eggs",
+    "Soto ayam",
+    "Soursop",
+    "Starfruit",
+    "Sweets",
+    "Tauhu Goreng",
+    "Udon",
+    "Wanton mee, dry",
+    "White Bread",
+    "Wholegrain Wrap",
+    "assam pedas",
+    "ayam penyet",
+    "bagel & croissant",
+    "bak chor mee",
+    "bak kut teh",
+    "bak kwa",
+    "baked beans",
+    "bakso",
+    "banana",
+    "bee hoon",
+    "beef noodle soup",
+    "begedil",
+    "biscuit",
+    "black pepper crab",
+    "blueberries",
+    "breakfast cereal",
+    "buckwheat",
+    "cake",
+    "cake rolls",
+    "canned Fruit salad",
+    "cereal prawns",
+    "chai tow kuay",
+    "char siew",
+    "char siew pau",
+    "chawanmushi",
+    "cheese fries",
+    "cheng tng",
+    "cherries",
+    "chicken chop",
+    "chicken masala",
+    "chicken pie",
+    "chicken rice",
+    "chicken soup",
+    "chicken wing",
+    "chilli crab",
+    "chin chow drink",
+    "chwee kueh",
+    "cooked brown rice",
+    "cooked white rice",
+    "corn",
+    "cream soup",
+    "curry puff",
+    "drunken prawn",
+    "dumpling",
+    "durian",
+    "egg tart",
+    "fish head curry",
+    "french fries",
+    "fried chicken",
+    "fried fish",
+    "fried prawn",
+    "fried rice",
+    "goreng pisang",
+    "green leafy vegetables",
+    "guava",
+    "gulai daun ubi",
+    "har cheong gai",
+    "hokkien prawn mee",
+    "honeydew",
+    "hotplate tofu",
+    "ice cream - chocolate",
+    "ice cream - vanilla",
+    "ice kacang",
+    "jackfruit",
+    "kaya toast",
+    "kebab - beef",
+    "kebab - chicken",
+    "kiwi",
+    "kueh lapis - rainbow",
+    "kueh lapis baked",
+    "kuih bahulu",
+    "kway chap",
+    "lamb chops",
+    "lasagna",
+    "longan",
+    "lontong",
+    "lychee",
+    "mango pudding",
+    "mangosteen",
+    "meatball",
+    "mee pok",
+    "milk",
+    "miso soup",
+    "mixed grills",
+    "mixed vegetables",
+    "muesli",
+    "murtabak",
+    "mushroom soup",
+    "nasi lemak",
+    "ngoh hiang",
+    "orange",
+    "otak",
+    "oyster omelette",
+    "paella seafood",
+    "pancake",
+    "parfait",
+    "passion fruit",
+    "pasta - fettuccine",
+    "pasta - red sauce",
+    "pear",
+    "pig organ soup",
+    "pineapple",
+    "pineapple tarts",
+    "pitaya",
+    "pizza",
+    "pomegranate",
+    "popcorn",
+    "popiah",
+    "preserved fruit snacks",
+    "rambutan",
+    "raspberry",
+    "rice dumpling",
+    "roasted chicken",
+    "rock melon",
+    "rojak",
+    "roti john",
+    "salad",
+    "salmon - grilled",
+    "sambal",
+    "sambal kangkung",
+    "sambal stingray",
+    "sandwich",
+    "satay",
+    "satay bee hoon",
+    "sausage rolls",
+    "seaweed snack",
+    "siew mai",
+    "singapore sling",
+    "sirloin steak",
+    "sliced fish soup",
+    "spring rolls",
+    "steamed buns",
+    "steamed grouper",
+    "strawberry",
+    "sushi",
+    "tacos and nachos",
+    "tandoori chicken",
+    "tau suan",
+    "thunder tea rice",
+    "tiramisu",
+    "tom yum noodle soup",
+    "tortilla - plain",
+    "tumpeng",
+    "tutu kueh",
+    "vadai",
+    "vegetable soup",
+    "vegetarian bee hoon",
+    "waffle",
+    "watermelon",
+    "whole grain bread",
+    "whole oats",
+    "whole wheat",
+    "wholegrain muffin",
+    "wholegrain pasta",
+    "xiao long bao",
+    "yam rice",
+    "yogurt",
+    "yong tau foo",
+    "yuseng",
+]
+
+def get_class_name(class_index: int) -> str:
+    """
+    Get the class name for a given index from the model output.
+    
+    Args:
+        class_index: Index from model prediction
+        
+    Returns:
+        String name of the food class
+    """
+    if 0 <= class_index < len(FOOD_CLASS_NAMES):
+        return FOOD_CLASS_NAMES[class_index]
+    return f"unknown_class_{class_index}"
+
+def get_display_name(class_name: str) -> str:
+    """
+    Convert internal class name to user-friendly display name.
+    
+    Args:
+        class_name: Internal class name
+        
+    Returns:
+        User-friendly display name
+    """
+    return class_name.replace('_', ' ').title()
+
+def is_valid_class_index(class_index: int) -> bool:
+    """
+    Check if a class index is valid for the current model.
+    
+    Args:
+        class_index: Index to validate
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    return 0 <= class_index < len(FOOD_CLASS_NAMES)
+
+# Mapping from class names to nutrition database keys
+# This helps link specific classifications to existing nutrition data
+NUTRITION_DATABASE_MAPPING = {
+    # Map your specific classes to keys in the nutrition database
+    # Format: "your_class_name": "nutrition_db_key"
+    "chicken_breast": "chicken_breast",
+    "apple": "apple",
+    "broccoli": "broccoli",
+    "rice": "rice",
+    "bread": "bread",
+    "milk": "milk",
+    "salmon": "salmon",
+    # Add more mappings as needed...
+}
+
