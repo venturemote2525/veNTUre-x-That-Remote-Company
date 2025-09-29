@@ -122,16 +122,27 @@ export default function LoggingScreen() {
       setLoading(true);
       setUploadLoading(true);
       const path = await uploadImage(id, profile.user_id, image);
+      console.log(path);
       setUploadLoading(false);
 
       setAiLoading(true);
       console.log("calling inference api");
-      const response = await fetch("http://0.0.0.0:8080/food/all", {
-        method: "GET",
+      // Test GET request
+      // const response = await fetch("http://192.168.1.237:8080/food/all", {
+      //   method: "GET",
+      //   headers: { "Content-Type": "application/json" },
+      // });
+
+      // Food classification POST request
+      const response = await fetch("http://192.168.1.237:8080/inference/analyze-image", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify({
-        //   image_base64: image
-        // }),
+        body: JSON.stringify({
+          bucket: "meal_images",
+          path: path,       // e.g. "user123/1758626669975.jpg"
+          user_id: profile.user_id,
+          meal_type: "lunch",
+        }),
       });
 
       if (response.ok) {
