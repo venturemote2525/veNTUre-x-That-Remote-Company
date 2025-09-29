@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import {
   DateGroup,
   ManualLogEntry,
+  ScaleLog,
   ScaleLogEntry,
   ScaleLogSummary,
 } from '@/types/database-types';
@@ -63,6 +64,12 @@ export async function fetchWeightLogs(
     default:
       throw new Error(`Unknown group: ${group}`);
   }
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchAllWeightLogs(): Promise<ScaleLog[]> {
+  const { data, error } = await supabase.from('manual_logs').select('*');
   if (error) throw error;
   return data;
 }

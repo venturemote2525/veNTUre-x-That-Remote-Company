@@ -49,6 +49,7 @@ export interface ManualLogEntry {
 // -------------------- scale_logs --------------------
 
 export interface ScaleLog {
+  id: number;
   user_id: string;
   weight: number;
   bmi: number;
@@ -62,6 +63,8 @@ export type ScaleLogEntry = Omit<ScaleLog, 'created_at'>;
 export interface ScaleLogSummary {
   start: string;
   average_weight: number;
+  average_bmi: number | null;
+  average_bodyfat: number | null;
   entry_count: number;
 }
 
@@ -80,5 +83,7 @@ export interface AlertState {
 // -------------------- MISC --------------------
 
 export type DateGroup = 'WEEK' | 'MONTH' | 'YEAR';
+
+export type MetricType = 'weight' | 'BMI' | 'body_fat';
 
 export type GraphPoint = { value: number; label: string };

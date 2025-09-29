@@ -3,11 +3,12 @@ import { Text } from '@/components/Themed';
 import { useEffect, useRef } from 'react';
 import { LineChart } from 'react-native-gifted-charts';
 import { Colors } from '@/constants/Colors';
-import {GraphPoint} from "@/types/database-types";
+import { GraphPoint } from '@/types/database-types';
 
 type ScrollChartProps = {
   graphData: GraphPoint[];
   height?: number;
+  width?: number;
   spacing?: number;
   sections?: number;
   chartColour?: string;
@@ -16,19 +17,25 @@ type ScrollChartProps = {
 
 export default function ScrollChart({
   graphData,
-  height = 180,
+  height = 200,
+  width = 50,
   spacing = 50,
   sections = 5,
   chartColour = Colors.light.colors.secondary[500] as string,
   label,
 }: ScrollChartProps) {
   const scrollViewRef = useRef<ScrollView>(null);
-  // Scroll to end on render
+  // Scroll to end/start on render
   useEffect(() => {
-    if (scrollViewRef.current) {
+    if (!scrollViewRef.current || !graphData) return;
+    if (graphData.length > sections - 1) {
+      // Scroll to end
       scrollViewRef.current.scrollToEnd({ animated: true });
+    } else {
+      // Scroll to start
+      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
     }
-  }, [graphData]);
+  }, [graphData, sections]);
 
   const screenWidth = Dimensions.get('window').width;
   const minWidth = screenWidth - 80;
@@ -92,6 +99,8 @@ export default function ScrollChart({
           xAxisLabelTextStyle={{
             color: '#b0aeae',
             fontFamily: 'Fredoka-Medium',
+            height: 24,
+            width: width,
           }}
           spacing={spacing}
           maxValue={maxValue}
@@ -117,7 +126,7 @@ export default function ScrollChart({
                   <Text style={{ fontSize: 12 }} className="text-primary-50">
                     {item.label ?? 'Value'}
                   </Text>
-                  <Text className="text-background-0" >
+                  <Text className="text-background-0">
                     {item.value} {label}
                   </Text>
                 </View>
