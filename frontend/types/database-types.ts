@@ -58,7 +58,7 @@ export interface ScaleLog {
   // TODO: Add other scale log fields
 }
 
-export type ScaleLogEntry = Omit<ScaleLog, 'created_at'>;
+export type ScaleLogEntry = Omit<ScaleLog, 'created_at' | 'id'>;
 
 export interface ScaleLogSummary {
   start: string;

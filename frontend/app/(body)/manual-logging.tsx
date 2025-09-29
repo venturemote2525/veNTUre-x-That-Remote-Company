@@ -67,6 +67,7 @@ export default function ManualLogging() {
   const handleConfirm = async () => {
     if (!profile) return;
     try {
+        console.log(profile)
       const log: ManualLogEntry = {
         logged_at: date.toISOString(),
         user_id: profile.user_id,
@@ -77,7 +78,7 @@ export default function ManualLogging() {
       } else if (screen === 'height') {
         log.height = height;
       }
-
+        console.log(log)
       await logDataManually(log);
       setShowAlert(true);
     } catch (error) {

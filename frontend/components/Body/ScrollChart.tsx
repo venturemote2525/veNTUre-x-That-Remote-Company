@@ -123,7 +123,7 @@ export default function ScrollChart({
                 <View
                   style={{ backgroundColor: chartColour }}
                   className="rounded-2xl p-3">
-                  <Text style={{ fontSize: 12 }} className="text-primary-50">
+                  <Text style={{ fontSize: 12 }} className="text-background-0 font-bodyBold">
                     {item.label ?? 'Value'}
                   </Text>
                   <Text className="text-background-0">
