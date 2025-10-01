@@ -160,12 +160,12 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    // Navigate to edit profile screen - you can implement this
+    // future iterationsss
     Alert.alert('Edit Profile', 'Edit profile feature coming soon!');
   };
 
   const handleSettings = () => {
-    // Navigate to settings screen - you can implement this
+    // future iterationsss
     Alert.alert('Settings', 'Settings feature coming soon!');
   };
 
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
 
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1">
-      {/* Elegant Wave-like Gradient Background */}
+      {/*Gradient Background */}
       <Animated.View 
         style={{ 
           opacity: fadeAnim,
@@ -198,7 +198,7 @@ export default function ProfileScreen() {
           className="h-full"
         />
         
-        {/* Wave Pattern Overlay */}
+        {/* Overlay */}
         <View className="absolute -bottom-10 left-0 right-0 h-20">
           <View 
   className="absolute -top-10 left-0 right-0 h-20 bg-background rounded-t-[40px]"
@@ -373,7 +373,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        {/* Theme Toggle - Simple version like before */}
+        {/* Theme Toggle */}
         <View className="mb-8 gap-1">
           <Text className="font-bodySemiBold text-body2 text-primary-300">
             Theme
