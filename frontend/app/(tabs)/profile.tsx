@@ -199,18 +199,7 @@ export default function ProfileScreen() {
         />
         
         {/* Overlay */}
-        <View className="absolute -bottom-10 left-0 right-0 h-20">
-          <View 
-  className="absolute -top-10 left-0 right-0 h-20 bg-background rounded-t-[40px]"
-  style={{
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  }}
-/>
-        </View>
+        
       </Animated.View>
 
       <Animated.ScrollView 

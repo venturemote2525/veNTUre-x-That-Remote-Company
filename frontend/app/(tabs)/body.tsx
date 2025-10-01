@@ -8,6 +8,7 @@ import TabToggle from '@/components/TabToggle';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import ScrollChart from '@/components/Body/ScrollChart';
 import {
   fetchGroupedManualLogs,
@@ -32,6 +33,32 @@ export default function BodyScreen() {
     {} as Record<DateGroup, MergedLogSummary[]>,
   );
   const [data, setData] = useState<MergedLogSummary[] | null>(null);
+
+  // Animation values - same as profile screen
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(50))[0];
+  const scaleAnim = useState(new Animated.Value(0.95))[0];
+
+  // Start animations when component mounts
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const overview = useMemo(() => {
     if (!data || data.length === 0) return { current: '-', previous: '-' };
@@ -125,77 +152,111 @@ export default function BodyScreen() {
       {/* Tab Selector */}
       <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
 
-      <View className="flex-1 items-center justify-center gap-4 p-4">
-        <OverviewCard
-          dateGroup={dateGroup}
-          current={overview.current}
-          previous={overview.previous}
-          graphLabel={graphLabel}
-        />
-        {/* Duration Selector*/}
-        <View className="flex-row justify-center gap-4">
-          <Pressable
-            onPress={() => setDateGroup('WEEK')}
-            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-            <Text
-              className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
-              Weekly
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setDateGroup('MONTH')}
-            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-            <Text
-              className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
-              Monthly
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setDateGroup('YEAR')}
-            className={`flex-1 items-center rounded-full px-4 py-3 ${dateGroup === 'YEAR' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-            <Text
-              className={`font-bodySemiBold ${dateGroup === 'YEAR' ? 'text-background-0' : 'text-primary-100'}`}>
-              Yearly
-            </Text>
-          </Pressable>
-        </View>
+      <Animated.ScrollView 
+        style={{ 
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }}
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="items-center justify-center gap-4 py-4">
+          <OverviewCard
+            dateGroup={dateGroup}
+            current={overview.current}
+            previous={overview.previous}
+            graphLabel={graphLabel}
+          />
+          
+          {/* Duration Selector*/}
+          <Animated.View 
+            style={{ transform: [{ scale: scaleAnim }] }}
+            className="flex-row justify-center gap-4 w-full"
+          >
+            <Pressable
+              onPress={() => setDateGroup('WEEK')}
+              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+              <Ionicons 
+                name="calendar-outline" 
+                size={16} 
+                color={dateGroup === 'WEEK' ? '#fff' : '#6b7280'} 
+              />
+              <Text
+                className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
+                Weekly
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setDateGroup('MONTH')}
+              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+              <Ionicons 
+                name="calendar" 
+                size={16} 
+                color={dateGroup === 'MONTH' ? '#fff' : '#6b7280'} 
+              />
+              <Text
+                className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
+                Monthly
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setDateGroup('YEAR')}
+              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'YEAR' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+              <Ionicons 
+                name="calendar-sharp" 
+                size={16} 
+                color={dateGroup === 'YEAR' ? '#fff' : '#6b7280'} 
+              />
+              <Text
+                className={`font-bodySemiBold ${dateGroup === 'YEAR' ? 'text-background-0' : 'text-primary-100'}`}>
+                Yearly
+              </Text>
+            </Pressable>
+          </Animated.View>
 
-        {graphData ? (
-          <View className="rounded-2xl bg-background-0 p-4">
-            <ScrollChart
-              graphData={graphData}
-              label={graphLabel}
-              width={dateGroup === 'MONTH' ? 120 : 70}
-              spacing={dateGroup === 'MONTH' ? 80 : 60}
-              height={250}
-            />
-          </View>
-        ) : (
-          <View
-            style={{ height: 250 }}
-            className="w-full items-center justify-center rounded-2xl bg-background-0 p-6">
-            <Text className="font-bodySemiBold text-body1 text-primary-500">
-              No Data Yet
-            </Text>
-            <Text className="text-center text-primary-200">
-              Log your first entry to start tracking your progress!
-            </Text>
-          </View>
-        )}
-      </View>
-      {/*  /!* Progress Message *!/*/}
-      {/*  <View className="rounded-xl border border-secondary-200 bg-secondary-50 p-4">*/}
-      {/*    <Text className="text-center font-body text-body2 text-typography-800">*/}
-      {/*      You've maintained a healthy {selectedMetric} range this week. Keep*/}
-      {/*      it up!*/}
-      {/*    </Text>*/}
-      {/*  </View>*/}
-      {/*</ScrollView>*/}
-      <Pressable
-        className="button-rounded m-4"
-        onPress={() => router.push('/(body)/all-logs')}>
-        <Text className="button-rounded-text">View All Logs</Text>
-      </Pressable>
+          {graphData ? (
+            <Animated.View 
+              style={{ transform: [{ scale: scaleAnim }] }}
+              className="rounded-2xl bg-background-0 p-4 shadow-lg w-full"
+            >
+              <ScrollChart
+                graphData={graphData}
+                label={graphLabel}
+                width={dateGroup === 'MONTH' ? 120 : 70}
+                spacing={dateGroup === 'MONTH' ? 80 : 60}
+                height={250}
+              />
+            </Animated.View>
+          ) : (
+            <Animated.View 
+              style={{ 
+                height: 250,
+                transform: [{ scale: scaleAnim }]
+              }}
+              className="w-full items-center justify-center rounded-2xl bg-background-0 p-6 shadow-lg"
+            >
+              <Text className="font-bodySemiBold text-body1 text-primary-500">
+                No Data Yet
+              </Text>
+              <Text className="text-center text-primary-200">
+                Log your first entry to start tracking your progress!
+              </Text>
+            </Animated.View>
+          )}
+        </View>
+      </Animated.ScrollView>
+
+      {/* View All Logs Button */}
+      <Animated.View 
+        style={{ opacity: fadeAnim }}
+        className="px-4 pb-8 pt-4"
+      >
+        <Pressable
+          className="button-rounded m-4 shadow-lg"
+          onPress={() => router.push('/(body)/all-logs')}>
+          <Text className="button-rounded-text">View All Logs</Text>
+        </Pressable>
+      </Animated.View>
     </ThemedSafeAreaView>
   );
 }
@@ -211,6 +272,33 @@ const OverviewCardBase = ({
   previous: number | string;
   graphLabel: string;
 }) => {
+  // Counter animation
+  const [displayValue, setDisplayValue] = useState(0);
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (typeof current === 'number') {
+      // Reset to 0 when current changes
+      setDisplayValue(0);
+      
+      // Animate from 0 to current value
+      Animated.timing(animatedValue, {
+        toValue: current,
+        duration: 1500,
+        useNativeDriver: false,
+      }).start();
+      
+      // Update display value during animation
+      animatedValue.addListener(({ value }) => {
+        setDisplayValue(Number(value.toFixed(1)));
+      });
+
+      return () => {
+        animatedValue.removeAllListeners();
+      };
+    }
+  }, [current]);
+
   // Trend Calculation
   let difference: number | null = null;
   if (typeof current === 'number' && typeof previous === 'number') {
@@ -240,21 +328,27 @@ const OverviewCardBase = ({
 
   return (
     <View className="w-full flex-row gap-4">
-      {/* Current */}
+      {/* Current with counter animation */}
       <View
         style={{ flex: 1 }}
-        className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4">
-        <Text className="text-primary-300">Current</Text>
+        className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4 shadow-md">
+        <View className="flex-row items-center gap-1">
+          <Ionicons name="today-outline" size={16} color="#6b7280" />
+          <Text className="text-primary-300">Current</Text>
+        </View>
         <Text className="font-bodySemiBold text-body1 text-secondary-500">
-          {current} {graphLabel}
+          {typeof current === 'number' ? displayValue : current} {graphLabel}
         </Text>
       </View>
 
       {/* Trend */}
       <View
         style={{ flex: 1 }}
-        className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4">
-        <Text className="text-primary-300">Trend</Text>
+        className="items-center justify-center gap-2 rounded-2xl bg-background-0 p-4 shadow-md">
+        <View className="flex-row items-center gap-1">
+          <Ionicons name="trending-up-outline" size={16} color="#6b7280" />
+          <Text className="text-primary-300">Trend</Text>
+        </View>
         <View className="flex-row items-center gap-2">
           {trendIcon}
           <Text className="font-bodySemiBold text-body1 text-secondary-500">
