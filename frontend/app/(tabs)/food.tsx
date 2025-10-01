@@ -3,17 +3,14 @@ import MealCard from '@/components/Food/MealCard';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { ScrollView, Animated, Easing, Pressable } from 'react-native';
+import { ScrollView, Animated, Easing, Pressable, Alert } from 'react-native';
 import { Meal } from '@/types/database-types';
-import { retrieveMeals } from '@/utils/food/api';
-import { LinearGradient } from 'expo-linear-gradient';
+import { retrieveMeals, deleteMeal } from '@/utils/food/api'; // Import deleteMeal
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faUtensils,
   faFire,
-  faCalendar,
 } from '@fortawesome/free-solid-svg-icons';
-import { useFadeIn } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
@@ -41,24 +38,78 @@ export default function FoodScreen() {
   const [progressAnim] = useState(new Animated.Value(0));
   const router = useRouter();
 
+  // Animation values - same as profile screen
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(50))[0];
+  const scaleAnim = useState(new Animated.Value(0.95))[0];
+
+  // Start animations when component mounts
   useEffect(() => {
-    const fetchMeals = async () => {
-      const result = await retrieveMeals(selectedDate);
-      setMeals(result);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
-      const totalCalories =
-        result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
-      const progress = Math.min(totalCalories / 2000, 1);
-
-      Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 800,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    };
+  useEffect(() => {
     fetchMeals();
   }, [selectedDate]);
+
+  const fetchMeals = async () => {
+    const result = await retrieveMeals(selectedDate);
+    setMeals(result);
+
+    const totalCalories =
+      result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
+    const progress = Math.min(totalCalories / 2000, 1);
+
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleDeleteMeal = async (mealId: string) => {
+    Alert.alert(
+      "Delete Meal",
+      "Are you sure you want to delete this meal?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMeal(mealId);
+              // Refresh the meals after successful deletion
+              await fetchMeals();
+            } catch (error) {
+              console.error('Error deleting meal:', error);
+              Alert.alert("Error", "Failed to delete meal. Please try again.");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const totalCalories =
     meals?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
@@ -68,9 +119,16 @@ export default function FoodScreen() {
   });
 
   return (
-    <ThemedSafeAreaView edges={['top']} className="flex-1">
-      <View className="flex-1 px-4">
-        <View className="flex-row items-center">
+    <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0">
+      <Animated.ScrollView 
+        style={{ 
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }}
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="flex-row items-center mb-4">
           <FontAwesomeIcon
             icon={faUtensils}
             size={24}
@@ -87,7 +145,10 @@ export default function FoodScreen() {
             onDateChange={setSelectedDate}
           />
 
-          <View className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-sm">
+          <Animated.View 
+            style={{ transform: [{ scale: scaleAnim }] }}
+            className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-lg"
+          >
             <View className="mb-3 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <FontAwesomeIcon
@@ -126,56 +187,66 @@ export default function FoodScreen() {
                 2000
               </Text>
             </View>
-          </View>
+          </Animated.View>
 
           <View className="flex-1 rounded-2xl">
-            <ScrollView
-              className="flex-1"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 20 }}>
-              <View className="gap-4">
-                {(
-                  [
-                    'BREAKFAST',
-                    'LUNCH',
-                    'DINNER',
-                    'MORNING_SNACK',
-                    'AFTERNOON_SNACK',
-                    'NIGHT_SNACK',
-                  ] as const
-                ).map(mealType => (
-                  <View key={mealType} className="relative">
-                    <MealCard
-                      title={
-                        mealIcons[mealType] +
-                        ' ' +
-                        mealType
-                          .split('_')
-                          .map(
-                            word =>
-                              word.charAt(0) + word.slice(1).toLowerCase(),
-                          )
-                          .join(' ')
-                      }
-                      meals={
-                        meals ? meals.filter(m => m.meal === mealType) : null
-                      }
-                    />
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          <View className="absolute bottom-6 right-6">
-            <Pressable
-              onPress={() => router.push('/(tabs)/logging')}
-              className="h-14 w-14 items-center justify-center rounded-full bg-secondary-500 shadow-lg">
-              <Text className="text-2xl font-bold text-white">+</Text>
-            </Pressable>
+            <View className="gap-4">
+              {(
+                [
+                  'BREAKFAST',
+                  'LUNCH',
+                  'DINNER',
+                  'MORNING_SNACK',
+                  'AFTERNOON_SNACK',
+                  'NIGHT_SNACK',
+                ] as const
+              ).map((mealType, index) => (
+                <Animated.View 
+                  key={mealType} 
+                  className="relative"
+                  style={{
+                    opacity: fadeAnim,
+                    transform: [
+                      { translateY: slideAnim },
+                      { scale: scaleAnim }
+                    ]
+                  }}
+                >
+                  <MealCard
+                    title={
+                      mealIcons[mealType] +
+                      ' ' +
+                      mealType
+                        .split('_')
+                        .map(
+                          word =>
+                            word.charAt(0) + word.slice(1).toLowerCase(),
+                        )
+                        .join(' ')
+                    }
+                    meals={
+                      meals ? meals.filter(m => m.meal === mealType) : null
+                    }
+                    mealType={mealType}
+                    onSwipeDelete={handleDeleteMeal}
+                  />
+                </Animated.View>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
+      </Animated.ScrollView>
+
+      <Animated.View 
+        style={{ opacity: fadeAnim }}
+        className="absolute bottom-6 right-6"
+      >
+        <Pressable
+          onPress={() => router.push('/(tabs)/logging')}
+          className="h-14 w-14 items-center justify-center rounded-full bg-secondary-500 shadow-lg active:opacity-80 active:scale-95">
+          <Text className="text-2xl font-bold text-white">+</Text>
+        </Pressable>
+      </Animated.View>
     </ThemedSafeAreaView>
   );
 }
