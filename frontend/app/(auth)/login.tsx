@@ -1,6 +1,6 @@
 import PasswordInput from '@/components/Auth/PasswordInput';
 import { ThemedSafeAreaView, Text, View, TextInput } from '@/components/Themed';
-import { userLogin } from '@/utils/auth/api';
+import { userLogin, resetPassword } from '@/utils/auth/api'; // Add resetPassword import
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
@@ -11,6 +11,7 @@ export default function LogIn() {
   const router = useRouter();
   const scheme = useColorScheme() || 'light';
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false); // Add reset loading state
   const [fields, setFields] = useState({
     email: '',
     password: '',
@@ -20,6 +21,7 @@ export default function LogIn() {
     password: '',
     login: '',
   });
+  const [resetSuccess, setResetSuccess] = useState(false); // Add reset success state
 
   const handleLogin = async () => {
     setError({ email: '', password: '', login: '' });
@@ -46,13 +48,33 @@ export default function LogIn() {
     }
   };
 
+  // Add forget password function
+  const handleForgotPassword = async () => {
+    if (!fields.email.trim()) {
+      setError(prev => ({ ...prev, email: 'Please enter your email to reset password' }));
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      await resetPassword(fields.email);
+      setResetSuccess(true);
+      setError({ email: '', password: '', login: '' });
+    } catch (error) {
+      console.log('Password reset failed: ', error);
+      setError(prev => ({ ...prev, login: 'Failed to send reset email. Please try again.' }));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <ThemedSafeAreaView className="flex-1">
       
       <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
-        <Text className="font-heading text-[50px] text-secondary-500">
-          HealthSync
+          <Text className="font-heading text-[50px] text-secondary-500">
+            HealthSync
           </Text>
           <Text className="font-heading text-head2 text-primary-500">
             Log In
@@ -82,7 +104,29 @@ export default function LogIn() {
                 <Text className="text-error-500">{error.password}</Text>
               )}
             </View>
+
+            {/* Add Forget Password Link */}
+            <View className="items-end">
+              <AnimatedPressable onPress={handleForgotPassword}>
+                <Text className="font-bodySemiBold text-secondary-500">
+                  {resetLoading ? 'Sending...' : 'Forgot Password?'}
+                </Text>
+              </AnimatedPressable>
+            </View>
+
+            {/* Reset Success Message */}
+            {resetSuccess && (
+              <View className="rounded-2xl bg-green-100 p-4">
+                <Text className="text-green-800">
+                  Password reset email sent! Check your inbox.
+                </Text>
+              </View>
+            )}
           </View>
+          
+          {error.login !== '' && (
+            <Text className="text-center text-error-500">{error.login}</Text>
+          )}
           
           <AnimatedPressable onPress={handleLogin} className="button">
             <Text className="text-xl font-bodyBold text-background-500">
