@@ -118,3 +118,10 @@ export type DateGroup = 'WEEK' | 'MONTH' | 'YEAR';
 export type MetricType = 'weight' | 'BMI' | 'body_fat' | 'height';
 
 export type GraphPoint = { value: number; label: string };
+
+export interface BodyLogDisplay {
+  weight: number | null;
+  height: number | null;
+  body_fat: number | null;
+  bmi: number | null;
+}
