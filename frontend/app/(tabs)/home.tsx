@@ -6,9 +6,34 @@ import { faUtensils, faChild, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Colors } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { fetchBodyLog, fetchRecentManualLog } from '@/utils/body/api';
+import { BodyLogDisplay, Meal } from '@/types/database-types';
+import { retrieveMeals } from '@/utils/food/api';
+import dayjs from 'dayjs';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [bodyLog, setBodyLog] = useState<BodyLogDisplay>();
+  const [meals, setMeals] = useState<Meal[] | null>(null);
+  const totalCalories =
+    meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) ?? 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const bodyResult = await fetchBodyLog();
+          setBodyLog(bodyResult);
+          const mealResult = await retrieveMeals(dayjs(new Date()));
+          setMeals(mealResult);
+        } catch (error) {
+          console.log('Failed to fetch body log', error);
+        }
+      })();
+    }, []),
+  );
 
   return (
     <ThemedSafeAreaView className="flex-1 bg-background-1">
@@ -67,7 +92,7 @@ export default function HomeScreen() {
               </View>
               <View className="items-center">
                 <Text className="font-heading text-body1 text-success-600">
-                  1,240
+                  {totalCalories}
                 </Text>
                 <Text className="font-bodyBold text-primary-100">
                   kcal today
@@ -102,25 +127,25 @@ export default function HomeScreen() {
             <View className="mt-4 flex-row justify-between">
               <View className="items-center">
                 <Text className="text-head3 font-heading text-success-600">
-                  18.5%
+                  {bodyLog?.body_fat}%
                 </Text>
-                <Text className="text-body3 font-body text-primary-600">
+                <Text className="font-body text-body3 text-primary-600">
                   Body Fat
                 </Text>
               </View>
               <View className="items-center">
                 <Text className="text-head3 font-heading text-success-600">
-                  68kg
+                  {bodyLog?.weight}kg
                 </Text>
-                <Text className="text-body3 font-body text-primary-600">
+                <Text className="font-body text-body3 text-primary-600">
                   Weight
                 </Text>
               </View>
               <View className="items-center">
                 <Text className="text-head3 font-heading text-success-600">
-                  22.1
+                  {bodyLog?.bmi}
                 </Text>
-                <Text className="text-body3 font-body text-primary-600">
+                <Text className="font-body text-body3 text-primary-600">
                   BMI
                 </Text>
               </View>

@@ -2,7 +2,7 @@ import DateSelector from '@/components/DateSelector';
 import MealCard from '@/components/Food/MealCard';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Animated, Easing, Pressable } from 'react-native';
 import { Meal } from '@/types/database-types';
 import { retrieveMeals } from '@/utils/food/api';
@@ -16,6 +16,7 @@ import {
 import { useFadeIn } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 const mealIcons = {
   BREAKFAST: '☀️',
@@ -41,24 +42,25 @@ export default function FoodScreen() {
   const [progressAnim] = useState(new Animated.Value(0));
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchMeals = async () => {
-      const result = await retrieveMeals(selectedDate);
-      setMeals(result);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const result = await retrieveMeals(selectedDate);
+        setMeals(result);
 
-      const totalCalories =
-        result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
-      const progress = Math.min(totalCalories / 2000, 1);
+        const totalCalories =
+          result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
+        const progress = Math.min(totalCalories / 2000, 1);
 
-      Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 800,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    };
-    fetchMeals();
-  }, [selectedDate]);
+        Animated.timing(progressAnim, {
+          toValue: progress,
+          duration: 800,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: false,
+        }).start();
+      })();
+    }, [selectedDate]),
+  );
 
   const totalCalories =
     meals?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
@@ -101,7 +103,7 @@ export default function FoodScreen() {
               </View>
               <Text className="font-heading text-head2 text-background-0">
                 {totalCalories}
-                <Text className="text-body3 font-body text-background-0">
+                <Text className="font-body text-body3 text-background-0">
                   {' '}
                   kcal
                 </Text>
@@ -110,19 +112,15 @@ export default function FoodScreen() {
 
             <View className="h-2 overflow-hidden rounded-full bg-secondary-100">
               <Animated.View
-                className="h-full rounded-full"
+                className={`h-full rounded-full ${totalCalories > 2000 ? 'bg-[#FF6B6B]' : 'bg-tertiary-500'}`}
                 style={{
                   width: progressWidth,
-                  backgroundColor:
-                    totalCalories > 2000
-                      ? '#FF6B6B'
-                      : Colors.light.colors.secondary[500],
                 }}
               />
             </View>
             <View className="mt-1 flex-row justify-between">
-              <Text className="text-body3 font-body text-primary-500">0</Text>
-              <Text className="text-body3 font-body text-primary-500">
+              <Text className="font-body text-body3 text-primary-500">0</Text>
+              <Text className="font-body text-body3 text-primary-500">
                 2000
               </Text>
             </View>

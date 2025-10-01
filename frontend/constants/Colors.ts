@@ -1,14 +1,13 @@
-
 export const Colors = {
   light: {
     // Keep your existing colors for compatibility
     text: '#11181C',
-    title: '#0077b6', 
+    title: '#0077b6',
     background: '#F2F2F2',
     cardBackground: '#FFFFFF',
     secondary: '#0077b6',
     primary: '#000000',
-    
+
     // Enhanced color palette
     colors: {
       primary: {
@@ -60,7 +59,7 @@ export const Colors = {
         700: '#b91c1c',
       },
     },
-    
+
     // Gradient combinations (TypeScript-safe with 'as const')
     gradients: {
       primary: ['#667eea', '#764ba2'] as const,
@@ -83,7 +82,7 @@ export const Colors = {
     cardBackground: '#2a2a2a',
     secondary: '#0096c7',
     primary: '#FFFFFF',
-    
+
     // Enhanced color palette (dark mode variants)
     colors: {
       primary: {
@@ -135,7 +134,7 @@ export const Colors = {
         700: '#fee2e2',
       },
     },
-    
+
     // Dark mode gradients (TypeScript-safe with 'as const')
     gradients: {
       primary: ['#4c1d95', '#7c3aed'] as const,
