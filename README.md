@@ -40,7 +40,6 @@ Add the JDK path in `android/gradle.properties`
 org.gradle.java.home=/path/to/your/jdk-17
 ```
 
-<<<<<<< HEAD
 ### 6. Run the project
 - Run `npm install` to install dependencies
 - Run `npm install expo-location` to setup location settings
@@ -95,4 +94,3 @@ project/
 | UserContext (`context/UserContext.tsx`)         | Context provider for user data             |
 | ThemeContext (`context/ThemeContext.tsx`)       | Manages app theme                          |
 | ICDeviceContext (`context/ICDeviceContext.tsx`) | Handle connection to SDK                   |
->>>>>>> main
