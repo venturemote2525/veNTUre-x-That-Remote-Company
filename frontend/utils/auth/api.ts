@@ -49,3 +49,16 @@ export async function createProfile(profile: UserProfileInsert) {
   console.log(data);
   return data;
 }
+/**
+ * Send password reset email
+ * @param email User's email address
+ * @returns void
+ */
+
+export async function resetPassword(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'frontend://reset-password',  
+  });
+
+  if (error) throw error;
+}

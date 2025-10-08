@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { ICDeviceProvider, useICDevice } from '@/context/ICDeviceContext';
 import { ThemeProvider, useThemeMode } from '@/context/ThemeContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -121,16 +122,18 @@ function RootLayoutNav() {
   }, [connectedDevices, weightData, segments]);
 
   return (
-    <GluestackUIProvider mode={mode}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(body)" options={{ headerShown: false }} />
-        <Stack.Screen name="(logging)" options={{ headerShown: false }} />
-        <Stack.Screen name="(device)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-      </Stack>
-    </GluestackUIProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GluestackUIProvider mode={mode}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(body)" options={{ headerShown: false }} />
+          <Stack.Screen name="(logging)" options={{ headerShown: false }} />
+          <Stack.Screen name="(device)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        </Stack>
+      </GluestackUIProvider>
+    </GestureHandlerRootView>
   );
 }
