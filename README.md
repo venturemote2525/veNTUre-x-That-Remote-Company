@@ -49,3 +49,42 @@ npm install
 ### 7. Run the project
 - Run `npx expo start` to start the project with Expo Go app
 - Run `npx expo run:android` to run the project on android device
+
+## Project Overview
+
+### Folder Structure
+```
+project/
+│
+├─ backend/
+│
+└─ frontend/
+    ├─ android/     # Android files for SDK
+    ├─ app/         # App screens
+    ├─ assets/      # Images, fonts, etc.
+    ├─ components/  # Reusable UI components
+    ├─ constants/   # Static configuration values
+    ├─ context/     # Global state providers
+    ├─ hooks/       # Custom React hooks
+    ├─ ios/         # IOS files for SDK
+    ├─ lib/         # Supabase configuration
+    ├─ types/       # Database and SDK types
+    └─ utils/       # Helper and API utility functions
+
+```
+
+### Key Components
+| Component                                 | Description                                   |
+|-------------------------------------------|-----------------------------------------------|
+| CustomAlert (`ui/CustomAlert.tsx`)        | Custom modal for confirmation and alerts      |
+| Gluestack UI (`ui/gluestack-ui-provider`) | UI library for theming and consistent design  |
+| LoadingScreen (`ui/LoadingScreen.tsx`)    | Custom loading screen shown during data fetch |
+| Themed (`ui/Themed.tsx`)                  | Custom themed Text/View/SafeAreaView wrappers |
+
+### Contexts
+| Context                                         | Description                                |
+|-------------------------------------------------|--------------------------------------------|
+| AuthContext (`context/AuthContext.tsx`)         | Handle login/logout, authentication status |
+| UserContext (`context/UserContext.tsx`)         | Context provider for user data             |
+| ThemeContext (`context/ThemeContext.tsx`)       | Manages app theme                          |
+| ICDeviceContext (`context/ICDeviceContext.tsx`) | Handle connection to SDK                   |
