@@ -8,10 +8,10 @@ import { Colors } from '@/constants/Colors';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { fetchGroupedScaleLogs } from '@/utils/body/api';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { fetchBodyLog, fetchRecentManualLog } from '@/utils/body/api';
+import {
+  fetchBodyLog,
+} from '@/utils/body/api';
+
 import { BodyLogDisplay, Meal } from '@/types/database-types';
 import { retrieveMeals } from '@/utils/food/api';
 import dayjs from 'dayjs';

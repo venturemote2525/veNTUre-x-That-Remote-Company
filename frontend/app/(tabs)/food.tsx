@@ -2,17 +2,13 @@ import DateSelector from '@/components/DateSelector';
 import MealCard from '@/components/Food/MealCard';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { ScrollView, Animated, Easing, Pressable, Alert } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Animated, Easing, Pressable } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { Animated, Easing, Pressable, Alert } from 'react-native';
+
 import { Meal } from '@/types/database-types';
 import { retrieveMeals, deleteMeal } from '@/utils/food/api'; // Import deleteMeal
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faUtensils,
-  faFire,
-} from '@fortawesome/free-solid-svg-icons';
+import { faUtensils, faFire } from '@fortawesome/free-solid-svg-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -67,52 +63,50 @@ export default function FoodScreen() {
     ]).start();
   }, []);
 
+  const fetchMeals = useCallback(async () => {
+    const result = await retrieveMeals(selectedDate);
+    setMeals(result);
+
+    const totalCalories =
+      result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
+    const progress = Math.min(totalCalories / 2000, 1);
+
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [selectedDate, progressAnim, setMeals]);
+
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await retrieveMeals(selectedDate);
-        setMeals(result);
-
-        const totalCalories =
-          result?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
-        const progress = Math.min(totalCalories / 2000, 1);
-
-        Animated.timing(progressAnim, {
-          toValue: progress,
-          duration: 800,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: false,
-        }).start();
-      })();
-    }, [selectedDate]),
+      fetchMeals();
+    }, [fetchMeals]),
   );
 
-    const handleDeleteMeal = async (mealId: string) => {
-        Alert.alert(
-            "Delete Meal",
-            "Are you sure you want to delete this meal?",
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel"
-                },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await deleteMeal(mealId);
-                            // Refresh the meals after successful deletion
-                            await fetchMeals();
-                        } catch (error) {
-                            console.error('Error deleting meal:', error);
-                            Alert.alert("Error", "Failed to delete meal. Please try again.");
-                        }
-                    }
-                }
-            ]
-        );
-    };
+  const handleDeleteMeal = async (mealId: string) => {
+    Alert.alert('Delete Meal', 'Are you sure you want to delete this meal?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteMeal(mealId);
+            // Refresh the meals after successful deletion
+            await fetchMeals();
+          } catch (error) {
+            console.error('Error deleting meal:', error);
+            Alert.alert('Error', 'Failed to delete meal. Please try again.');
+          }
+        },
+      },
+    ]);
+  };
 
   const totalCalories =
     meals?.reduce((sum, meal) => sum + meal.calories, 0) || 0;
@@ -126,12 +120,11 @@ export default function FoodScreen() {
       <Animated.ScrollView
         style={{
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
+          transform: [{ translateY: slideAnim }],
         }}
         className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="flex-row items-center mb-4">
+        showsVerticalScrollIndicator={false}>
+        <View className="mb-4 flex-row items-center">
           <FontAwesomeIcon
             icon={faUtensils}
             size={24}
@@ -150,8 +143,7 @@ export default function FoodScreen() {
 
           <Animated.View
             style={{ transform: [{ scale: scaleAnim }] }}
-            className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-lg"
-          >
+            className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-lg">
             <View className="mb-3 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <FontAwesomeIcon
@@ -207,10 +199,9 @@ export default function FoodScreen() {
                     opacity: fadeAnim,
                     transform: [
                       { translateY: slideAnim },
-                      { scale: scaleAnim }
-                    ]
-                  }}
-                >
+                      { scale: scaleAnim },
+                    ],
+                  }}>
                   <MealCard
                     title={
                       mealIcons[mealType] +
@@ -218,8 +209,7 @@ export default function FoodScreen() {
                       mealType
                         .split('_')
                         .map(
-                          word =>
-                            word.charAt(0) + word.slice(1).toLowerCase(),
+                          word => word.charAt(0) + word.slice(1).toLowerCase(),
                         )
                         .join(' ')
                     }
@@ -238,11 +228,10 @@ export default function FoodScreen() {
 
       <Animated.View
         style={{ opacity: fadeAnim }}
-        className="absolute bottom-6 right-6"
-      >
+        className="absolute bottom-6 right-6">
         <Pressable
           onPress={() => router.push('/(tabs)/logging')}
-          className="h-14 w-14 items-center justify-center rounded-full bg-secondary-500 shadow-lg active:opacity-80 active:scale-95">
+          className="h-14 w-14 items-center justify-center rounded-full bg-secondary-500 shadow-lg active:scale-95 active:opacity-80">
           <Text className="text-2xl font-bold text-white">+</Text>
         </Pressable>
       </Animated.View>
