@@ -11,7 +11,12 @@ import uuid from 'react-native-uuid';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faCamera, faImages, faUtensils, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCamera,
+  faImages,
+  faUtensils,
+  faArrowRight,
+} from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -43,7 +48,7 @@ export default function LoggingScreen() {
       console.log('Open from add meal: ', mealValue);
       setMeal(mealValue);
     }
-    
+
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -58,7 +63,7 @@ export default function LoggingScreen() {
           easing: Easing.ease,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, [paramMeal]);
 
@@ -74,7 +79,7 @@ export default function LoggingScreen() {
       console.log('select photo');
       const base64Data = result.assets[0].base64!;
       setImage(base64Data);
-      
+
       Animated.spring(slideAnim, {
         toValue: 1,
         friction: 8,
@@ -104,7 +109,7 @@ export default function LoggingScreen() {
       console.log('take photo');
       const base64Data = result.assets[0].base64!;
       setImage(base64Data);
-      
+
       Animated.spring(slideAnim, {
         toValue: 1,
         friction: 8,
@@ -163,32 +168,33 @@ export default function LoggingScreen() {
     outputRange: [0, 1],
   });
 
-  const formattedMeal = meal ? 
-    `${meal.charAt(0).toUpperCase() + meal.slice(1).toLowerCase()} Meal` : 
-    '';
+  const formattedMeal = meal
+    ? `${meal.charAt(0).toUpperCase() + meal.slice(1).toLowerCase()} Meal`
+    : '';
 
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1">
-      <ScrollView 
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          paddingHorizontal: 20, 
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 20,
           paddingVertical: 20,
-          paddingBottom: 100
+          paddingBottom: 100,
         }}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         <View className="flex-1 items-center justify-between">
-          <View className="items-center w-full mb-6">
-            <Text className="font-heading text-head2 text-secondary-500 mb-2">
+          <View className="mb-6 w-full items-center">
+            <Text className="mb-2 font-heading text-head2 text-secondary-500">
               Log Your Meal
             </Text>
-            <Text className="font-body text-body2 text-primary-300 text-center">
-              {meal ? `Logging your ${meal.toLowerCase()} meal` : 'Capture your food to track nutrition'}
+            <Text className="text-center font-body text-body2 text-primary-300">
+              {meal
+                ? `Logging your ${meal.toLowerCase()} meal`
+                : 'Capture your food to track nutrition'}
             </Text>
           </View>
 
-          <View className="items-center justify-center mb-8">
+          <View className="mb-8 items-center justify-center">
             {image ? (
               <View className="relative">
                 <Image
@@ -200,26 +206,29 @@ export default function LoggingScreen() {
                   className="absolute bottom-0 left-0 right-0 h-20 rounded-b-3xl"
                 />
                 <View className="absolute bottom-4 left-4 right-4">
-                  <Text className="font-bodyBold text-background-0 text-center">
+                  <Text className="text-center font-bodyBold text-background-0">
                     Ready to analyze!
                   </Text>
                 </View>
               </View>
             ) : (
               <View className="items-center justify-center">
-                <Animated.View 
-                  style={{ 
+                <Animated.View
+                  style={{
                     transform: [{ scale: pulseAnim }],
                     opacity: pulseAnim.interpolate({
                       inputRange: [1, 1.1],
-                      outputRange: [0.7, 1]
-                    })
+                      outputRange: [0.7, 1],
+                    }),
                   }}
-                  className="h-60 w-60 items-center justify-center rounded-3xl bg-secondary-100/50 border-2 border-dashed border-secondary-300 mb-4"
-                >
-                  <Ionicons name="fast-food-outline" size={48} color={Colors.light.colors.secondary[400]} />
+                  className="mb-4 h-60 w-60 items-center justify-center rounded-3xl border-2 border-dashed border-secondary-300 bg-secondary-100/50">
+                  <Ionicons
+                    name="fast-food-outline"
+                    size={48}
+                    color={Colors.light.colors.secondary[400]}
+                  />
                 </Animated.View>
-                <Text className="font-body text-body2 text-primary-300 text-center">
+                <Text className="text-center font-body text-body2 text-primary-300">
                   Take a photo or choose from gallery
                 </Text>
               </View>
@@ -227,28 +236,30 @@ export default function LoggingScreen() {
           </View>
         </View>
 
-        <View className="w-full gap-3 mb-6">
-          <AnimatedPressable 
-            className="flex-row items-center justify-center gap-2 rounded-xl bg-secondary-500 py-3 px-4"
+        <View className="mb-6 w-full gap-3">
+          <AnimatedPressable
+            className="flex-row items-center justify-center gap-2 rounded-xl bg-secondary-500 px-4 py-3"
             onPress={takePhoto}
-            scaleAmount={0.95}
-          >
+            scaleAmount={0.95}>
             <View className="flex-row items-center justify-center">
               <FontAwesomeIcon icon={faCamera} size={16} color="white" />
-              <Text className="font-bodySemiBold text-body2 text-background-0 ml-2">
+              <Text className="ml-2 font-bodySemiBold text-body2 text-background-0">
                 Take Photo
               </Text>
             </View>
           </AnimatedPressable>
 
-          <AnimatedPressable 
-            className="flex-row items-center justify-center gap-2 rounded-xl bg-background-0 border border-secondary-200 py-3 px-4"
+          <AnimatedPressable
+            className="flex-row items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-background-0 px-4 py-3"
             onPress={pickImage}
-            scaleAmount={0.95}
-          >
+            scaleAmount={0.95}>
             <View className="flex-row items-center justify-center">
-              <FontAwesomeIcon icon={faImages} size={16} color={Colors.light.colors.secondary[500]} />
-              <Text className="font-bodySemiBold text-body2 text-secondary-500 ml-2">
+              <FontAwesomeIcon
+                icon={faImages}
+                size={16}
+                color={Colors.light.colors.secondary[500]}
+              />
+              <Text className="ml-2 font-bodySemiBold text-body2 text-secondary-500">
                 Choose from Gallery
               </Text>
             </View>
@@ -256,8 +267,12 @@ export default function LoggingScreen() {
         </View>
 
         {meal && (
-          <View className="flex-row items-center justify-center gap-2 mb-8 bg-secondary-100 rounded-full px-4 py-2">
-            <FontAwesomeIcon icon={faUtensils} size={14} color={Colors.light.colors.secondary[500]} />
+          <View className="mb-8 flex-row items-center justify-center gap-2 rounded-full bg-secondary-100 px-4 py-2">
+            <FontAwesomeIcon
+              icon={faUtensils}
+              size={14}
+              color={Colors.light.colors.secondary[500]}
+            />
             <Text className="font-bodySemiBold text-body3 text-secondary-500">
               {formattedMeal}
             </Text>
@@ -265,7 +280,7 @@ export default function LoggingScreen() {
         )}
       </ScrollView>
 
-      <Animated.View 
+      <Animated.View
         style={{
           transform: [{ translateY: buttonSlide }],
           opacity: buttonOpacity,
@@ -274,22 +289,20 @@ export default function LoggingScreen() {
           left: 20,
           right: 20,
           zIndex: 10,
-        }}
-      >
-        <AnimatedPressable 
-          onPress={confirmPhoto} 
-          className="flex-row items-center justify-center gap-2 rounded-full bg-success-500 py-4 px-6 shadow-lg"
-          scaleAmount={0.95}
-        >
+        }}>
+        <AnimatedPressable
+          onPress={confirmPhoto}
+          className="flex-row items-center justify-center gap-2 rounded-full bg-success-500 px-6 py-4 shadow-lg"
+          scaleAmount={0.95}>
           <View className="flex-row items-center justify-center">
             <Text className="font-bodyBold text-body1 text-background-0">
               Analyze Meal
             </Text>
-            <FontAwesomeIcon 
-              icon={faArrowRight} 
-              size={16} 
-              color="white" 
-              style={{ marginLeft: 8 }} 
+            <FontAwesomeIcon
+              icon={faArrowRight}
+              size={16}
+              color="white"
+              style={{ marginLeft: 8 }}
             />
           </View>
         </AnimatedPressable>

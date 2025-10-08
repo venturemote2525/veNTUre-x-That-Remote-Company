@@ -2,16 +2,17 @@ import DateSelector from '@/components/DateSelector';
 import MealCard from '@/components/Food/MealCard';
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import dayjs from 'dayjs';
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Animated, Easing, Pressable, Alert } from 'react-native';
 
-import { Meal } from '@/types/database-types';
+import { AlertState, Meal } from '@/types/database-types';
 import { retrieveMeals, deleteMeal } from '@/utils/food/api'; // Import deleteMeal
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUtensils, faFire } from '@fortawesome/free-solid-svg-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { CustomAlert } from '@/components/CustomAlert';
 
 const mealIcons = {
   BREAKFAST: '☀️',
@@ -36,6 +37,12 @@ export default function FoodScreen() {
   const [meals, setMeals] = useState<Meal[] | null>(null);
   const [progressAnim] = useState(new Animated.Value(0));
   const router = useRouter();
+
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   // Animation values - same as profile screen
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -86,26 +93,29 @@ export default function FoodScreen() {
   );
 
   const handleDeleteMeal = async (mealId: string) => {
-    Alert.alert('Delete Meal', 'Are you sure you want to delete this meal?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
+    setAlert({
+      visible: true,
+      title: 'Delete Meal',
+      message: 'Are you sure you want to delete this meal?',
+      confirmText: 'Yes',
+      onConfirm: () => {
+        handleConfirmDelete(mealId);
       },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteMeal(mealId);
-            // Refresh the meals after successful deletion
-            await fetchMeals();
-          } catch (error) {
-            console.error('Error deleting meal:', error);
-            Alert.alert('Error', 'Failed to delete meal. Please try again.');
-          }
-        },
-      },
-    ]);
+      cancelText: 'No',
+      onCancel: () => setAlert({ ...alert, visible: false }),
+    });
+  };
+
+  const handleConfirmDelete = async (mealId: string) => {
+    try {
+      await deleteMeal(mealId);
+      // Refresh the meals after successful deletion
+      await fetchMeals();
+      setAlert({ ...alert, visible: false });
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+      Alert.alert('Error', 'Failed to delete meal. Please try again.');
+    }
   };
 
   const totalCalories =
@@ -116,15 +126,9 @@ export default function FoodScreen() {
   });
 
   return (
-    <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0">
-      <Animated.ScrollView
-        style={{
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        }}
-        className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}>
-        <View className="mb-4 flex-row items-center">
+    <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0 p-4">
+      <View className="mt-4">
+        <View className="flex-row items-center">
           <FontAwesomeIcon
             icon={faUtensils}
             size={24}
@@ -134,13 +138,20 @@ export default function FoodScreen() {
             Food Diary
           </Text>
         </View>
-
+        <DateSelector
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
+      </View>
+      <Animated.ScrollView
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+          borderRadius: 20,
+        }}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}>
         <View className="flex-1">
-          <DateSelector
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-          />
-
           <Animated.View
             style={{ transform: [{ scale: scaleAnim }] }}
             className="mb-4 rounded-2xl bg-secondary-500 p-5 shadow-lg">
@@ -235,6 +246,15 @@ export default function FoodScreen() {
           <Text className="text-2xl font-bold text-white">+</Text>
         </Pressable>
       </Animated.View>
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        confirmText={alert.confirmText}
+        onConfirm={alert.onConfirm ?? (() => {})}
+        cancelText={alert.cancelText}
+        onCancel={alert.onCancel}
+      />
     </ThemedSafeAreaView>
   );
 }
