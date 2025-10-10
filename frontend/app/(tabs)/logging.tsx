@@ -127,14 +127,49 @@ export default function LoggingScreen() {
 
       setAiLoading(true);
       console.log("calling inference api");
+
       // Test GET request
       // const response = await fetch("http://192.168.1.237:8080/food/all", {
       //   method: "GET",
       //   headers: { "Content-Type": "application/json" },
       // });
 
-      // Food classification POST request
-      const response = await fetch("http://192.168.1.237:8080/inference/analyze-image", {
+      // Food classification POST request (before full ai-integration)
+      // const response = await fetch("http://192.168.1.237:8080/inference/analyze-image", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     bucket: "meal_images",
+      //     path: path,       // e.g. "user123/1758626669975.jpg"
+      //     user_id: profile.user_id,
+      //     meal_type: "lunch",
+      //   }),
+      // });
+
+      // if (response.ok) {
+      //   const aiResults = await response.json();
+      //   console.log("AI analysis results:", aiResults);
+      //   // Pass AI results into summary page
+      //   router.push({
+      //     pathname: '/(logging)/summary',
+      //     params: {
+      //       mealId: id,
+      //       meal: meal,
+      //       type: 'log',
+      //       calories: aiResults.calories.toString(),
+      //       carbs: aiResults.carbs.toString(),
+      //       protein: aiResults.protein.toString(),
+      //       fat: aiResults.fat.toString(),
+      //       foodName: aiResults.food_name,
+      //       confidence: aiResults.confidence.toString(),
+      //     },
+      //   });
+      // } else {
+      //   console.error("AI analysis failed:", response.statusText);
+      // }
+
+      // Food classification POST request (full ai-integration)
+      const response = await fetch("http://192.168.0.125:8080/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -147,17 +182,34 @@ export default function LoggingScreen() {
 
       if (response.ok) {
         const aiResults = await response.json();
-        console.log("AI analysis results:", aiResults);
+        console.log("AI analysis results:", aiResults.summary);
+        // Pass AI results into summary page
+        // router.push({
+        //   pathname: '/(logging)/summary',
+        //   params: {
+        //     mealId: id,
+        //     meal: meal,
+        //     type: 'log',
+        //     calories: aiResults.calories.toString(),
+        //     carbs: aiResults.carbs.toString(),
+        //     protein: aiResults.protein.toString(),
+        //     fat: aiResults.fat.toString(),
+        //     foodName: aiResults.food_name,
+        //     confidence: aiResults.confidence.toString(),
+        //   },
+        // });
       } else {
         console.error("AI analysis failed:", response.statusText);
       }
+
+
       setAiLoading(false);
 
       setLoading(false);
-      router.push({
-        pathname: '/(logging)/summary',
-        params: { mealId: id, meal: meal, type: 'log' },
-      });
+      // router.push({
+      //   pathname: '/(logging)/summary',
+      //   params: { mealId: id, meal: meal, type: 'log' },
+      // });
     } catch (error) {
       console.log('Upload meal error: ', error);
     }
