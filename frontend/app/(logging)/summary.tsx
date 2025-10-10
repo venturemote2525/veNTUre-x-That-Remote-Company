@@ -36,14 +36,26 @@ export default function SummaryScreen() {
   const rawScheme = useColorScheme();
   const scheme: 'light' | 'dark' = rawScheme === 'dark' ? 'dark' : 'light';
   const {
-    mealId,
-    meal: paramMeal,
-    type,
-  } = useLocalSearchParams<{
-    mealId: string;
-    meal: string;
-    type: string;
-  }>();
+  mealId,
+  meal: paramMeal,
+  type,
+  calories,
+  carbs,
+  protein,
+  fat,
+  foodName,
+  confidence,
+} = useLocalSearchParams<{
+  mealId: string;
+  meal: string;
+  type: string;
+  calories?: string;
+  carbs?: string;
+  protein?: string;
+  fat?: string;
+  foodName?: string;
+  confidence?: string;
+}>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [data, setData] = useState({ date: new Date(), meal: paramMeal ?? '' });
@@ -51,6 +63,7 @@ export default function SummaryScreen() {
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mealData, setMealData] = useState<Meal | null>(null);
+  const [caloriesValue, setCaloriesValue] = useState(0);
   const [nutrients, setNutrients] = useState([
     { key: 'Carbs', value: 0, color: '#FFCA3A' },
     { key: 'Protein', value: 0, color: '#1982C4' },
@@ -63,25 +76,42 @@ export default function SummaryScreen() {
   });
   const [showCapybaraModal, setShowCapybaraModal] = useState(false);
 
-  useEffect(() => {
-    const fetchMeal = async () => {
+useEffect(() => {
+  const fetchMeal = async () => {
+    setLoading(true);
+    try {
       const data = await retrieveMeal(mealId);
       setMealData(data);
+
       setData(prev => ({
         ...prev,
         date: new Date(data.date),
         meal: type === 'history' ? data.meal.toLowerCase() : prev.meal,
       }));
       setName(data.name);
-      setNutrients([
-        { key: 'Carbs', value: data.carbs, color: '#FFCA3A' },
-        { key: 'Protein', value: data.protein, color: '#1982C4' },
-        { key: 'Fat', value: data.fat, color: '#FF595E' },
-      ]);
-    };
-    setLoading(true);
-    fetchMeal().finally(() => setLoading(false));
-  }, []);
+      setCaloriesValue(data.calories ?? 0);
+
+      // ✅ override with AI inference params if passed
+      if (calories) setCaloriesValue(Number(calories));
+      if (carbs && protein && fat) {
+        setNutrients([
+          { key: 'Carbs', value: Number(carbs), color: '#FFCA3A' },
+          { key: 'Protein', value: Number(protein), color: '#1982C4' },
+          { key: 'Fat', value: Number(fat), color: '#FF595E' },
+        ]);
+      }
+      if (foodName) setName(foodName);
+
+    } catch (err) {
+      console.error("Failed to fetch meal:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchMeal();
+}, [mealId, type, calories, carbs, protein, fat, foodName]);
+
 
   const handleDateChange = (_event: any, date?: Date) => {
     if (date) {
@@ -151,11 +181,20 @@ export default function SummaryScreen() {
     }
     setLoading(true);
     try {
-      await updateMeal(mealId, {
+      // Prepare update data with nutritional info
+      const updateData: any = {
         name,
         date: data.date.toISOString(),
         meal: data.meal.toUpperCase(),
-      });
+      };
+
+      // Include nutritional data if provided via AI inference
+      if (calories) updateData.calories = Number(calories);
+      if (carbs) updateData.carbs = Number(carbs);
+      if (protein) updateData.protein = Number(protein);
+      if (fat) updateData.fat = Number(fat);
+
+      await updateMeal(mealId, updateData);
       setShowCapybaraModal(true);
     } catch (error) {
       console.log(error);
@@ -238,7 +277,7 @@ export default function SummaryScreen() {
           )}
           <View className="gap-4">
             <Text className="font-bodyBold text-head2 text-secondary-500">
-              {mealData?.calories ?? 0} kcal
+              {caloriesValue} kcal
             </Text>
             <View className="gap-1">
               {nutrients.map(n => (
