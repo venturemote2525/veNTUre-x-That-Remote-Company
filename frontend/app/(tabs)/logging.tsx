@@ -60,7 +60,7 @@ type AIResults = {
   };
 };
 
-const processAIResults = (aiResults: AIResults, id: string, meal: string) => {
+const processAIResults = (aiResults: AIResults, id: string, meal: string, foodClass: string) => {
   const roundInt = (num: number): string => Math.round(num).toString();
 
   // Extract and round values from summary
@@ -88,6 +88,7 @@ const processAIResults = (aiResults: AIResults, id: string, meal: string) => {
     fat,
     fiber,
     topFoods: topFoods.join(', '),
+    foodName: foodClass,
   };
 
   console.log('Router params:', params);
@@ -253,13 +254,18 @@ export default function LoggingScreen() {
       if (response.ok) {
         const aiResults = await response.json();
         console.log("AI analysis results:", aiResults.summary);
-        const params = processAIResults(aiResults, id, meal);
+        const food_class = aiResults.summary.food_name;
+        console.log("Predicted food class:", food_class);
+        const params = processAIResults(aiResults, id, meal, food_class);
         console.log("Navigating with params:", params);
         setAiLoading(false);
         setLoading(false);
         router.push({
           pathname: '/(logging)/summary',
-          params: params,
+          params:  {
+          ...params,
+          foodName: food_class,
+        },
         });
       } else {
         console.error("AI analysis failed:", response.statusText);

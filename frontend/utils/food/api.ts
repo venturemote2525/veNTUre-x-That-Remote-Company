@@ -7,6 +7,7 @@ export async function uploadImage(
   id: string,
   userId: string,
   base64Data: string,
+  foodName?: string,
 ) {
   const filePath = `${userId}/${Date.now()}.jpg`;
 
@@ -16,11 +17,19 @@ export async function uploadImage(
 
   if (uploadError) throw uploadError;
 
-  // Save in meals
+  // Save in meals with default values for required fields
   const { error: dbError } = await supabase.from('meals').insert({
     id,
     user_id: userId,
     image_url: filePath,
+    name: foodName ?? '',
+    meal: 'BREAKFAST',
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0,
+    date: new Date().toISOString(),
   });
   if (dbError) throw dbError;
   return filePath;

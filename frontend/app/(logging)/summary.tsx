@@ -45,6 +45,7 @@ export default function SummaryScreen() {
     fat: paramFat,
     fiber: paramFiber,
     topFoods: paramTopFoods,
+    foodName: paramFoodName,
   } = useLocalSearchParams<{
     mealId: string;
     meal: string;
@@ -55,11 +56,12 @@ export default function SummaryScreen() {
     fat?: string;
     fiber?: string;
     topFoods?: string;
+    foodName?: string;
   }>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [data, setData] = useState({ date: new Date(), meal: paramMeal ?? '' });
-  const [name, setName] = useState(paramTopFoods ?? '');
+  const [name, setName] = useState(paramFoodName ?? '');
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mealData, setMealData] = useState<Meal | null>(null);
@@ -87,7 +89,7 @@ export default function SummaryScreen() {
         meal: type === 'history' ? data.meal.toLowerCase() : prev.meal,
       }));
       // Only override with fetched data if we don't have params (history mode)
-      if (!paramTopFoods) setName(data.name);
+      if (!paramFoodName) setName(data.name);
       if (!paramCalories) setCalories(data.calories);
       if (!paramFiber) setFiber(data.fiber);
       if (!paramCarbs || !paramProtein || !paramFat) {
