@@ -61,15 +61,15 @@ type AIResults = {
 };
 
 const processAIResults = (aiResults: AIResults, id: string, meal: string) => {
-  const round1 = (num: number): string => num.toFixed(1);
+  const roundInt = (num: number): string => Math.round(num).toString();
 
   // Extract and round values from summary
   const { summary } = aiResults;
-  const calories = round1(summary.total_calories);
-  const carbs = round1(summary.total_carbs_g);
-  const protein = round1(summary.total_protein_g);
-  const fat = round1(summary.total_fat_g);
-  const fiber = round1(summary.total_fiber_g);
+  const calories = roundInt(summary.total_calories);
+  const carbs = roundInt(summary.total_carbs_g);
+  const protein = roundInt(summary.total_protein_g);
+  const fat = roundInt(summary.total_fat_g);
+  const fiber = roundInt(summary.total_fiber_g);
 
   // Sort by confidence (descending) and get top 2 food names
   const topFoods = aiResults.nutrition.items
@@ -255,36 +255,17 @@ export default function LoggingScreen() {
         console.log("AI analysis results:", aiResults.summary);
         const params = processAIResults(aiResults, id, meal);
         console.log("Navigating with params:", params);
+        setAiLoading(false);
+        setLoading(false);
         router.push({
           pathname: '/(logging)/summary',
           params: params,
         });
-        // Pass AI results into summary page
-        // router.push({
-        //   pathname: '/(logging)/summary',
-        //   params: {
-        //     mealId: id,
-        //     meal: meal,
-        //     type: 'log',
-        //     calories: aiResults.calories.toString(),
-        //     carbs: aiResults.carbs.toString(),
-        //     protein: aiResults.protein.toString(),
-        //     fat: aiResults.fat.toString(),
-        //     foodName: aiResults.food_name,
-        //     confidence: aiResults.confidence.toString(),
-        //   },
-        // });
       } else {
         console.error("AI analysis failed:", response.statusText);
+        setAiLoading(false);
+        setLoading(false);
       }
-
-      setAiLoading(false);
-
-      setLoading(false);
-      router.push({
-        pathname: '/(logging)/summary',
-        params: { mealId: id, meal: meal, type: 'log' },
-      });
     } catch (error) {
       console.log('Upload meal error: ', error);
     }

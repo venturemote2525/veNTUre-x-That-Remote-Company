@@ -39,22 +39,36 @@ export default function SummaryScreen() {
     mealId,
     meal: paramMeal,
     type,
+    calories: paramCalories,
+    carbs: paramCarbs,
+    protein: paramProtein,
+    fat: paramFat,
+    fiber: paramFiber,
+    topFoods: paramTopFoods,
   } = useLocalSearchParams<{
     mealId: string;
     meal: string;
     type: string;
+    calories?: string;
+    carbs?: string;
+    protein?: string;
+    fat?: string;
+    fiber?: string;
+    topFoods?: string;
   }>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [data, setData] = useState({ date: new Date(), meal: paramMeal ?? '' });
-  const [name, setName] = useState('');
+  const [name, setName] = useState(paramTopFoods ?? '');
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mealData, setMealData] = useState<Meal | null>(null);
+  const [calories, setCalories] = useState(paramCalories ? Math.round(parseFloat(paramCalories)) : 0);
+  const [fiber, setFiber] = useState(paramFiber ? Math.round(parseFloat(paramFiber)) : 0);
   const [nutrients, setNutrients] = useState([
-    { key: 'Carbs', value: 0, color: '#FFCA3A' },
-    { key: 'Protein', value: 0, color: '#1982C4' },
-    { key: 'Fat', value: 0, color: '#FF595E' },
+    { key: 'Carbs', value: paramCarbs ? Math.round(parseFloat(paramCarbs)) : 0, color: '#FFCA3A' },
+    { key: 'Protein', value: paramProtein ? Math.round(parseFloat(paramProtein)) : 0, color: '#1982C4' },
+    { key: 'Fat', value: paramFat ? Math.round(parseFloat(paramFat)) : 0, color: '#FF595E' },
   ]);
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -72,12 +86,17 @@ export default function SummaryScreen() {
         date: new Date(data.date),
         meal: type === 'history' ? data.meal.toLowerCase() : prev.meal,
       }));
-      setName(data.name);
-      setNutrients([
-        { key: 'Carbs', value: data.carbs, color: '#FFCA3A' },
-        { key: 'Protein', value: data.protein, color: '#1982C4' },
-        { key: 'Fat', value: data.fat, color: '#FF595E' },
-      ]);
+      // Only override with fetched data if we don't have params (history mode)
+      if (!paramTopFoods) setName(data.name);
+      if (!paramCalories) setCalories(data.calories);
+      if (!paramFiber) setFiber(data.fiber);
+      if (!paramCarbs || !paramProtein || !paramFat) {
+        setNutrients([
+          { key: 'Carbs', value: data.carbs, color: '#FFCA3A' },
+          { key: 'Protein', value: data.protein, color: '#1982C4' },
+          { key: 'Fat', value: data.fat, color: '#FF595E' },
+        ]);
+      }
     };
     setLoading(true);
     fetchMeal().finally(() => setLoading(false));
@@ -155,6 +174,11 @@ export default function SummaryScreen() {
         name,
         date: data.date.toISOString(),
         meal: data.meal.toUpperCase(),
+        calories,
+        carbs: nutrients[0].value,
+        protein: nutrients[1].value,
+        fat: nutrients[2].value,
+        fiber,
       });
       setShowCapybaraModal(true);
     } catch (error) {
@@ -238,7 +262,7 @@ export default function SummaryScreen() {
           )}
           <View className="gap-4">
             <Text className="font-bodyBold text-head2 text-secondary-500">
-              {mealData?.calories ?? 0} kcal
+              {calories} kcal
             </Text>
             <View className="gap-1">
               {nutrients.map(n => (
@@ -254,6 +278,9 @@ export default function SummaryScreen() {
                   {n.value}g {n.key}
                 </Text>
               ))}
+              <Text className="font-bodySemiBold text-body2 text-primary-500">
+                {fiber}g Fiber
+              </Text>
             </View>
           </View>
         </View>

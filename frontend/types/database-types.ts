@@ -25,6 +25,7 @@ export interface Meal {
   protein: number;
   carbs: number;
   fat: number;
+  fiber: number;
   date: string;
   created_at: string;
 }
