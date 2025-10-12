@@ -67,8 +67,8 @@ MODELS = {}
 # Utensil reference sizes (in mm)
 UTENSIL_SIZES = {
     0: {"name": "chopsticks", "length_mm": 230.0, "width_mm": 8.0},  # Standard Chinese chopsticks
-    1: {"name": "spoon", "length_mm": 90.0, "width_mm": 35.0},     # Align with non-API
-    2: {"name": "fork", "length_mm": 90.0, "width_mm": 25.0},      # Align with non-API
+    1: {"name": "spoon", "length_mm": 160.0, "width_mm": 35.0},     # Dinner/dessert spoon average (aligned with non-API)
+    2: {"name": "fork", "length_mm": 180.0, "width_mm": 25.0},      # Dinner fork (aligned with non-API)
 }
 
 # YOLO class ordering for ONNX utensil detector (3-class model)
@@ -78,34 +78,37 @@ class AnalyzeRequest(BaseModel):
     bucket: str  # Supabase storage bucket name
     path: str    # Path to image in bucket
     image_base64: Optional[str] = None
-    confidence_threshold: float = 0.3
+    confidence_threshold: float = 0.2
     enable_volume: bool = True
     enable_nutrition: bool = True
     dedup_overlap_threshold: float = 0.3  # Enable deduplication by default to prevent over-counting
     # Depth/volume options
     baseline_method: str = "food_95th"
     # Utensil tuning (aligned with non-API which uses conf=0.5)
-    utensil_conf: float = 0.5  # Raised from 0.01 to match non-API and reduce false positives
+    utensil_conf: float = 0.6  # Raised from 0.01 to match non-API and reduce false positives
     utensil_nms_iou: float = 0.3
     utensil_min_box_px: int = 5
     utensil_promote_top_n: int = 2
-    spoon_length_mm: float = 90.0
-    fork_length_mm: float = 90.0
+    spoon_length_mm: float = 160.0  # Dinner/dessert spoon average (aligned with non-API)
+    fork_length_mm: float = 180.0  # Dinner fork (aligned with non-API)
     # Synthetic fallback scale
     synthetic_px_per_mm_1024: float = 3.5
     prefer_synthetic_first: bool = False  # Use real utensil scale when available!
     # Classification threshold for per-detection specific class
     classification_conf_threshold: float = 0.40
+    # Minimum weighted score for segment inclusion in weighted classification
+    min_weighted_score_pct: float = 2.0
 
 class AnalyzeResponse(BaseModel):
     status: str
-    classification: dict
+    classification: dict  # Kept for backwards compatibility
     segmentation: dict
     utensils: list = []
     volume_estimates: dict = {}
     nutrition: dict = {}
     summary: dict = {}
     visuals: dict = {}
+    classification_methods: dict = {}  # New: two-method comparison results
 
 @app.get("/")
 def root():
@@ -197,6 +200,7 @@ async def analyze_image(request: AnalyzeRequest):
         # 1. Run classification
         classification_result = classify_food(MODELS['vit'], image_array)
         logger.info(f"Classification: {classification_result['top_prediction']['class_name']} ({classification_result['top_prediction']['confidence']:.3f})")
+        print(f"Classification: {classification_result['top_prediction']['class_name']} ({classification_result['top_prediction']['confidence']:.3f})") # e.g. chicken rice (0.715)
 
         # 2. Run segmentation (per-instance, probability-thresholded)
         seg_threshold = request.confidence_threshold
@@ -265,6 +269,7 @@ async def analyze_image(request: AnalyzeRequest):
                     utensil_detections,
                     spoon_len_mm=float(request.spoon_length_mm),
                     fork_len_mm=float(request.fork_length_mm),
+                    utensil_conf_threshold=float(request.utensil_conf)
                 )
                 if pixel_to_mm_ratio:
                     logger.info(f"Utensils detected: {len(utensil_detections)}, scale: {pixel_to_mm_ratio:.4f} mm/px")
@@ -322,6 +327,41 @@ async def analyze_image(request: AnalyzeRequest):
             summary = nutrition_result.get('summary', {})
             logger.info(f"Nutrition: {summary.get('total_calories', 0):.1f} kcal")
 
+        # 6. Calculate weighted classification (two-method comparison)
+        classification_methods = {}
+        if segmentation_result['detections'] and 'vit' in MODELS:
+            try:
+                weighted_result = calculate_weighted_classification(
+                    image_array,
+                    segmentation_result['detections'],
+                    classification_result['top_prediction'],
+                    min_weighted_score_pct=float(request.min_weighted_score_pct)
+                )
+
+                classification_methods = {
+                    "full_image": {
+                        "class": classification_result['top_prediction']['class_name'],
+                        "confidence": float(classification_result['top_prediction']['confidence'])
+                    },
+                    "weighted_segments": {
+                        "class": weighted_result['best_segment']['class'] if weighted_result['best_segment'] else None,
+                        "confidence": float(weighted_result['weighted_confidence']),
+                        "breakdown": [
+                            f"{seg['class'].replace('_', ' ').title()} ({seg['weighted_score_pct']:.1f}%)"
+                            for seg in weighted_result['all_segments']
+                        ]
+                    },
+                    "recommendation": weighted_result['recommendation'],
+                    "multi_segment_bonus": weighted_result['multi_segment_bonus'],
+                    "num_big_segments": weighted_result['num_big_segments']
+                }
+
+                logger.info(f"[CLASSIFICATION] Full image: {classification_result['top_prediction']['class_name']} ({classification_result['top_prediction']['confidence']:.3f})")
+                logger.info(f"[CLASSIFICATION] Weighted segments: {weighted_result['weighted_confidence']:.3f}, Recommendation: {weighted_result['recommendation']}")
+            except Exception as e:
+                logger.warning(f"[CLASSIFICATION] Weighted classification failed: {e}")
+                classification_methods = {}
+
         # Visuals (segmentation overlay + depth map preview)
         visuals = {}
         try:
@@ -353,13 +393,14 @@ async def analyze_image(request: AnalyzeRequest):
 
         return {
             "status": "success",
-            "classification": classification_result,
+            "classification": classification_result,  # Kept for backwards compatibility
             "segmentation": segmentation_result,
             "utensils": utensil_detections,
             "volume_estimates": volume_estimates,
             "nutrition": nutrition_result,
             "summary": summary,
-            "visuals": visuals
+            "visuals": visuals,
+            "classification_methods": classification_methods  # New: two-method comparison
         }
 
     except Exception as e:
@@ -728,7 +769,7 @@ def detect_utensils(session, image_array, conf_thres=0.25, nms_iou=0.3, min_box_
     logger.info(f"[UTENSIL] Final detections: {len(out)}")
     return out
 
-def calculate_pixel_to_mm_ratio(utensil_detections, spoon_len_mm=150.0, fork_len_mm=180.0):
+def calculate_pixel_to_mm_ratio(utensil_detections, spoon_len_mm=150.0, fork_len_mm=180.0, utensil_conf_threshold=0.5):
     """Calculate mm per pixel from utensil detections
 
     Args:
@@ -759,7 +800,7 @@ def calculate_pixel_to_mm_ratio(utensil_detections, spoon_len_mm=150.0, fork_len
     utensil_detections = norm
 
     # Filter for confidence > 0.5 (aligned with non-API), then use highest confidence utensil
-    valid_utensils = [u for u in utensil_detections if u['confidence'] > 0.5]
+    valid_utensils = [u for u in utensil_detections if u['confidence'] >= utensil_conf_threshold]
 
     if not valid_utensils:
         return None
@@ -1181,9 +1222,24 @@ def calculate_volumes_depth_map(
         if food_depths.size == 0:
             continue
 
-        # Baseline: Always use food_95th (95th percentile = furthest plate surface)
-        # This is the most accurate method for typical flat plate scenarios
-        baseline_depth = float(np.percentile(food_depths, 95))
+        # Calculate baseline depth based on selected method
+        if baseline_method == "food_5th":
+            # 5th percentile: nearest food surface (good for bowls/containers)
+            baseline_depth = float(np.percentile(food_depths, 5))
+            baseline_source = "food_5th (5th percentile)"
+        elif baseline_method == "adaptive":
+            # Adaptive: choose based on depth variance
+            depth_var = float(np.var(food_depths))
+            if depth_var > 0.01:  # High variance suggests bowl
+                baseline_depth = float(np.percentile(food_depths, 5))
+                baseline_source = "adaptive (5th percentile, high variance)"
+            else:  # Low variance suggests flat plate
+                baseline_depth = float(np.percentile(food_depths, 95))
+                baseline_source = "adaptive (95th percentile, low variance)"
+        else:  # Default: food_95th
+            # 95th percentile: furthest plate surface (best for flat plates)
+            baseline_depth = float(np.percentile(food_depths, 95))
+            baseline_source = "food_95th (95th percentile)"
 
         # Relative heights (Depth Anything inverse depth: higher=farther)
         relative_heights = baseline_depth - food_depths
@@ -1310,6 +1366,170 @@ def calculate_volumes_depth_map(
     volumes['total_area_cm2'] = float(total_area_cm2)
     return volumes
 
+def calculate_weighted_classification(
+    image_array: np.ndarray,
+    detections: List[Dict],
+    full_image_prediction: Dict,
+    min_weighted_score_pct: float = 2.0
+) -> Dict:
+    """Calculate area-weighted classification from segments.
+
+    Implements the sophisticated weighted segment analysis from non_api_working:
+    - Weighted score = confidence² × area_fraction × confidence_boost × size_penalty
+    - Multi-segment bonus for images with multiple substantial food items
+    - Filters segments below minimum weighted score threshold
+
+    Args:
+        image_array: RGB image array
+        detections: List of detection dicts with 'specific_food', 'specific_confidence', 'mask'
+        full_image_prediction: Full image classification result
+        min_weighted_score_pct: Minimum weighted score percentage to include segment (default 2.0%)
+
+    Returns:
+        Dict with:
+            - weighted_confidence: float
+            - best_segment: dict or None
+            - all_segments: list of segment contributions
+            - multi_segment_bonus: float
+            - recommendation: "full_image" | "weighted_segments" | "similar"
+    """
+    if not detections:
+        return {
+            "weighted_confidence": 0.0,
+            "best_segment": None,
+            "all_segments": [],
+            "multi_segment_bonus": 1.0,
+            "recommendation": "full_image"
+        }
+
+    # Get full image confidence as reference
+    reference_confidence = full_image_prediction.get('confidence', 0.0)
+
+    # Calculate total segmented area (only valid food segments with VIT classification)
+    h, w = image_array.shape[:2]
+    total_segmented_area = 0
+    valid_segments = []
+
+    for det in detections:
+        specific_confidence = det.get('specific_confidence', 0.0)
+        if specific_confidence > 0:
+            mask = det.get('mask')
+            if mask is not None:
+                # Resize mask to match image if needed
+                if mask.shape[:2] != (h, w):
+                    mask_resized = cv2.resize(mask.astype(np.uint8), (w, h), interpolation=cv2.INTER_NEAREST)
+                else:
+                    mask_resized = mask.astype(np.uint8)
+
+                mask_area = np.sum(mask_resized > 0)
+                total_segmented_area += mask_area
+
+                valid_segments.append({
+                    'specific_class': det.get('specific_food'),
+                    'specific_confidence': specific_confidence,
+                    'mask_area': mask_area,
+                    'broad_class': det.get('class_name', 'unknown')
+                })
+
+    if not valid_segments or total_segmented_area == 0:
+        return {
+            "weighted_confidence": 0.0,
+            "best_segment": None,
+            "all_segments": [],
+            "multi_segment_bonus": 1.0,
+            "recommendation": "full_image"
+        }
+
+    # Filter segments by minimum weighted score (before applying bonuses)
+    filtered_segments = []
+    for seg in valid_segments:
+        area_fraction = seg['mask_area'] / total_segmented_area
+        weighted_score_pct = (seg['specific_confidence'] * area_fraction) * 100
+        if weighted_score_pct >= min_weighted_score_pct:
+            filtered_segments.append(seg)
+
+    if not filtered_segments:
+        return {
+            "weighted_confidence": 0.0,
+            "best_segment": None,
+            "all_segments": [],
+            "multi_segment_bonus": 1.0,
+            "recommendation": "full_image"
+        }
+
+    # Count big segments (> 10% of total food area)
+    big_segment_threshold = 0.10
+    num_big_segments = sum(
+        1 for seg in filtered_segments
+        if (seg['mask_area'] / total_segmented_area) > big_segment_threshold
+    )
+
+    # Multi-segment bonus (rewards having multiple substantial food items)
+    multi_segment_bonus = 1.0 + max(0, num_big_segments - 1) * 0.30
+
+    # Calculate weighted confidence with all factors
+    # confidence² × area_fraction × confidence_boost × size_penalty
+    segment_scores = []
+    for seg in filtered_segments:
+        area_fraction = seg['mask_area'] / total_segmented_area
+        confidence = seg['specific_confidence']
+
+        # Confidence boost: segments more confident than full image get boosted
+        confidence_boost = max(1.0, confidence / reference_confidence if reference_confidence > 0 else 1.0)
+
+        # Size penalty: penalize segments < 5% of total food area
+        size_penalty = min(1.0, area_fraction / 0.05)
+
+        # Calculate weighted score
+        weighted_score = (confidence ** 2) * area_fraction * confidence_boost * size_penalty
+
+        segment_scores.append({
+            'segment': seg,
+            'weighted_score': weighted_score,
+            'weighted_score_pct': weighted_score * 100
+        })
+
+    # Apply multi-segment bonus
+    raw_weighted_confidence = sum(s['weighted_score'] for s in segment_scores) * multi_segment_bonus
+
+    # Normalize to ensure max is 100% (1.0)
+    weighted_confidence = min(1.0, raw_weighted_confidence)
+
+    # Find best segment (highest weighted score)
+    best_segment_info = max(segment_scores, key=lambda x: x['weighted_score'])
+    best_segment = best_segment_info['segment']
+
+    # Sort all segments by weighted score (highest first)
+    all_segments = sorted(segment_scores, key=lambda x: x['weighted_score'], reverse=True)
+
+    # Determine recommendation
+    if weighted_confidence > reference_confidence + 0.05:
+        recommendation = "weighted_segments"
+    elif reference_confidence > weighted_confidence + 0.05:
+        recommendation = "full_image"
+    else:
+        recommendation = "similar"
+
+    return {
+        "weighted_confidence": float(weighted_confidence),
+        "best_segment": {
+            "class": best_segment['specific_class'],
+            "confidence": float(best_segment['specific_confidence']),
+            "broad_class": best_segment['broad_class']
+        },
+        "all_segments": [
+            {
+                "class": s['segment']['specific_class'],
+                "confidence": float(s['segment']['specific_confidence']),
+                "weighted_score_pct": float(s['weighted_score_pct'])
+            }
+            for s in all_segments
+        ],
+        "multi_segment_bonus": float(multi_segment_bonus),
+        "num_big_segments": int(num_big_segments),
+        "recommendation": recommendation
+    }
+
 def calculate_nutrition(detections, classification_result, volume_estimates, nutrition_db, classification_confidence_threshold=0.40):
     """Calculate nutrition using per-detection classification + volumes.
 
@@ -1388,6 +1608,7 @@ def calculate_nutrition(detections, classification_result, volume_estimates, nut
             })
 
     summary = {
+        "food_name": classification_result["top_prediction"]["class_name"],
         "total_calories": total_calories,
         "total_volume_ml": total_volume,
         "total_weight_g": total_weight,
