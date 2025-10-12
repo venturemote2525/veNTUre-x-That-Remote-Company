@@ -83,7 +83,30 @@ models/
 - Direct model loading for real-time analysis
 - UI integration in `ui/nutrition_analysis_app.py`
 
+## Git LFS Models (Included in Repository)
+
+The following models are stored using Git LFS and included in the repository:
+
+### Small-Medium Models (<100MB)
+- **vit_food_classifier.onnx** (84MB) - Food classification
+- **utensil_detector_converted.onnx** (43MB) - Utensil detection
+- **utensil_detector_converted_12MB_backup.onnx** (12MB) - Backup utensil detector
+- **yolo_utensil_detector_43MB.onnx** (43MB) - Alternative utensil detector
+
+### Excluded Models (>100MB - GitHub LFS Limit)
+These models exceed GitHub's 100MB LFS limit and must be downloaded separately:
+
+- **segformer_food_segmentation.onnx** (181MB) - Food segmentation
+- **depth_anything_vitb.onnx** (371MB) - Depth estimation
+
 ## Model Updates (Latest)
+
+### October 2025:
+- ✅ Implemented Git LFS for model storage
+- ✅ Excluded largest models (>100MB) due to GitHub limits
+- ✅ Updated model documentation
+- ✅ Added fallback mechanisms for missing models
+- ✅ Optimized repository size while maintaining functionality
 
 ### September 2025:
 - ✅ Converted utensil detector to ONNX for consistency
