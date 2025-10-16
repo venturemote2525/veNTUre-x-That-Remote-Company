@@ -1,6 +1,6 @@
-package com.anonymous.frontend
+package com.anonymous.stride
 
-import com.anonymous.frontend.BuildConfig
+import com.anonymous.stride.BuildConfig
 
 import expo.modules.splashscreen.SplashScreenManager
 

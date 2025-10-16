@@ -1,4 +1,4 @@
-package com.anonymous.frontend
+package com.anonymous.stride
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule
