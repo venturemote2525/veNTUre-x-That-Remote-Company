@@ -1,4 +1,4 @@
-package com.anonymous.frontend.device
+package com.anonymous.stride.device
 
 import android.Manifest
 import android.content.pm.PackageManager

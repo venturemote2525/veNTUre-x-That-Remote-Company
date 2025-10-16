@@ -1,7 +1,7 @@
-package com.anonymous.frontend
+package com.anonymous.stride
 import com.facebook.react.common.assets.ReactFontManager
 
-import com.anonymous.frontend.BuildConfig
+import com.anonymous.stride.BuildConfig
 
 import android.app.Application
 import android.content.res.Configuration

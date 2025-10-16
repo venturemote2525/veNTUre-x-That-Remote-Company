@@ -1,4 +1,4 @@
-package com.anonymous.frontend
+package com.anonymous.stride
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -7,9 +7,9 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.anonymous.frontend.device.PermissionManager
-import com.anonymous.frontend.device.ScanManager
-import com.anonymous.frontend.device.SettingManager
+import com.anonymous.stride.device.PermissionManager
+import com.anonymous.stride.device.ScanManager
+import com.anonymous.stride.device.SettingManager
 import cn.icomon.icdevicemanager.model.device.ICUserInfo
 import cn.icomon.icdevicemanager.model.other.ICConstant
 
