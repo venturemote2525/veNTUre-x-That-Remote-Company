@@ -43,7 +43,7 @@ export default function HomeScreen() {
       <View className="flex-row justify-between p-6 pb-4">
         <View>
           <Text className="font-heading text-head2 text-secondary-500">
-            HealthSync
+            STRIDE
           </Text>
           <Text className="font-body text-body2 text-primary-300">
             Welcome back! 👋

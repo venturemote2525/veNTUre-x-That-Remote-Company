@@ -90,7 +90,7 @@ export default function SignUp() {
       <View className="flex-1 justify-center px-4">
         <View className="mb-8 items-center gap-1">
           <Text className="font-heading text-[50px] text-secondary-500">
-            HealthSync
+            STRIDE
           </Text>
           <Text className="font-heading text-head2 text-primary-500">
             Sign Up
