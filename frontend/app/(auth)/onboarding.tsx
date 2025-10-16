@@ -70,7 +70,7 @@ export default function Onboarding() {
     <ThemedSafeAreaView className="px-4">
       <View className="items-center gap-1 py-12">
         <Text className="font-heading text-head2 text-primary-500">
-          Welcome to HealthSync
+          Welcome to STRIDE
         </Text>
         <Text className="text-primary-200">Please enter your details</Text>
       </View>
