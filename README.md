@@ -44,7 +44,7 @@ org.gradle.java.home=/path/to/your/jdk-17
 ```bash
 cd frontend
 npm install
-npm install expo-location
+npm install expo-location #Required for device's geo-location
 ```
 
 ### 7. Run the project
