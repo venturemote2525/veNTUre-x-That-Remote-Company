@@ -44,6 +44,7 @@ org.gradle.java.home=/path/to/your/jdk-17
 ```bash
 cd frontend
 npm install
+npm install expo-location
 ```
 
 ### 7. Run the project
