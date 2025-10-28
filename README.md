@@ -85,6 +85,8 @@ project/
 ### Trouble Shooting
 1. Might need to install nvm. Check this for os errors.
 2. Might need to install this too. npm install @gluestack-ui/nativewind-utils
+3. Enable permissions for Android device if testing on device. Bluetooth, Location and Storage permissions.
+4. Turn on USB Debugging mode for Android devices.
 
 ### Contexts
 | Context                                         | Description                                |
