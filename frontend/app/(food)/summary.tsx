@@ -19,7 +19,8 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { deleteMeal, retrieveMeal, updateMeal } from '@/utils/food/api';
 import { AlertState, Meal } from '@/types/database-types';
 import { CustomAlert } from '@/components/CustomAlert';
-import { useFocusEffect } from '@react-navigation/native';
+import BodyScene from '@/app/(body)/body-scene';
+import FoodScene from '@/app/(food)/food-scene';
 
 const mealColoursClasses: Record<string, string> = {
   breakfast: 'bg-[#8ecae6]',
@@ -65,12 +66,29 @@ export default function SummaryScreen() {
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mealData, setMealData] = useState<Meal | null>(null);
-  const [calories, setCalories] = useState(paramCalories ? Math.round(parseFloat(paramCalories)) : 0);
-  const [fiber, setFiber] = useState(paramFiber ? Math.round(parseFloat(paramFiber)) : 0);
+  const [showScene, setShowScene] = useState<boolean>(false);
+  const [calories, setCalories] = useState(
+    paramCalories ? Math.round(parseFloat(paramCalories)) : 0,
+  );
+  const [fiber, setFiber] = useState(
+    paramFiber ? Math.round(parseFloat(paramFiber)) : 0,
+  );
   const [nutrients, setNutrients] = useState([
-    { key: 'Carbs', value: paramCarbs ? Math.round(parseFloat(paramCarbs)) : 0, color: '#FFCA3A' },
-    { key: 'Protein', value: paramProtein ? Math.round(parseFloat(paramProtein)) : 0, color: '#1982C4' },
-    { key: 'Fat', value: paramFat ? Math.round(parseFloat(paramFat)) : 0, color: '#FF595E' },
+    {
+      key: 'Carbs',
+      value: paramCarbs ? Math.round(parseFloat(paramCarbs)) : 0,
+      color: '#FFCA3A',
+    },
+    {
+      key: 'Protein',
+      value: paramProtein ? Math.round(parseFloat(paramProtein)) : 0,
+      color: '#1982C4',
+    },
+    {
+      key: 'Fat',
+      value: paramFat ? Math.round(parseFloat(paramFat)) : 0,
+      color: '#FF595E',
+    },
   ]);
   const [alert, setAlert] = useState<AlertState>({
     visible: false,
@@ -211,121 +229,142 @@ export default function SummaryScreen() {
       </ThemedSafeAreaView>
     );
 
+  const handleBackgroundPress = () => setShowScene(true);
+
   return (
     <ThemedSafeAreaView>
       <Header title="Food Summary" onBackPress={handleCancel} />
-      <View className="flex-1 items-center gap-4 px-8 text-body1">
-        <Pressable onPress={() => setShowDatePicker(true)}>
-          <Text className="font-bodySemiBold text-primary-500">
-            {dayjs(data.date).format('DD MMM YYYY HH:mm')}
-          </Text>
-        </Pressable>
-
-        {mealData?.image_url ? (
-          <Image
-            source={{ uri: mealData?.image_url }}
-            className="h-80 w-80 rounded-3xl"
-          />
-        ) : (
-          <View className="h-80 w-80 items-center justify-center rounded-3xl border-2 border-secondary-500 bg-background-0">
-            <Text className="font-bodyBold text-secondary-500">
-              No photo found
+      <Pressable onPress={handleBackgroundPress} style={{ flex: 1 }}>
+        <View className="flex-1 items-center gap-4 px-8 text-body1">
+          <Pressable onPress={() => setShowDatePicker(true)}>
+            <Text className="font-bodySemiBold text-primary-500">
+              {dayjs(data.date).format('DD MMM YYYY HH:mm')}
             </Text>
-          </View>
-        )}
+          </Pressable>
 
-        <View className="w-full flex-row items-center justify-between">
-          <FoodNameInput value={name} onChange={setName} />
-          <MemoizedMealDropdown
-            meal={data.meal}
-            setMeal={meal => setData(prev => ({ ...prev, meal }))}
-          />
-        </View>
-
-        <View className="w-full flex-row items-center justify-start gap-8">
-          {nutrients.reduce((sum, n) => sum + n.value, 0) > 0 ? (
-            <PieChart
-              data={nutrients.map(n => ({
-                value: n.value,
-                text: n.key,
-                color: n.color,
-              }))}
-              showText
-              radius={90}
-              labelsPosition="mid"
-              font="Poppins-Medium"
-              textColor="#1e1e1e"
-              onPress={(item: pieDataItem) =>
-                setSelectedSlice(item.text ?? null)
-              }
+          {mealData?.image_url ? (
+            <Image
+              source={{ uri: mealData?.image_url }}
+              className="h-80 w-80 rounded-3xl"
             />
           ) : (
-            <Text className="text-secondary-500">No nutrients data</Text>
-          )}
-          <View className="gap-4">
-            <Text className="font-bodyBold text-head2 text-secondary-500">
-              {calories} kcal
-            </Text>
-            <View className="gap-1">
-              {nutrients.map(n => (
-                <Text
-                  key={n.key}
-                  className={`text-body2 ${selectedSlice === n.key ? 'font-bodyBold text-secondary-500' : 'font-bodySemiBold text-primary-500'}`}
-                  style={{
-                    color:
-                      selectedSlice === n.key
-                        ? n.color
-                        : Colors[scheme].primary,
-                  }}>
-                  {n.value}g {n.key}
-                </Text>
-              ))}
-              <Text className="font-bodySemiBold text-body2 text-primary-500">
-                {fiber}g Fiber
+            <View className="h-80 w-80 items-center justify-center rounded-3xl border-2 border-secondary-500 bg-background-0">
+              <Text className="font-bodyBold text-secondary-500">
+                No photo found
               </Text>
+            </View>
+          )}
+
+          <View className="w-full flex-row items-center justify-between">
+            <FoodNameInput value={name} onChange={setName} />
+            <MemoizedMealDropdown
+              meal={data.meal}
+              setMeal={meal => setData(prev => ({ ...prev, meal }))}
+            />
+          </View>
+
+          <View className="w-full flex-row items-center justify-start gap-8">
+            {nutrients.reduce((sum, n) => sum + n.value, 0) > 0 ? (
+              <PieChart
+                data={nutrients.map(n => ({
+                  value: n.value,
+                  text: n.key,
+                  color: n.color,
+                }))}
+                showText
+                radius={90}
+                labelsPosition="mid"
+                font="Poppins-Medium"
+                textColor="#1e1e1e"
+                onPress={(item: pieDataItem) =>
+                  setSelectedSlice(item.text ?? null)
+                }
+              />
+            ) : (
+              <Text className="text-secondary-500">No nutrients data</Text>
+            )}
+            <View className="gap-4">
+              <Text className="font-bodyBold text-head2 text-secondary-500">
+                {calories} kcal
+              </Text>
+              <View className="gap-1">
+                {nutrients.map(n => (
+                  <Text
+                    key={n.key}
+                    className={`text-body2 ${selectedSlice === n.key ? 'font-bodyBold text-secondary-500' : 'font-bodySemiBold text-primary-500'}`}
+                    style={{
+                      color:
+                        selectedSlice === n.key
+                          ? n.color
+                          : Colors[scheme].primary,
+                    }}>
+                    {n.value}g {n.key}
+                  </Text>
+                ))}
+                <Text className="font-bodySemiBold text-body2 text-primary-500">
+                  {fiber}g Fiber
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <View className="flex-row gap-4 p-4">
+        <View className="flex-row gap-4 p-4">
+          <Pressable
+            onPress={handleCancel}
+            className="button-rounded-tertiary flex-1">
+            <Text className="font-bodyBold text-background-0">Cancel</Text>
+          </Pressable>
+          <Pressable onPress={handleSave} className="button-rounded flex-1">
+            <Text className="font-bodyBold text-background-0">Save</Text>
+          </Pressable>
+        </View>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={data.date}
+            mode="date"
+            display="spinner"
+            maximumDate={new Date()}
+            onChange={handleDateChange}
+          />
+        )}
+        {showTimePicker && (
+          <DateTimePicker
+            value={data.date}
+            mode="time"
+            display="spinner"
+            onChange={handleTimeChange}
+          />
+        )}
+
+        <CustomAlert
+          visible={alert.visible}
+          title={alert.title}
+          message={alert.message}
+          confirmText={alert.confirmText}
+          onConfirm={alert.onConfirm ?? (() => {})}
+          cancelText={alert.cancelText}
+          onCancel={alert.onCancel}
+        />
+      </Pressable>
+
+      <Modal
+        visible={showScene}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowScene(false)}>
         <Pressable
-          onPress={handleCancel}
-          className="button-rounded-tertiary flex-1">
-          <Text className="font-bodyBold text-background-0">Cancel</Text>
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowScene(false)}>
+          <FoodScene />
         </Pressable>
-        <Pressable onPress={handleSave} className="button-rounded flex-1">
-          <Text className="font-bodyBold text-background-0">Save</Text>
-        </Pressable>
-      </View>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={data.date}
-          mode="date"
-          display="spinner"
-          maximumDate={new Date()}
-          onChange={handleDateChange}
-        />
-      )}
-      {showTimePicker && (
-        <DateTimePicker
-          value={data.date}
-          mode="time"
-          display="spinner"
-          onChange={handleTimeChange}
-        />
-      )}
-
-      <CustomAlert
-        visible={alert.visible}
-        title={alert.title}
-        message={alert.message}
-        confirmText={alert.confirmText}
-        onConfirm={alert.onConfirm ?? (() => {})}
-        cancelText={alert.cancelText}
-        onCancel={alert.onCancel}
-      />
+      </Modal>
 
       {/*Capybara Popup */}
       <Modal
