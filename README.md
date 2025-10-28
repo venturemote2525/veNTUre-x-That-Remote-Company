@@ -84,6 +84,7 @@ project/
 
 ### Trouble Shooting
 1. Might need to install nvm. Check this for os errors.
+2. Might need to install this too. npm install @gluestack-ui/nativewind-utils
 
 ### Contexts
 | Context                                         | Description                                |
