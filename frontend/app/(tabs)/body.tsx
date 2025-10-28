@@ -1,6 +1,12 @@
 import { Text, ThemedSafeAreaView, View } from '@/components/Themed';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Dimensions, Pressable, Animated } from 'react-native';
+import {
+  ScrollView,
+  Dimensions,
+  Pressable,
+  Animated,
+  Modal,
+} from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { AnimatedPressable } from '@/components/AnimatedComponents';
 import { Colors } from '@/constants/Colors';
@@ -22,6 +28,8 @@ import {
 } from '@/types/database-types';
 import { useFocusEffect } from '@react-navigation/native';
 import { mergeGroupedLogs, transformScaleLogs } from '@/utils/body/body';
+import HomeScene from '@/app/(home)/home-scene';
+import BodyScene from '@/app/(body)/body-scene';
 
 const TABS = ['weight', 'BMI', 'body_fat', 'height'];
 
@@ -33,6 +41,7 @@ export default function BodyScreen() {
     {} as Record<DateGroup, MergedLogSummary[]>,
   );
   const [data, setData] = useState<MergedLogSummary[] | null>(null);
+  const [showScene, setShowScene] = useState<boolean>(false);
 
   // Animation values - same as profile screen
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -147,116 +156,129 @@ export default function BodyScreen() {
     return transformScaleLogs(data, dateGroup, screen as MetricType);
   }, [data, dateGroup, screen]);
 
+  const handleBackgroundPress = () => setShowScene(true);
+
   return (
     <ThemedSafeAreaView edges={['top']} className="flex-1 bg-background-0">
-      {/* Tab Selector */}
-      <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
+      <Pressable onPress={handleBackgroundPress} style={{ flex: 1 }}>
+        {/* Tab Selector */}
+        <TabToggle tabs={TABS} selectedTab={screen} onTabChange={setScreen} />
 
-      <Animated.ScrollView 
-        style={{ 
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
-        }}
-        className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="items-center justify-center gap-4 py-4">
-          <OverviewCard
-            dateGroup={dateGroup}
-            current={overview.current}
-            previous={overview.previous}
-            graphLabel={graphLabel}
-          />
-          
-          {/* Duration Selector*/}
-          <Animated.View 
-            style={{ transform: [{ scale: scaleAnim }] }}
-            className="flex-row justify-center gap-4 w-full"
-          >
-            <Pressable
-              onPress={() => setDateGroup('WEEK')}
-              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-              <Ionicons 
-                name="calendar-outline" 
-                size={16} 
-                color={dateGroup === 'WEEK' ? '#fff' : '#6b7280'} 
-              />
-              <Text
-                className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
-                Weekly
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setDateGroup('MONTH')}
-              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-              <Ionicons 
-                name="calendar" 
-                size={16} 
-                color={dateGroup === 'MONTH' ? '#fff' : '#6b7280'} 
-              />
-              <Text
-                className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
-                Monthly
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setDateGroup('YEAR')}
-              className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'YEAR' ? 'bg-secondary-500' : 'bg-background-0'}`}>
-              <Ionicons 
-                name="calendar-sharp" 
-                size={16} 
-                color={dateGroup === 'YEAR' ? '#fff' : '#6b7280'} 
-              />
-              <Text
-                className={`font-bodySemiBold ${dateGroup === 'YEAR' ? 'text-background-0' : 'text-primary-100'}`}>
-                Yearly
-              </Text>
-            </Pressable>
-          </Animated.View>
+        <Animated.ScrollView
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+          className="flex-1 px-4"
+          showsVerticalScrollIndicator={false}>
+          <View className="items-center justify-center gap-4 py-4">
+            <OverviewCard
+              dateGroup={dateGroup}
+              current={overview.current}
+              previous={overview.previous}
+              graphLabel={graphLabel}
+            />
 
-          {graphData ? (
-            <Animated.View 
+            {/* Duration Selector*/}
+            <Animated.View
               style={{ transform: [{ scale: scaleAnim }] }}
-              className="rounded-2xl bg-background-0 p-4 shadow-lg w-full"
-            >
-              <ScrollChart
-                graphData={graphData}
-                label={graphLabel}
-                width={dateGroup === 'MONTH' ? 120 : 70}
-                spacing={dateGroup === 'MONTH' ? 80 : 60}
-                height={250}
-              />
+              className="w-full flex-row justify-center gap-4">
+              <Pressable
+                onPress={() => setDateGroup('WEEK')}
+                className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'WEEK' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={16}
+                  color={dateGroup === 'WEEK' ? '#fff' : '#6b7280'}
+                />
+                <Text
+                  className={`font-bodySemiBold ${dateGroup === 'WEEK' ? 'text-background-0' : 'text-primary-100'}`}>
+                  Weekly
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setDateGroup('MONTH')}
+                className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'MONTH' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+                <Ionicons
+                  name="calendar"
+                  size={16}
+                  color={dateGroup === 'MONTH' ? '#fff' : '#6b7280'}
+                />
+                <Text
+                  className={`font-bodySemiBold ${dateGroup === 'MONTH' ? 'text-background-0' : 'text-primary-100'}`}>
+                  Monthly
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setDateGroup('YEAR')}
+                className={`flex-1 flex-row items-center justify-center gap-2 rounded-full px-4 py-3 shadow-md ${dateGroup === 'YEAR' ? 'bg-secondary-500' : 'bg-background-0'}`}>
+                <Ionicons
+                  name="calendar-sharp"
+                  size={16}
+                  color={dateGroup === 'YEAR' ? '#fff' : '#6b7280'}
+                />
+                <Text
+                  className={`font-bodySemiBold ${dateGroup === 'YEAR' ? 'text-background-0' : 'text-primary-100'}`}>
+                  Yearly
+                </Text>
+              </Pressable>
             </Animated.View>
-          ) : (
-            <Animated.View 
-              style={{ 
-                height: 250,
-                transform: [{ scale: scaleAnim }]
-              }}
-              className="w-full items-center justify-center rounded-2xl bg-background-0 p-6 shadow-lg"
-            >
-              <Text className="font-bodySemiBold text-body1 text-primary-500">
-                No Data Yet
-              </Text>
-              <Text className="text-center text-primary-200">
-                Log your first entry to start tracking your progress!
-              </Text>
-            </Animated.View>
-          )}
-        </View>
-      </Animated.ScrollView>
 
-      {/* View All Logs Button */}
-      <Animated.View 
-        style={{ opacity: fadeAnim }}
-        className="px-4 pb-8 pt-4"
-      >
+            {graphData ? (
+              <Animated.View
+                style={{ transform: [{ scale: scaleAnim }] }}
+                className="w-full rounded-2xl bg-background-0 p-4 shadow-lg">
+                <ScrollChart
+                  graphData={graphData}
+                  label={graphLabel}
+                  width={dateGroup === 'MONTH' ? 120 : 70}
+                  spacing={dateGroup === 'MONTH' ? 80 : 60}
+                  height={250}
+                />
+              </Animated.View>
+            ) : (
+              <Animated.View
+                style={{
+                  height: 250,
+                  transform: [{ scale: scaleAnim }],
+                }}
+                className="w-full items-center justify-center rounded-2xl bg-background-0 p-6 shadow-lg">
+                <Text className="font-bodySemiBold text-body1 text-primary-500">
+                  No Data Yet
+                </Text>
+                <Text className="text-center text-primary-200">
+                  Log your first entry to start tracking your progress!
+                </Text>
+              </Animated.View>
+            )}
+          </View>
+        </Animated.ScrollView>
+
+        {/* View All Logs Button */}
+        <Animated.View style={{ opacity: fadeAnim }} className="px-4 pb-8 pt-4">
+          <Pressable
+            className="button-rounded m-4 shadow-lg"
+            onPress={() => router.push('/(body)/all-logs')}>
+            <Text className="button-rounded-text">View All Logs</Text>
+          </Pressable>
+        </Animated.View>
+      </Pressable>
+      <Modal
+        visible={showScene}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowScene(false)}>
         <Pressable
-          className="button-rounded m-4 shadow-lg"
-          onPress={() => router.push('/(body)/all-logs')}>
-          <Text className="button-rounded-text">View All Logs</Text>
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowScene(false)}>
+          <BodyScene />
         </Pressable>
-      </Animated.View>
+      </Modal>
     </ThemedSafeAreaView>
   );
 }
@@ -280,14 +302,14 @@ const OverviewCardBase = ({
     if (typeof current === 'number') {
       // Reset to 0 when current changes
       setDisplayValue(0);
-      
+
       // Animate from 0 to current value
       Animated.timing(animatedValue, {
         toValue: current,
         duration: 1500,
         useNativeDriver: false,
       }).start();
-      
+
       // Update display value during animation
       animatedValue.addListener(({ value }) => {
         setDisplayValue(Number(value.toFixed(1)));

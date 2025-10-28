@@ -60,7 +60,12 @@ type AIResults = {
   };
 };
 
-const processAIResults = (aiResults: AIResults, id: string, meal: string, foodClass: string) => {
+const processAIResults = (
+  aiResults: AIResults,
+  id: string,
+  meal: string,
+  foodClass: string,
+) => {
   const roundInt = (num: number): string => Math.round(num).toString();
 
   // Extract and round values from summary
@@ -75,7 +80,7 @@ const processAIResults = (aiResults: AIResults, id: string, meal: string, foodCl
   const topFoods = aiResults.nutrition.items
     .sort((a, b) => parseFloat(b.confidence) - parseFloat(a.confidence))
     .slice(0, 2)
-    .map((item) => item.display_name);
+    .map(item => item.display_name);
 
   // Prepare params for router
   const params = {
@@ -197,7 +202,7 @@ export default function LoggingScreen() {
       setUploadLoading(false);
 
       setAiLoading(true);
-            console.log("calling inference api");
+      console.log('calling inference api');
 
       // Test GET request
       // const response = await fetch("http://192.168.1.237:8080/food/all", {
@@ -240,35 +245,35 @@ export default function LoggingScreen() {
       // }
 
       // Food classification POST request (full ai-integration)
-      const response = await fetch("http://192.168.0.127:8080/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('http://192.168.0.127:8080/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bucket: "meal_images",
-          path: path,       // e.g. "user123/1758626669975.jpg"
+          bucket: 'meal_images',
+          path: path, // e.g. "user123/1758626669975.jpg"
           user_id: profile.user_id,
-          meal_type: "lunch",
+          meal_type: 'lunch',
         }),
       });
 
       if (response.ok) {
         const aiResults = await response.json();
-        console.log("AI analysis results:", aiResults.summary);
+        console.log('AI analysis results:', aiResults.summary);
         const food_class = aiResults.summary.food_name;
-        console.log("Predicted food class:", food_class);
+        console.log('Predicted food class:', food_class);
         const params = processAIResults(aiResults, id, meal, food_class);
-        console.log("Navigating with params:", params);
+        console.log('Navigating with params:', params);
         setAiLoading(false);
         setLoading(false);
         router.push({
-          pathname: '/(logging)/summary',
-          params:  {
-          ...params,
-          foodName: food_class,
-        },
+          pathname: '/(food)/summary',
+          params: {
+            ...params,
+            foodName: food_class,
+          },
         });
       } else {
-        console.error("AI analysis failed:", response.statusText);
+        console.error('AI analysis failed:', response.statusText);
         setAiLoading(false);
         setLoading(false);
       }

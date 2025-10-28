@@ -65,7 +65,7 @@ export default function MealCard({ title, meals, onSwipeDelete }: MealCardProps)
             <Pressable
               onPress={() =>
                 router.push({
-                  pathname: '/(logging)/summary',
+                  pathname: '/(food)/summary',
                   params: { mealId: meal.id, type: 'history' }
                 })
               }
