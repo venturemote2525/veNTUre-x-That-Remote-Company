@@ -82,6 +82,9 @@ project/
 | LoadingScreen (`ui/LoadingScreen.tsx`)    | Custom loading screen shown during data fetch |
 | Themed (`ui/Themed.tsx`)                  | Custom themed Text/View/SafeAreaView wrappers |
 
+### Trouble Shooting
+1. Might need to install nvm. Check this for os errors.
+
 ### Contexts
 | Context                                         | Description                                |
 |-------------------------------------------------|--------------------------------------------|
