@@ -18,6 +18,8 @@ git checkout dev
 ```env
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
+
+EXPO_PUBLIC_API_URL=
 ```
 **`local.properties`**
 - Add your Android SDK location inside `android/local.properties`
@@ -38,6 +40,24 @@ Place the `.aar` file (from the weighing scale SDK) in `android/app/libs` (Creat
 Add the JDK path in `android/gradle.properties`
 ```properties
 org.gradle.java.home=/path/to/your/jdk-17
+```
+
+### (new) Dockerized front and back end commands
+
+For Windows:
+```
+.\build-all.bat
+```
+
+For Mac/Linux/WSL
+```
+chmod +x build-all.sh stop-all.sh
+./build-all.sh
+```
+
+To Stop Everything:
+```
+.\stop-all.bat
 ```
 
 ### 6. Run the project

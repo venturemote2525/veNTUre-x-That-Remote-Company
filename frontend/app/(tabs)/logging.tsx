@@ -18,6 +18,7 @@ import {
   faArrowRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { apiEndpoints } from '@/constants/Api';
 
 const { width } = Dimensions.get('window');
 
@@ -245,7 +246,7 @@ export default function LoggingScreen() {
       // }
 
       // Food classification POST request (full ai-integration)
-      const response = await fetch('http://192.168.0.127:8080/analyze', {
+      const response = await fetch(apiEndpoints.analyze, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
