@@ -9,3 +9,9 @@ frontend/android/gradle.properties
 frontend/android/gradle.properties
 backend/app/food_ai
 backend/venv/
+frontend/venv/
+venv/
+__pycache__/
+*.pyc
+.claude/
+node_modules/
