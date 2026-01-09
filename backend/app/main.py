@@ -79,7 +79,7 @@ class AnalyzeRequest(BaseModel):
     path: str    # Path to image in bucket
     image_base64: Optional[str] = None
     confidence_threshold: float = 0.2
-    enable_volume: bool = True
+    enable_volume: bool = os.getenv("ENABLE_VOLUME_BY_DEFAULT", "true").lower() == "true"  # Default True (required for nutrition)
     enable_nutrition: bool = True
     dedup_overlap_threshold: float = 0.3  # Enable deduplication by default to prevent over-counting
     # Depth/volume options
@@ -114,6 +114,28 @@ class AnalyzeResponse(BaseModel):
 def root():
     return {"message": "Hello from FastAPI + Supabase!"}
 
+def create_cpu_optimized_session(model_path: str) -> ort.InferenceSession:
+    """Create ONNX Runtime session optimized for CPU inference"""
+    sess_options = ort.SessionOptions()
+
+    # Enable all optimizations
+    sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+    # Set number of threads (use all available cores)
+    import os
+    num_threads = os.cpu_count() or 4
+    sess_options.intra_op_num_threads = num_threads
+    sess_options.inter_op_num_threads = num_threads
+
+    # Enable memory pattern optimization
+    sess_options.enable_mem_pattern = True
+    sess_options.enable_cpu_mem_arena = True
+
+    # Use CPU execution provider (default)
+    providers = ['CPUExecutionProvider']
+
+    return ort.InferenceSession(model_path, sess_options=sess_options, providers=providers)
+
 @app.on_event("startup")
 async def load_models():
     """Load all models on startup"""
@@ -122,7 +144,7 @@ async def load_models():
     # Load ViT classification model (ONNX) - optional for per-detection classification
     vit_path = API_ROOT / "food_ai" / "models" / "classification" / "vit_food_classifier.onnx"
     try:
-        MODELS['vit'] = ort.InferenceSession(str(vit_path))
+        MODELS['vit'] = create_cpu_optimized_session(str(vit_path))
         logger.info(f"[OK] ViT model loaded: {vit_path}")
     except Exception as e:
         logger.warning(f"[WARN] VIT model failed to load (per-detection classification disabled): {e}")
@@ -136,7 +158,7 @@ async def load_models():
     # Load utensil detection model (YOLO ONNX)
     utensil_path = API_ROOT / "food_ai" / "models" / "utensil_detection" / "utensil_detector_converted.onnx"
     if utensil_path.exists():
-        MODELS['utensil'] = ort.InferenceSession(str(utensil_path))
+        MODELS['utensil'] = create_cpu_optimized_session(str(utensil_path))
         logger.info(f"[OK] Utensil detector loaded: {utensil_path}")
     # Initialize optional heuristic detector
     # if HeuristicReferenceObjectDetector is not None:
@@ -146,10 +168,10 @@ async def load_models():
     #     except Exception as e:
     #         logger.warning(f"[UTENSIL] Heuristic init failed: {e}")
 
-    # Load depth model
+    # Load depth model (CPU-optimized for faster inference on CPU-only instances)
     depth_path = API_ROOT / "food_ai" / "models" / "volume" / "depth_anything_vitb.onnx"
     if depth_path.exists():
-        MODELS['depth'] = ort.InferenceSession(str(depth_path))
+        MODELS['depth'] = create_cpu_optimized_session(str(depth_path))
         logger.info(f"[OK] Depth model loaded: {depth_path}")
 
     # Initialize nutrition database
@@ -985,6 +1007,10 @@ def compute_depth_map(depth_session: ort.InferenceSession, image_array: np.ndarr
 
     This reads model input shape dynamically and applies simple [0,1] normalization.
     """
+    import time
+    start_time = time.time()
+    logger.info("[DEPTH] Starting depth map computation (this may take 30-60s on CPU)")
+
     h, w = image_array.shape[:2]
     # Determine input
     input_info = depth_session.get_inputs()[0]
@@ -1027,6 +1053,9 @@ def compute_depth_map(depth_session: ort.InferenceSession, image_array: np.ndarr
         depth_map = (depth_map - dmin) / (dmax - dmin)
     else:
         depth_map = np.zeros_like(depth_map, dtype=np.float32)
+
+    elapsed = time.time() - start_time
+    logger.info(f"[DEPTH] Depth map computed in {elapsed:.1f}s")
 
     return depth_map
 
@@ -1551,15 +1580,50 @@ def calculate_nutrition(detections, classification_result, volume_estimates, nut
         volume_key = f"detection_{i}"
         volume_info = volume_estimates.get(volume_key, {})
 
-        if not volume_info:
-            continue
+        # Get classification info (either from volume_info or detection directly)
+        if volume_info:
+            # Volume-based calculation (accurate)
+            specific_class = volume_info.get('specific_class')
+            specific_confidence = volume_info.get('specific_confidence', 0.0)
+            food_type = volume_info.get('class_name', detection.get('class_name', 'unknown'))
+            weight_g = volume_info.get('weight_grams', 0.0)
+            volume_ml = volume_info.get('volume_ml', 0.0)
+        else:
+            # Fallback: estimate weight from segmentation area (less accurate but fast)
+            specific_class = detection.get('specific_food')
+            specific_confidence = detection.get('specific_confidence', 0.0)
+            food_type = detection.get('class_name', 'unknown')
 
-        # Get per-detection classification info (stored by calculate_volumes_depth_map)
-        specific_class = volume_info.get('specific_class')
-        specific_confidence = volume_info.get('specific_confidence', 0.0)
-        food_type = volume_info.get('class_name', detection.get('class_name', 'unknown'))
-        weight_g = volume_info.get('weight_grams', 0.0)
-        volume_ml = volume_info.get('volume_ml', 0.0)
+            # Estimate weight from area (rough approximation)
+            # Assume average thickness of 1.5cm and use density
+            area_pixels = detection.get('area_pixels', 0)
+
+            if area_pixels > 0:
+                # Rough conversion: pixels to cm² (assuming typical phone camera ~0.03 cm per pixel)
+                area_cm2 = area_pixels * (0.03 ** 2)
+                thickness_cm = 1.5  # Average food thickness
+                volume_ml = area_cm2 * thickness_cm
+
+                # Get density for weight estimation
+                use_specific = specific_class and specific_confidence >= classification_confidence_threshold
+                if use_specific:
+                    nutrition_info_temp = nutrition_db.get_nutrition_info(specific_class)
+                    density = nutrition_info_temp.density_g_ml if nutrition_info_temp else 0.8
+                else:
+                    nutrition_info_temp = nutrition_db.get_nutrition_info(food_type)
+                    density = nutrition_info_temp.density_g_ml if nutrition_info_temp else 0.8
+
+                weight_g = volume_ml * density
+
+                # Apply conservative correction (area-based is less accurate)
+                weight_g *= 0.7
+                volume_ml *= 0.7
+            else:
+                weight_g = 0.0
+                volume_ml = 0.0
+
+        if weight_g == 0.0:
+            continue
 
         # Determine which classification to use based on confidence threshold
         use_specific = specific_class and specific_confidence >= classification_confidence_threshold
