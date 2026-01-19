@@ -3,6 +3,7 @@
 .env
 /.expo
 *.aar
+!frontend/android/app/libs/*.aar
 .env.local
 frontend/android/gradlew
 frontend/android/gradle.properties
