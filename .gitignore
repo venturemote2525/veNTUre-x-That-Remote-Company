@@ -5,9 +5,6 @@
 *.aar
 !frontend/android/app/libs/*.aar
 .env.local
-frontend/android/gradlew
-frontend/android/gradle.properties
-frontend/android/gradle.properties
 backend/app/food_ai
 backend/venv/
 frontend/venv/
