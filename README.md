@@ -14,7 +14,7 @@ git checkout dev
 
 ### 3. Create environment files
 **`.env.local`**
-- Add environment variables to `.env.local` at the project root
+- Add environment variables to `.env.local` in the frontend folder
 ```env
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
