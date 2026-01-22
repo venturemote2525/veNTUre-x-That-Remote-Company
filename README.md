@@ -37,7 +37,7 @@ sdk.dir=C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk
 Place the `.aar` file (from the weighing scale SDK) in `android/app/libs` (Create the `libs` folder if it doesn't exist).
 
 ### 5. Ensure Java JDK 17 installed
-Add the JDK path in `android/gradle.properties`
+Add the JDK path in `android/gradle.properties` (AND NOT IN "frontend/android/gradle.properties")
 ```properties
 org.gradle.java.home=/path/to/your/jdk-17
 ```
